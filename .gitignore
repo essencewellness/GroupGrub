@@ -1,0 +1,44 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+buildout.log
+
+# Local dev build output
+dev-dist/
+
+# Hermes agent scratch
+.hermes/
+
+# Stray files
+nul
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Env / secrets — NUNCA commitar
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vercel — keep linked project config, ignore generated build output
+.vercel/output/
+!.vercel/project.json
+!.vercel/.env.local

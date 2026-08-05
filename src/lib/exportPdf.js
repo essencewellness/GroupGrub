@@ -1,0 +1,182 @@
+/**
+ * Export to PDF — Premium feature (Pro €10)
+ * Uses jsPDF (zero dependencies, lightweight)
+ * Works in all browsers incl. iOS Safari (where html2canvas may fail)
+ */
+import { jsPDF } from "jspdf"
+
+/**
+ * Export shopping list to PDF
+ * @param {string} tripId - Trip identifier
+ * @param {Array} items - Shopping items
+ * @param {Array} pessoas - People in trip
+ * @param {string} tripName - Trip display name
+ */
+export async function exportShoppingList({ tripId, items, tripName }) {
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  })
+
+  const pageHeight = 297
+  const margin = 20
+  let y = margin
+
+  // Header
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(22)
+  doc.setTextColor(46, 125, 50) // green-600
+  doc.text("Lista de Compras", margin, y)
+  y += 8
+
+  doc.setFontSize(14)
+  doc.setTextColor(130, 130, 130) // gray-400
+  doc.setFont("helvetica", "normal")
+  doc.text(tripName || tripId, margin, y)
+  y += 10
+
+  // Stats
+  const total = items.length
+  const comprados = items.filter((i) => i.comprado).length
+  const pct = total ? Math.round((comprados / total) * 100) : 0
+
+  doc.setFontSize(11)
+  doc.setTextColor(180, 180, 180)
+  doc.text(`${comprados}/${total} items (${pct}%)`, margin, y)
+  y += 12
+
+  // Separator
+  doc.setDrawColor(255, 255, 255)
+  doc.setLineWidth(0.3)
+  doc.line(margin, y, 190, y)
+  y += 10
+
+  // Items (sorted by category)
+  const cats = ["duradouro", "congelado", "refrigerado", "fresco", "outro"]
+  const catLabels = {
+    duradouro: "Duradouro (comprar com antecedência)",
+    congelado: "Congelado",
+    refrigerado: "Refrigerado (1-2 dias antes)",
+    fresco: "Fresco (comprar na hora)",
+    outro: "Outro",
+  }
+
+  const catColors = {
+    duradouro: [201, 168, 76],
+    congelado: [91, 168, 201],
+    refrigerado: [155, 127, 212],
+    fresco: [90, 158, 111],
+    outro: [158, 145, 126],
+  }
+
+  let firstCategory = true
+  for (const cat of cats) {
+    const itemsInCat = items.filter((i) => (i.categoria || "outro") === cat)
+    if (!itemsInCat.length) continue
+
+    if (!firstCategory) y += 4
+    firstCategory = false
+
+    // Category header
+    const color = catColors[cat]
+    doc.setFillColor(color[0], color[1], color[2])
+    doc.setDrawColor(color[0], color[1], color[2])
+    doc.setLineWidth(0.5)
+    doc.rect(margin, y, 5, 5, "fd") // colored square
+    doc.setFontSize(12)
+    doc.setTextColor(240, 232, 216)
+    doc.setFont("helvetica", "bold")
+    doc.text(catLabels[cat], margin + 9, y + 3.5)
+    doc.setFont("helvetica", "normal")
+    y += 10
+
+    // Items
+    itemsInCat.forEach((item) => {
+      const isComprado = item.comprado ? "✓ " : "☐ "
+      const qtd = item.qtd ? ` (${item.qtd})` : ""
+      const assignee = item.assignee ? ` → ${item.assignee}` : ""
+      const line = `${isComprado}${item.nome}${qtd}${assignee}`
+
+      doc.setFontSize(10)
+      doc.setTextColor(item.comprado ? 120 : 240, item.comprado ? 120 : 232, item.comprado ? 120 : 216)
+      const split = doc.splitTextToSize(line, 160)
+
+      if (y + split.length * 5 > pageHeight - margin) {
+        doc.addPage()
+        y = margin
+      }
+
+      doc.text(split, margin, y)
+      y += split.length * 4.5
+    })
+  }
+
+  // Footer
+  doc.setPageSize("a4")
+  doc.setFontSize(8)
+  doc.setTextColor(130, 130, 130)
+  doc.text(
+    `Exportado em ${new Date().toLocaleDateString("pt-PT")} · Férias Celorico Pro`,
+    margin,
+    pageHeight - 10
+  )
+
+  doc.save("lista-compras-" + (tripName || tripId).toLowerCase().replace(/ /g, "-") + ".pdf")
+}
+
+/**
+ * Export meal plan to PDF
+ */
+export async function exportMealPlan({ tripId, meals, tripName }) {
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  })
+
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(22)
+  doc.setTextColor(46, 125, 50)
+  doc.text("Plano de Refeições", 20, 30)
+
+  doc.setFontSize(12)
+  doc.setTextColor(130, 130, 130)
+  doc.setFont("helvetica", "normal")
+  doc.text(tripName || tripId, 20, 45)
+
+  let y = 55
+  meals.forEach((meal) => {
+    doc.setFontSize(11)
+    doc.setTextColor(240, 232, 216)
+    doc.setFont("helvetica", "bold")
+    const mealLine = `${meal.emoji || "🍽️"} ${meal.nome}`
+    doc.text(mealLine, 20, y)
+    y += 6
+
+    if (meal.ingredientes && meal.ingredientes.length > 0) {
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(9)
+      doc.setTextColor(180, 180, 180)
+      meal.ingredientes.forEach((ing) => {
+        doc.text(`• ${ing}`, 25, y)
+        y += 5
+        if (y > 280) {
+          doc.addPage()
+          y = 30
+        }
+      })
+    }
+    y += 4
+  })
+
+  doc.setFontSize(8)
+  doc.setTextColor(130, 130, 130)
+  doc.text(
+    `Exportado em ${new Date().toLocaleDateString("pt-PT")} · Férias Celorico Pro`,
+    20,
+    290
+  )
+
+  doc.save("plano-refeicoes-" + (tripName || tripId).toLowerCase().replace(/ /g, "-") + ".pdf")
+}

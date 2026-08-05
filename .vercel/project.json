@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_Bz8HOFpVxdCTAWXd5hrniSfcppD3",
+  "orgId": "team_sneZRpPE4OumqxPxZpjrKhdz",
+  "projectName": "ferias-app",
+  "settings": {
+    "createdAt": 1780831511427,
+    "framework": "vite",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
