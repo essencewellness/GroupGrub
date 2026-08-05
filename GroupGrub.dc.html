@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#000000;-webkit-font-smoothing:antialiased}
+a{color:#FF5A26}a:hover{color:#FF7A4D}
+input::placeholder{color:#71717A}
+::-webkit-scrollbar{width:0px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes checkPop{0%{transform:scale(0.82)}55%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+
+<div style="max-width:480px;margin:0 auto;min-height:100dvh;background:#050505;position:relative;font-family:'Inter',sans-serif;color:#FFFFFF;overflow-x:hidden">
+
+  <div style="position:sticky;top:0;z-index:50;background:#000000;border-bottom:1px solid rgba(255,255,255,0.08);box-shadow:{{ headerShadow }};transition:box-shadow .2s ease">
+    <div style="padding:16px 16px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:34px;height:34px;border-radius:9999px;background:rgba(255,90,38,0.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="19" height="19" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#FF5A26" stroke-width="1.5"/><path d="M14 12v8a2 2 0 0 0 4 0v-8M16 20v8" stroke="#FF5A26" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M26 12c-2.2 2-2.2 5 0 7l-1 9" stroke="#FF5A26" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+          </div>
+          <div style="font-size:19px;font-weight:800;letter-spacing:-0.02em;line-height:1"><span style="color:#FFFFFF">Group</span><span style="color:#FF5A26">Grub</span></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="{{ onRefresh }}" title="Sincronizar" style="width:37px;height:37px;border-radius:9999px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.06);color:#A1A1AA;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease" style-hover="background:rgba(255,255,255,0.1)" style-active="transform:scale(0.94)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate({{ refreshRotation }}deg);transition:transform .6s linear"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+          </button>
+          <button onclick="{{ onShareOpen }}" title="Partilhar" style="width:37px;height:37px;border-radius:9999px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.06);color:#A1A1AA;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease" style-hover="background:rgba(255,255,255,0.1)" style-active="transform:scale(0.94)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div style="position:relative;margin-bottom:14px">
+        <button onclick="{{ toggleTripsMenu }}" style="display:flex;align-items:center;gap:7px;padding:7px 12px 7px 14px;border-radius:9999px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#FFFFFF;font-size:13px;font-weight:600;cursor:pointer;max-width:100%;transition:background .15s ease" style-hover="background:rgba(255,255,255,0.1)">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">{{ currentTripTitle }}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#71717A;flex-shrink:0"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+
+        <sc-if value="{{ showTripsMenu }}">
+          <div onclick="{{ toggleTripsMenu }}" style="position:fixed;inset:0;z-index:59;background:transparent"></div>
+          <div style="position:absolute;top:calc(100% + 8px);left:0;right:0;background:#18181B;border:1px solid rgba(255,255,255,0.1);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,0.6);padding:10px;z-index:60;max-height:70vh;overflow-y:auto;animation:fadeUp .22s cubic-bezier(0.22,0.61,0.36,1) backwards">
+            <button onclick="{{ onNovaViagem }}" style="width:100%;padding:11px 12px;border-radius:9999px;border:none;background:#FF5A26;color:#FFFFFF;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px;box-shadow:0 4px 16px rgba(255,90,38,0.3)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Nova viagem
+            </button>
+            <button onclick="{{ onTemplatesClick }}" style="width:100%;padding:11px 12px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#FFFFFF;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 8 4-8 4-8-4 8-4z"/><path d="m4 10 8 4 8-4"/><path d="m4 14 8 4 8-4"/></svg> Usar template
+            </button>
+
+            <sc-if value="{{ showUpsell }}">
+              <div style="background:rgba(255,90,38,0.1);border-radius:14px;padding:12px;margin-bottom:6px;text-align:center;animation:fadeUp .2s ease backwards">
+                <div style="font-size:12.5px;color:#FF8354;font-weight:600;margin-bottom:8px">Limite gratuito: 1 viagem</div>
+                <button onclick="{{ onUpsellUnlock }}" style="width:100%;padding:9px;border-radius:9999px;border:none;background:#FF5A26;color:#FFFFFF;font-size:13px;font-weight:700;cursor:pointer">Desbloquear Pro — 10€</button>
+              </div>
+            </sc-if>
+
+            <div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 0"></div>
+            <sc-for list="{{ tripsMenuList }}" as="trip" hint-placeholder-count="1">
+              <button onclick="{{ trip.onSwitch }}" style="width:100%;padding:10px 12px;border-radius:12px;border:none;background:{{ trip.rowBg }};color:{{ trip.rowColor }};font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span>{{ trip.title }}</span>
+                <span style="font-size:11px;color:#71717A">{{ trip.dateStr }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="display:flex;position:relative;background:#121214;border:1px solid rgba(255,255,255,0.06);border-radius:9999px;padding:4px">
+        <div style="position:absolute;top:4px;bottom:4px;left:4px;width:calc(33.333% - 2.66px);border-radius:9999px;background:#FF5A26;transform:translateX({{ tabPillTranslate }});transition:transform .32s cubic-bezier(0.22,0.61,0.36,1)"></div>
+        <button onclick="{{ goRefeicoes }}" style="flex:1;position:relative;z-index:1;padding:10px 4px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;color:{{ tab1Color }};font-weight:700;font-size:12.5px;transition:color .2s ease">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v7c0 1.1.9 2 2 2h1a2 2 0 0 0 2-2V3"/><path d="M6 3v18"/><path d="M15 3v18"/><path d="M21 3c0 4-3 6-3 6s-3-2-3-6"/></svg>
+          Refeições
+        </button>
+        <button onclick="{{ goPlano }}" style="flex:1;position:relative;z-index:1;padding:10px 4px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;color:{{ tab2Color }};font-weight:700;font-size:12.5px;transition:color .2s ease">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Plano
+        </button>
+        <button onclick="{{ goCompras }}" style="flex:1;position:relative;z-index:1;padding:10px 4px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;color:{{ tab3Color }};font-weight:700;font-size:12.5px;transition:color .2s ease">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.6 12.6a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+          Compras
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:16px 16px 0">
+    <div style="display:flex;gap:8px;margin-bottom:20px;animation:fadeUp .3s cubic-bezier(0.22,0.61,0.36,1) backwards">
+      <div style="flex:1;background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 12px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <div style="font-size:18px;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em">{{ statMealsFraction }}</div>
+        <div style="font-size:10px;color:#71717A;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px">Refeições</div>
+      </div>
+      <div style="flex:1;background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 12px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.6 12.6a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+        <div style="font-size:18px;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em">{{ comprasTotal }}</div>
+        <div style="font-size:10px;color:#71717A;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px">Itens</div>
+      </div>
+      <div style="flex:1;background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 12px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <div style="font-size:18px;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em">{{ statPending }}</div>
+        <div style="font-size:10px;color:#71717A;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px">Por comprar</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:0 16px 120px">
+
+    <sc-if value="{{ isRefeicoes }}">
+      <div style="display:grid;gap:10px;animation:fadeUp .32s cubic-bezier(0.22,0.61,0.36,1) backwards">
+        <sc-for list="{{ mealsList }}" as="meal" hint-placeholder-count="3">
+          <div style="background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:20px;overflow:hidden;animation:fadeUp .34s cubic-bezier(0.22,0.61,0.36,1) backwards;animation-delay:{{ meal.delay }}ms;transition:transform .15s ease" style-active="transform:scale(0.985)">
+            <div onclick="{{ meal.onToggle }}" style="padding:16px 16px;display:flex;align-items:center;gap:14px;cursor:pointer">
+              <div style="width:44px;height:44px;border-radius:13px;background:rgba(255,90,38,0.12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">{{ meal.emoji }}</div>
+              <div style="flex:1;min-width:0">
+                <div style="display:inline-block;background:rgba(255,255,255,0.08);color:#A1A1AA;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:2px 8px;border-radius:9999px;margin-bottom:5px">{{ meal.tipo }}</div>
+                <div style="font-size:15.5px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em">{{ meal.nome }}</div>
+                <div style="font-size:12px;color:#71717A;margin-top:2px">{{ meal.ingCount }} ingredientes</div>
+              </div>
+              <button onclick="{{ meal.onEdit }}" style="width:29px;height:29px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#A1A1AA;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:color .15s ease" style-hover="color:#FF5A26">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <sc-if value="{{ meal.isConfirm }}" hint-placeholder-val="{{ false }}">
+                <div onclick="{{ stop }}" style="display:flex;gap:4px;flex-shrink:0">
+                  <button onclick="{{ meal.onConfirmDelete }}" style="padding:5px 10px;border-radius:9999px;border:none;background:#FF5A5A;color:#FFFFFF;font-size:11px;font-weight:700;cursor:pointer">Sim</button>
+                  <button onclick="{{ meal.onCancelDelete }}" style="padding:5px 10px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#A1A1AA;font-size:11px;font-weight:700;cursor:pointer">Não</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ meal.isConfirmInverse }}" hint-placeholder-val="{{ true }}">
+                <button onclick="{{ meal.onAskDelete }}" style="width:29px;height:29px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#A1A1AA;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:color .15s ease" style-hover="color:#FF5A5A">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                </button>
+              </sc-if>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#52525B;flex-shrink:0;transform:rotate({{ meal.chevronDeg }}deg);transition:transform .25s cubic-bezier(0.22,0.61,0.36,1)"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <sc-if value="{{ meal.isOpen }}">
+              <div style="border-top:1px solid rgba(255,255,255,0.07);padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px;animation:fadeUp .25s ease backwards">
+                <sc-for list="{{ meal.ingredientesList }}" as="ing" hint-placeholder-count="4">
+                  <span style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:9999px;padding:5px 12px;font-size:12.5px;color:#D4D4D8">{{ ing.text }}</span>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+
+        <button onclick="{{ onAddMealOpen }}" style="width:100%;padding:14px;border-radius:9999px;border:1px dashed rgba(255,90,38,0.5);background:rgba(255,90,38,0.08);color:#FF5A26;font-weight:700;font-size:13.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s ease" style-hover="background:rgba(255,90,38,0.14)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Nova Refeição
+        </button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPlano }}">
+      <div style="animation:fadeUp .32s cubic-bezier(0.22,0.61,0.36,1) backwards">
+      <sc-if value="{{ hasMeals }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:20px 22px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#FFFFFF;letter-spacing:-0.01em">Plano de Refeições</div>
+            <div style="font-size:12px;color:#71717A;margin-top:4px">{{ filledSlotsCount }} de {{ totalSlotsCount }} refeições planeadas</div>
+          </div>
+          <div style="position:relative;width:60px;height:60px;flex-shrink:0">
+            <svg width="60" height="60" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
+              <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+              <circle cx="32" cy="32" r="27" fill="none" stroke="#FF5A26" stroke-width="6" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="{{ ringOffsetPlano }}"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#FFFFFF;letter-spacing:-0.02em">{{ pctPlanoDisplay }}<span style="font-size:9px;opacity:0.6">%</span></div>
+          </div>
+        </div>
+
+        <sc-for list="{{ planoDias }}" as="dia" hint-placeholder-count="3">
+          <div style="margin-bottom:26px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span style="font-size:16px">{{ dia.diaEmoji }}</span>
+              <span style="font-size:14.5px;font-weight:700;color:#FFFFFF">{{ dia.dia }}</span>
+              <div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>
+            </div>
+            <div style="display:grid;gap:8px">
+              <sc-for list="{{ dia.slots }}" as="slot" hint-placeholder-count="2">
+                <div style="background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden">
+                  <div onclick="{{ slot.onToggleOpen }}" style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+                    <span style="font-size:17px;flex-shrink:0">{{ slot.emoji }}</span>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:13.5px;font-weight:700;color:#FFFFFF">{{ slot.slot }}</div>
+                      <div style="font-size:12px;color:{{ slot.statusColor }};margin-top:1px">{{ slot.statusText }}</div>
+                    </div>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#52525B;flex-shrink:0;transform:rotate({{ slot.chevronDeg }}deg);transition:transform .25s cubic-bezier(0.22,0.61,0.36,1)"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                  <sc-if value="{{ slot.isOpen }}">
+                    <div style="border-top:1px solid rgba(255,255,255,0.07);padding:12px 16px;display:grid;gap:5px;animation:fadeUp .22s ease backwards">
+                      <sc-for list="{{ slot.options }}" as="opt" hint-placeholder-count="3">
+                        <button onclick="{{ opt.onSelect }}" style="width:100%;text-align:left;padding:9px 12px;border-radius:12px;border:none;cursor:pointer;background:{{ opt.bg }};display:flex;align-items:center;gap:10px">
+                          <span style="font-size:16px;flex-shrink:0">{{ opt.emoji }}</span>
+                          <span style="flex:1;font-size:13px;font-weight:600;color:#FFFFFF">{{ opt.nome }}</span>
+                          <sc-if value="{{ opt.selected }}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF5A26" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                          </sc-if>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{ noMeals }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:50px 24px;text-align:center">
+          <div style="font-size:15px;font-weight:700;color:#FFFFFF;margin-bottom:6px">Ainda sem refeições</div>
+          <div style="font-size:13px;color:#71717A">Adiciona refeições na aba Refeições primeiro</div>
+        </div>
+      </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCompras }}">
+      <div style="animation:fadeUp .32s cubic-bezier(0.22,0.61,0.36,1) backwards">
+      <div style="background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:20px 22px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <div>
+          <div style="font-size:11px;color:#71717A;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Progresso de compras</div>
+          <div style="font-size:15px;font-weight:700;color:#FFFFFF">{{ comprasComprados }} <span style="color:#71717A;font-weight:500">/ {{ comprasTotal }}</span></div>
+        </div>
+        <div style="position:relative;width:60px;height:60px;flex-shrink:0">
+          <svg width="60" height="60" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
+            <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+            <circle cx="32" cy="32" r="27" fill="none" stroke="{{ pctComprasColor }}" stroke-width="6" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="{{ ringOffsetCompras }}"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#FFFFFF;letter-spacing:-0.02em">{{ pctComprasDisplay }}<span style="font-size:9px;opacity:0.6">%</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button onclick="{{ onRecategorize }}" style="flex:1;padding:11px 12px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#FFFFFF;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s ease" style-hover="background:rgba(255,255,255,0.13)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF5A26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="{{ aiSpinStyle }}"><path d="M12 3v4M12 17v4M5 12H1M23 12h-4M18.4 5.6l-2 2M7.6 16.4l-2 2M18.4 18.4l-2-2M7.6 7.6l-2-2"/></svg>
+          {{ recategorizeLabel }}
+        </button>
+        <button onclick="{{ onResetTicks }}" title="Limpar" style="padding:11px 13px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#A1A1AA;cursor:pointer;display:flex;align-items:center;transition:background .15s ease" style-hover="background:rgba(255,255,255,0.13)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button onclick="{{ onExportPdf }}" title="PDF" style="padding:11px 13px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#A1A1AA;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;transition:background .15s ease" style-hover="background:rgba(255,255,255,0.13)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg> PDF
+        </button>
+      </div>
+
+      <sc-for list="{{ groups }}" as="grp" hint-placeholder-count="3">
+        <div style="margin-bottom:22px;animation:fadeUp .3s cubic-bezier(0.22,0.61,0.36,1) backwards;animation-delay:{{ grp.delay }}ms">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="width:8px;height:8px;border-radius:9999px;background:{{ grp.color }};flex-shrink:0"></span>
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:{{ grp.color }};flex:1">{{ grp.label }}</span>
+            <span style="font-size:11px;color:#52525B">{{ grp.desc }}</span>
+            <span style="font-size:11px;font-weight:700;color:#A1A1AA;background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:9999px">{{ grp.done }}/{{ grp.count }}</span>
+          </div>
+          <div style="display:grid;gap:6px">
+            <sc-for list="{{ grp.items }}" as="item" hint-placeholder-count="3">
+              <div style="background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden">
+                <sc-if value="{{ item.isConfirm }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:12px 14px;display:flex;align-items:center;gap:10px">
+                    <span style="flex:1;font-size:13px;font-weight:600;color:#FF5A5A">Remover "{{ item.nome }}"?</span>
+                    <button onclick="{{ item.onConfirmDelete }}" style="padding:6px 12px;border-radius:9999px;border:none;background:#FF5A5A;color:#FFFFFF;font-size:12px;font-weight:700;cursor:pointer">Sim</button>
+                    <button onclick="{{ item.onCancelDelete }}" style="padding:6px 12px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#A1A1AA;font-size:12px;font-weight:700;cursor:pointer">Não</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ item.isNotConfirm }}" hint-placeholder-val="{{ true }}">
+                  <div style="padding:12px 14px;display:flex;align-items:center;gap:11px">
+                    <button onclick="{{ item.onToggle }}" style="width:22px;height:22px;border-radius:8px;border:1.6px solid {{ item.checkBorder }};background:{{ item.checkBg }};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;animation:{{ item.checkAnim }}">
+                      <sc-if value="{{ item.comprado }}">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                      </sc-if>
+                    </button>
+                    <span style="flex:1;font-size:14px;font-weight:500;color:{{ item.textColor }};text-decoration:{{ item.textDecoration }};opacity:{{ item.textOpacity }};transition:opacity .2s ease">{{ item.nome }}</span>
+                    <sc-if value="{{ item.hasAssignee }}">
+                      <span style="font-size:10.5px;font-weight:700;background:rgba(255,255,255,0.08);color:#A1A1AA;padding:3px 8px;border-radius:9999px;flex-shrink:0">{{ item.assignee }}</span>
+                    </sc-if>
+                    <sc-if value="{{ item.isEditQty }}" hint-placeholder-val="{{ false }}">
+                      <input value="{{ qtyDraft }}" oninput="{{ onQtyChange }}" onblur="{{ item.onQtySave }}" onkeydown="{{ item.onQtyKeyDown }}" autofocus="{{ true }}" onclick="{{ stop }}" style="width:64px;padding:4px 8px;border-radius:9999px;border:1px solid #FF5A26;background:#000000;color:#FFFFFF;font-size:12px;text-align:center;outline:none" />
+                    </sc-if>
+                    <sc-if value="{{ item.isNotEditQty }}" hint-placeholder-val="{{ true }}">
+                      <span onclick="{{ item.onEditQtyStart }}" style="font-size:11.5px;color:#52525B;font-weight:600;border-bottom:1px dashed #3F3F46;padding-bottom:1px;cursor:text;flex-shrink:0">{{ item.qtdLabel }}</span>
+                    </sc-if>
+                    <button onclick="{{ item.onAskDelete }}" style="background:none;border:none;color:#52525B;cursor:pointer;display:flex;align-items:center;flex-shrink:0;padding:2px;transition:color .15s ease" style-hover="color:#FF5A5A">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                    </button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <input value="{{ novoItem }}" oninput="{{ onNovoItemChange }}" onkeydown="{{ onItemKeyDown }}" placeholder="Adicionar item…" style="flex:1;border:1px solid rgba(255,255,255,0.08);outline:none;background:#121214;color:#FFFFFF;border-radius:9999px;font-size:14px;padding:13px 18px;transition:border-color .15s ease" style-focus="border-color:#FF5A26" />
+        <sc-if value="{{ hasNovoItem }}">
+          <button onclick="{{ onAddItemSubmit }}" style="width:38px;height:38px;border-radius:9999px;border:none;background:#FF5A26;color:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 4px 14px rgba(255,90,38,0.35)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </sc-if>
+      </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="position:fixed;inset:0;max-width:480px;margin:0 auto;z-index:200;pointer-events:{{ addMealPointerEvents }}">
+    <div onclick="{{ onCloseAddMeal }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);opacity:{{ addMealOpacity }};transition:opacity .3s ease"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow-y:auto;background:#121214;border-radius:24px 24px 0 0;border-top:1px solid rgba(255,255,255,0.1);padding:24px 20px 28px;transform:translateY({{ addMealOffset }});transition:transform .34s cubic-bezier(0.22,0.61,0.36,1)">
+      <div style="font-size:19px;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em;margin-bottom:18px">{{ mealModalTitle }}</div>
+      <div style="font-size:11px;font-weight:700;color:#71717A;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Emoji</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+        <sc-for list="{{ emojiList }}" as="em" hint-placeholder-count="12">
+          <button onclick="{{ em.onClick }}" style="width:38px;height:38px;border-radius:12px;border:1.5px solid {{ em.borderColor }};background:{{ em.bg }};font-size:19px;cursor:pointer">{{ em.char }}</button>
+        </sc-for>
+      </div>
+      <input value="{{ addMealDraft.nome }}" oninput="{{ onDraftNomeChange }}" placeholder="Nome (ex: Lasanha)" style="width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:#000000;color:#FFFFFF;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box;transition:border-color .15s ease" style-focus="border-color:#FF5A26" />
+      <input value="{{ addMealDraft.tipo }}" oninput="{{ onDraftTipoChange }}" placeholder="Tipo (ex: Jantar, Petisco…)" style="width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:#000000;color:#FFFFFF;font-size:14px;margin-bottom:18px;outline:none;box-sizing:border-box;transition:border-color .15s ease" style-focus="border-color:#FF5A26" />
+      <div style="font-size:11px;font-weight:700;color:#71717A;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Ingredientes</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:20px">
+        <sc-for list="{{ addMealIngredients }}" as="ing" hint-placeholder-count="3">
+          <span style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.08);border-radius:9999px;padding:5px 8px 5px 12px;font-size:12.5px;color:#D4D4D8;display:flex;align-items:center;gap:6px">
+            {{ ing.text }}
+            <button onclick="{{ ing.onRemove }}" style="background:none;border:none;color:#71717A;cursor:pointer;padding:0;display:flex"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </span>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:22px">
+        <input value="{{ addMealNewIng }}" oninput="{{ onDraftNewIngChange }}" onkeydown="{{ onIngKeyDown }}" placeholder="Adicionar ingrediente…" style="flex:1;padding:12px 16px;border-radius:9999px;border:1px solid rgba(255,255,255,0.08);background:#000000;color:#FFFFFF;font-size:13.5px;outline:none;transition:border-color .15s ease" style-focus="border-color:#FF5A26" />
+        <button onclick="{{ onDraftAddIng }}" style="padding:0 16px;border-radius:9999px;border:none;background:rgba(255,255,255,0.1);color:#FFFFFF;cursor:pointer;display:flex;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      <button onclick="{{ onSubmitMeal }}" style="width:100%;padding:16px;border-radius:9999px;border:none;background:{{ submitMealBg }};color:#FFFFFF;font-weight:700;font-size:14.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(255,90,38,0.32);transition:opacity .15s ease" style-hover="opacity:0.9" style-active="transform:scale(0.98)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> {{ mealSubmitLabel }}
+      </button>
+    </div>
+  </div>
+
+  <div style="position:fixed;inset:0;max-width:480px;margin:0 auto;z-index:200;pointer-events:{{ sharePointerEvents }}">
+    <div onclick="{{ onCloseShare }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);opacity:{{ shareOpacity }};transition:opacity .3s ease"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow-y:auto;background:#121214;border-radius:24px 24px 0 0;border-top:1px solid rgba(255,255,255,0.1);padding:24px 20px 28px;transform:translateY({{ shareOffset }});transition:transform .34s cubic-bezier(0.22,0.61,0.36,1)">
+      <div style="font-size:19px;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em;margin-bottom:18px">Partilhar lista</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);margin-bottom:16px">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/></svg>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#34D399">Link em tempo real ativo</div>
+          <div style="font-size:11.5px;color:#71717A;margin-top:1px">Qualquer pessoa com o link vê as mesmas alterações</div>
+        </div>
+      </div>
+      <div style="background:#000000;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+        <div style="flex:1;font-size:12.5px;color:#D4D4D8;word-break:break-all">{{ shareUrl }}</div>
+        <button onclick="{{ onCopyShare }}" style="width:32px;height:32px;border-radius:9999px;border:none;background:{{ copyBg }};color:{{ copyColor }};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <button onclick="{{ onCopyShare }}" style="width:100%;padding:15px;border-radius:9999px;border:none;background:#FF5A26;color:#FFFFFF;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;box-shadow:0 6px 20px rgba(255,90,38,0.32);transition:opacity .15s ease" style-hover="opacity:0.9">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> {{ copyLabel }}
+      </button>
+      <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:16px">
+        <div style="font-size:11px;font-weight:700;color:#71717A;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px">Entrar noutra lista</div>
+        <div style="display:flex;gap:8px">
+          <input value="{{ joinLink }}" oninput="{{ onJoinLinkChange }}" onkeydown="{{ onJoinKeyDown }}" placeholder="Cola aqui o link ou código…" style="flex:1;padding:12px 16px;border-radius:9999px;border:1px solid {{ joinBorderColor }};background:#000000;color:#FFFFFF;font-size:13px;outline:none" />
+          <button onclick="{{ onDoJoin }}" style="padding:0 18px;border-radius:9999px;border:none;background:rgba(255,255,255,0.1);color:#FFFFFF;font-weight:700;font-size:13px;cursor:pointer">Entrar</button>
+        </div>
+        <sc-if value="{{ joinError }}">
+          <div style="font-size:12px;color:#FF5A5A;margin-top:6px">Link inválido — tenta novamente</div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:fixed;inset:0;max-width:480px;margin:0 auto;z-index:210;pointer-events:{{ tripsModalPointerEvents }}">
+    <div onclick="{{ onCloseCreateTrip }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);opacity:{{ createTripOpacity }};transition:opacity .3s ease"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#121214;border-radius:24px 24px 0 0;border-top:1px solid rgba(255,255,255,0.1);padding:24px 20px 28px;transform:translateY({{ createTripOffset }});transition:transform .34s cubic-bezier(0.22,0.61,0.36,1)">
+      <div style="font-size:19px;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em;margin-bottom:6px">Nova viagem</div>
+      <div style="font-size:13px;color:#71717A;margin-bottom:18px">Cria uma nova viagem para organizar as refeições e compras.</div>
+      <input value="{{ newTripName }}" oninput="{{ onNewTripNameChange }}" onkeydown="{{ onNewTripKeyDown }}" placeholder="Nome da viagem…" style="width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:#000000;color:#FFFFFF;font-size:14px;margin-bottom:18px;outline:none;box-sizing:border-box;transition:border-color .15s ease" style-focus="border-color:#FF5A26" />
+      <button onclick="{{ onCreateTripSubmit }}" style="width:100%;padding:15px;border-radius:9999px;border:none;background:#FF5A26;color:#FFFFFF;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 6px 20px rgba(255,90,38,0.32)">Criar viagem</button>
+    </div>
+  </div>
+
+  <div style="position:fixed;inset:0;max-width:480px;margin:0 auto;z-index:210;pointer-events:{{ templatesModalPointerEvents }}">
+    <div onclick="{{ onCloseTemplates }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);opacity:{{ templatesOpacity }};transition:opacity .3s ease"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;max-height:80vh;overflow-y:auto;background:#121214;border-radius:24px 24px 0 0;border-top:1px solid rgba(255,255,255,0.1);padding:24px 20px 28px;transform:translateY({{ templatesOffset }});transition:transform .34s cubic-bezier(0.22,0.61,0.36,1)">
+      <div style="font-size:19px;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em;margin-bottom:18px">Escolhe um template</div>
+      <div style="display:grid;gap:10px">
+        <sc-for list="{{ templatesList }}" as="tmpl" hint-placeholder-count="4">
+          <button onclick="{{ tmpl.onUse }}" style="width:100%;text-align:left;padding:15px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:#18181B;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s ease" style-hover="border-color:rgba(255,90,38,0.4)">
+            <span style="font-size:23px">{{ tmpl.emoji }}</span>
+            <div>
+              <div style="font-size:13.5px;font-weight:700;color:#FFFFFF">{{ tmpl.name }}</div>
+              <div style="font-size:12px;color:#71717A;margin-top:1px">{{ tmpl.desc }}</div>
+            </div>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:fixed;inset:0;max-width:480px;margin:0 auto;z-index:220;background:#050505;transform:translateX({{ pricingOffset }});visibility:{{ pricingVisibility }};pointer-events:{{ pricingPointerEvents }};transition:transform .34s cubic-bezier(0.22,0.61,0.36,1);overflow-y:auto">
+    <div style="padding:16px">
+      <button onclick="{{ onClosePricing }}" style="width:37px;height:37px;border-radius:9999px;border:none;background:rgba(255,255,255,0.08);color:#A1A1AA;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:28px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="text-align:center;margin-bottom:30px">
+        <div style="width:64px;height:64px;border-radius:9999px;background:rgba(255,90,38,0.14);display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FF5A26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l4 4 6-8 6 8 4-4-2 13H4L2 7z"/></svg>
+        </div>
+        <div style="font-size:34px;font-weight:800;color:#FFFFFF;margin-bottom:6px;letter-spacing:-0.02em">10€ por ano</div>
+        <div style="font-size:13.5px;color:#71717A">Um pagamento. Sem mensalidades.</div>
+      </div>
+      <div style="background:#121214;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:20px;margin-bottom:24px">
+        <sc-for list="{{ pricingFeatures }}" as="feat" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>
+            <span style="font-size:14px;color:#D4D4D8;font-weight:500">{{ feat.text }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <button onclick="{{ onUnlockPro }}" style="width:100%;padding:17px;border-radius:9999px;border:none;background:#FF5A26;color:#FFFFFF;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:14px;box-shadow:0 8px 26px rgba(255,90,38,0.35);transition:opacity .15s ease" style-hover="opacity:0.9" style-active="transform:scale(0.98)">Desbloquear GroupGrub Pro — 10€</button>
+      <div style="text-align:center;font-size:12px;color:#52525B">Pagamento único. Sem renovação automática.</div>
+    </div>
+  </div>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ null }}">
+    <div style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%);max-width:420px;background:#18181B;border:1px solid rgba(255,255,255,0.1);color:#FFFFFF;padding:12px 22px;border-radius:9999px;font-size:13.5px;font-weight:600;box-shadow:0 14px 34px rgba(0,0,0,0.6);z-index:300;white-space:nowrap;animation:fadeUp .25s cubic-bezier(0.22,0.61,0.36,1)">{{ toast.msg }}</div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const EMOJIS = ['🍽️','🍖','🥗','🍝','🥪','🍕','🍳','🥘','🍰','🥤','🍓','🌮'];
+const CATS = {
+  duradouro:   { label: 'Duradouro',   color: '#FBBF24', desc: 'Compra com antecedência' },
+  congelado:   { label: 'Congelado',   color: '#38BDF8', desc: 'Conserva no congelador' },
+  refrigerado: { label: 'Refrigerado', color: '#A78BFA', desc: '1–2 dias antes' },
+  fresco:      { label: 'Fresco',      color: '#34D399', desc: 'Comprar na hora' },
+  outro:       { label: 'Outro',       color: '#71717A', desc: '' },
+};
+const CAT_ORDER = ['duradouro','congelado','refrigerado','fresco','outro'];
+const SLOTS = [
+  { dia: 'Sexta-feira', diaEmoji: '🌆', items: [ { key: 'sexta-jantar', slot: 'Jantar', emoji: '🌙' } ] },
+  { dia: 'Sábado',      diaEmoji: '☀️', items: [ { key: 'sabado-almoco', slot: 'Almoço', emoji: '☀️' }, { key: 'sabado-jantar', slot: 'Jantar', emoji: '🌙' } ] },
+  { dia: 'Domingo',     diaEmoji: '🌅', items: [ { key: 'domingo-almoco', slot: 'Almoço', emoji: '☀️' }, { key: 'domingo-lanche', slot: 'Lanche', emoji: '🌇' } ] },
+];
+const TEMPLATES = [
+  { key: 'praia',    name: 'Fim de Semana de Praia',    emoji: '🏖️', desc: 'Churrascos, saladas e petiscos leves' },
+  { key: 'montanha', name: 'Escapadinha na Montanha',   emoji: '⛰️', desc: 'Pratos quentes e reconfortantes' },
+  { key: 'familia',  name: 'Reunião de Família',         emoji: '👨‍👩‍👧‍👦', desc: 'Refeições para grupos grandes' },
+  { key: 'cidade',   name: 'Fim de Semana na Cidade',    emoji: '🏙️', desc: 'Refeições rápidas e práticas' },
+];
+const RING_CIRC = 169.6;
+
+function categorize(nomeRaw) {
+  const n = (nomeRaw || '').toLowerCase();
+  if (/carne|frango|peixe|marisco|fruta|legum|salada|alface|tomate|pepino/.test(n)) return 'fresco';
+  if (/gelad|congelad|gelo/.test(n)) return 'congelado';
+  if (/queijo|iogurte|leite|manteiga|fiambre|presunto|feta|mozarela/.test(n)) return 'refrigerado';
+  if (/arroz|massa|conserva|água|azeite|sal|açúcar|farinha|vinho|cerveja|café|carvão|molho|pão/.test(n)) return 'duradouro';
+  return 'outro';
+}
+
+class Component extends DCLogic {
+  state = {
+    tab: 'refeicoes',
+    scrolled: false,
+    refreshing: false,
+    meals: [
+      { id: 'm1', emoji: '🍖', nome: 'Churrasco de Grupo', tipo: 'Jantar', ingredientes: ['Carne para churrasco','Carvão','Pão','Salada mista','Molho'] },
+      { id: 'm2', emoji: '🥗', nome: 'Salada Fresca', tipo: 'Almoço', ingredientes: ['Alface','Tomate','Pepino','Queijo feta','Azeite'] },
+      { id: 'm3', emoji: '🍝', nome: 'Massa ao Forno', tipo: 'Jantar', ingredientes: ['Massa','Queijo mozarela','Tomate pelado','Carne picada'] },
+      { id: 'm4', emoji: '🥪', nome: 'Sandes e Fruta', tipo: 'Almoço', ingredientes: ['Pão','Fiambre','Queijo','Fruta variada'] },
+    ],
+    expandedMealId: null,
+    confirmDeleteMealId: null,
+    showAddMeal: false,
+    addMealEditingId: null,
+    addMealDraft: { emoji: EMOJIS[0], nome: '', tipo: '', ingredientes: [] },
+    addMealNewIng: '',
+    items: [
+      { id: 'i1', nome: 'Carne para churrasco', categoria: 'fresco', comprado: false, qtd: '2kg', assignee: '' },
+      { id: 'i2', nome: 'Carvão', categoria: 'duradouro', comprado: true, qtd: '', assignee: '' },
+      { id: 'i3', nome: 'Pão', categoria: 'duradouro', comprado: false, qtd: '', assignee: '' },
+      { id: 'i4', nome: 'Salada mista', categoria: 'fresco', comprado: false, qtd: '', assignee: 'Ana' },
+      { id: 'i5', nome: 'Molho', categoria: 'duradouro', comprado: false, qtd: '', assignee: '' },
+      { id: 'i6', nome: 'Alface', categoria: 'fresco', comprado: false, qtd: '', assignee: '' },
+      { id: 'i7', nome: 'Queijo feta', categoria: 'refrigerado', comprado: false, qtd: '', assignee: '' },
+      { id: 'i8', nome: 'Massa', categoria: 'duradouro', comprado: false, qtd: '', assignee: '' },
+      { id: 'i9', nome: 'Queijo mozarela', categoria: 'refrigerado', comprado: false, qtd: '', assignee: '' },
+      { id: 'i10', nome: 'Água', categoria: 'duradouro', comprado: false, qtd: '6L', assignee: '' },
+      { id: 'i11', nome: 'Gelo', categoria: 'congelado', comprado: false, qtd: '', assignee: '' },
+    ],
+    confirmDeleteItemId: null,
+    editQtyItemId: null,
+    qtyDraft: '',
+    novoItem: '',
+    plano: { 'sexta-jantar': 'm1', 'sabado-almoco': 'm2' },
+    openSlotKey: null,
+    pessoas: ['Ana','Rui','Marta'],
+    trips: [ { id: 't1', title: 'Fim de Semana na Serra', created_at: '2026-06-12' } ],
+    currentTripId: 't1',
+    showTripsMenu: false,
+    showUpsell: false,
+    showCreateTrip: false,
+    newTripName: '',
+    showTemplates: false,
+    isPro: false,
+    showShare: false,
+    shareCopied: false,
+    joinLink: '',
+    joinError: false,
+    showPricing: false,
+    aiLoading: false,
+    toast: null,
+    animPlano: 0,
+    animCompras: 0,
+  };
+
+  computePctPlano() {
+    const total = SLOTS.reduce((a,d) => a + d.items.length, 0);
+    const filled = Object.keys(this.state.plano).filter(k => this.state.plano[k]).length;
+    return total ? Math.round(filled / total * 100) : 0;
+  }
+  computePctCompras() {
+    const total = this.state.items.length;
+    const done = this.state.items.filter(i => i.comprado).length;
+    return total ? Math.round(done / total * 100) : 0;
+  }
+  startCountUp(key, target) {
+    const startVal = this.state[key] || 0;
+    if (Math.round(startVal) === target) return;
+    cancelAnimationFrame(this['_raf_' + key]);
+    const startTime = performance.now();
+    const duration = 650;
+    const step = (now) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const val = startVal + (target - startVal) * eased;
+      this.setState({ [key]: val });
+      if (t < 1) this['_raf_' + key] = requestAnimationFrame(step);
+    };
+    this['_raf_' + key] = requestAnimationFrame(step);
+  }
+
+  componentDidMount() {
+    this._onScroll = () => {
+      const s = window.scrollY > 4;
+      if (s !== this.state.scrolled) this.setState({ scrolled: s });
+    };
+    window.addEventListener('scroll', this._onScroll);
+    this._lastTp = 0; this._lastTc = 0;
+    setTimeout(() => {
+      this._lastTp = this.computePctPlano(); this._lastTc = this.computePctCompras();
+      this.startCountUp('animPlano', this._lastTp);
+      this.startCountUp('animCompras', this._lastTc);
+    }, 150);
+  }
+  componentDidUpdate() {
+    const tp = this.computePctPlano();
+    const tc = this.computePctCompras();
+    if (this._lastTp !== tp) { this._lastTp = tp; this.startCountUp('animPlano', tp); }
+    if (this._lastTc !== tc) { this._lastTc = tc; this.startCountUp('animCompras', tc); }
+  }
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this._onScroll);
+    clearTimeout(this._toastTimer);
+    cancelAnimationFrame(this._raf_animPlano);
+    cancelAnimationFrame(this._raf_animCompras);
+  }
+
+  showToast(msg) {
+    this.setState({ toast: { msg } });
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => this.setState({ toast: null }), 2600);
+  }
+
+  setTab(tab) { this.setState({ tab }); }
+
+  onRefresh() {
+    this.setState({ refreshing: true });
+    setTimeout(() => { this.setState({ refreshing: false }); this.showToast('Atualizado!'); }, 700);
+  }
+
+  toggleMeal(id) { this.setState({ expandedMealId: this.state.expandedMealId === id ? null : id }); }
+
+  openAddMeal() {
+    this.setState({ showAddMeal: true, addMealEditingId: null, addMealDraft: { emoji: EMOJIS[0], nome: '', tipo: '', ingredientes: [] }, addMealNewIng: '' });
+  }
+  openEditMeal(meal) {
+    this.setState({ showAddMeal: true, addMealEditingId: meal.id, addMealDraft: { emoji: meal.emoji, nome: meal.nome, tipo: meal.tipo, ingredientes: [...meal.ingredientes] }, addMealNewIng: '' });
+  }
+  closeAddMeal() { this.setState({ showAddMeal: false }); }
+
+  submitMeal() {
+    const draft = this.state.addMealDraft;
+    if (!draft.nome.trim()) return;
+    let meals;
+    if (this.state.addMealEditingId) {
+      meals = this.state.meals.map(m => m.id === this.state.addMealEditingId ? { ...m, ...draft } : m);
+    } else {
+      meals = [...this.state.meals, { id: 'm' + Date.now(), ...draft }];
+    }
+    const existing = new Set(this.state.items.map(i => i.nome.toLowerCase()));
+    const newItems = draft.ingredientes.filter(ing => !existing.has(ing.toLowerCase()))
+      .map(ing => ({ id: 'i' + Date.now() + Math.random(), nome: ing, categoria: categorize(ing), comprado: false, qtd: '', assignee: '' }));
+    this.setState({ meals, items: [...this.state.items, ...newItems], showAddMeal: false });
+    this.showToast(newItems.length ? `Refeição guardada · ${newItems.length} ingrediente(s) na lista` : 'Refeição guardada');
+  }
+
+  deleteMeal(id) {
+    this.setState({
+      meals: this.state.meals.filter(m => m.id !== id),
+      expandedMealId: this.state.expandedMealId === id ? null : this.state.expandedMealId,
+      confirmDeleteMealId: null,
+    });
+  }
+
+  toggleItem(id) {
+    this.setState({ items: this.state.items.map(i => i.id === id ? { ...i, comprado: !i.comprado } : i) });
+  }
+  deleteItem(id) { this.setState({ items: this.state.items.filter(i => i.id !== id), confirmDeleteItemId: null }); }
+  saveQty(id) {
+    this.setState({ items: this.state.items.map(i => i.id === id ? { ...i, qtd: this.state.qtyDraft } : i), editQtyItemId: null });
+  }
+  selectAssignee(id, person) {
+    this.setState({ items: this.state.items.map(i => i.id === id ? { ...i, assignee: i.assignee === person ? '' : person } : i) });
+  }
+  addItem() {
+    const nome = this.state.novoItem.trim();
+    if (!nome) return;
+    const item = { id: 'i' + Date.now(), nome, categoria: categorize(nome), comprado: false, qtd: '', assignee: '' };
+    this.setState({ items: [...this.state.items, item], novoItem: '' });
+    this.showToast(`"${nome}" adicionado`);
+  }
+  onRecategorize() {
+    if (this.state.aiLoading) return;
+    this.setState({ aiLoading: true });
+    setTimeout(() => {
+      this.setState({ items: this.state.items.map(i => ({ ...i, categoria: categorize(i.nome) })), aiLoading: false });
+      this.showToast('Itens recategorizados');
+    }, 900);
+  }
+  onResetTicks() {
+    this.setState({ items: this.state.items.map(i => ({ ...i, comprado: false })) });
+    this.showToast('Registos limpos');
+  }
+  onExportPdf() { this.showToast('Lista exportada em PDF'); }
+
+  toggleSlot(key) { this.setState({ openSlotKey: this.state.openSlotKey === key ? null : key }); }
+  selectSlotMeal(key, mealId) {
+    this.setState({ plano: { ...this.state.plano, [key]: mealId }, openSlotKey: null });
+  }
+
+  toggleTripsMenu() { this.setState({ showTripsMenu: !this.state.showTripsMenu, showUpsell: false }); }
+  onNovaViagem() {
+    if (!this.state.isPro && this.state.trips.length >= 1) { this.setState({ showUpsell: true }); return; }
+    this.setState({ showCreateTrip: true, showTripsMenu: false });
+  }
+  onTemplatesClick() {
+    if (!this.state.isPro && this.state.trips.length >= 1) { this.setState({ showUpsell: true }); return; }
+    this.setState({ showTemplates: true, showTripsMenu: false });
+  }
+  switchTrip(id) { this.setState({ currentTripId: id, showTripsMenu: false }); }
+  createTrip() {
+    const title = this.state.newTripName.trim() || 'Nova Viagem';
+    const trip = { id: 't' + Date.now(), title, created_at: new Date().toISOString().slice(0,10) };
+    this.setState({ trips: [...this.state.trips, trip], currentTripId: trip.id, showCreateTrip: false, newTripName: '' });
+    this.showToast('Viagem criada');
+  }
+  useTemplate(tmpl) {
+    const trip = { id: 't' + Date.now(), title: tmpl.name, created_at: new Date().toISOString().slice(0,10) };
+    this.setState({ trips: [...this.state.trips, trip], currentTripId: trip.id, showTemplates: false });
+    this.showToast('Viagem criada a partir do template');
+  }
+
+  onUnlockPro() {
+    this.setState({ isPro: true, showPricing: false, showUpsell: false });
+    this.showToast('Bem-vindo ao GroupGrub Pro!');
+  }
+
+  copyShare() {
+    const url = this.shareUrl();
+    if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+    this.setState({ shareCopied: true });
+    setTimeout(() => this.setState({ shareCopied: false }), 2000);
+  }
+  shareUrl() { return `https://groupgrub.app/t/${this.state.currentTripId}`; }
+  doJoin() {
+    if (this.state.joinLink.trim().length < 4) { this.setState({ joinError: true }); return; }
+    this.showToast('A entrar na lista…');
+    this.setState({ showShare: false, joinLink: '', joinError: false });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const tabIndex = s.tab === 'refeicoes' ? 0 : s.tab === 'plano' ? 1 : 2;
+    const accent = '#FF5A26', muted = '#71717A';
+
+    const mealsList = s.meals.map((m, i) => ({
+      ...m,
+      isOpen: s.expandedMealId === m.id,
+      isConfirm: s.confirmDeleteMealId === m.id,
+      isConfirmInverse: s.confirmDeleteMealId !== m.id,
+      ingCount: m.ingredientes.length,
+      chevronDeg: s.expandedMealId === m.id ? 180 : 0,
+      delay: i * 40,
+      ingredientesList: m.ingredientes.map(t => ({ text: t })),
+      onToggle: () => this.toggleMeal(m.id),
+      onEdit: (e) => { e.stopPropagation(); this.openEditMeal(m); },
+      onAskDelete: (e) => { e.stopPropagation(); this.setState({ confirmDeleteMealId: m.id }); },
+      onConfirmDelete: (e) => { e.stopPropagation(); this.deleteMeal(m.id); },
+      onCancelDelete: (e) => { e.stopPropagation(); this.setState({ confirmDeleteMealId: null }); },
+    }));
+
+    const planoDias = SLOTS.map(dia => ({
+      dia: dia.dia,
+      diaEmoji: dia.diaEmoji,
+      slots: dia.items.map(sl => {
+        const mealId = s.plano[sl.key] || null;
+        const meal = mealId ? s.meals.find(m => m.id === mealId) : null;
+        const isOpen = s.openSlotKey === sl.key;
+        return {
+          key: sl.key, slot: sl.slot, emoji: sl.emoji,
+          isOpen, chevronDeg: isOpen ? 180 : 0,
+          statusText: meal ? meal.nome : 'Toca para escolher uma refeição',
+          statusColor: meal ? '#34D399' : '#52525B',
+          onToggleOpen: () => this.toggleSlot(sl.key),
+          options: s.meals.map(m => ({
+            id: m.id, emoji: m.emoji, nome: m.nome,
+            selected: m.id === mealId,
+            bg: m.id === mealId ? 'rgba(255,90,38,0.14)' : 'rgba(255,255,255,0.06)',
+            onSelect: () => this.selectSlotMeal(sl.key, m.id),
+          })),
+        };
+      }),
+    }));
+    const totalSlotsCount = SLOTS.reduce((a,d) => a + d.items.length, 0);
+    const filledSlotsCount = Object.keys(s.plano).filter(k => s.plano[k]).length;
+    const pctPlanoTarget = this.computePctPlano();
+    const pctPlanoDisplay = Math.round(s.animPlano || 0);
+    const ringOffsetPlano = RING_CIRC * (1 - (s.animPlano || 0) / 100);
+
+    const groups = CAT_ORDER.map((key, gi) => {
+      const cfg = CATS[key];
+      const its = s.items.filter(i => (i.categoria || 'outro') === key).map(i => ({
+        ...i,
+        isConfirm: s.confirmDeleteItemId === i.id,
+        isNotConfirm: s.confirmDeleteItemId !== i.id,
+        isEditQty: s.editQtyItemId === i.id,
+        isNotEditQty: s.editQtyItemId !== i.id,
+        checkBg: i.comprado ? '#FF5A26' : 'transparent',
+        checkBorder: i.comprado ? '#FF5A26' : '#3F3F46',
+        checkAnim: i.comprado ? 'checkPop 0.3s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
+        textColor: i.comprado ? '#52525B' : '#FFFFFF',
+        textDecoration: i.comprado ? 'line-through' : 'none',
+        textOpacity: i.comprado ? 0.65 : 1,
+        hasAssignee: !!i.assignee,
+        qtdLabel: i.qtd || 'QTD',
+        onToggle: () => this.toggleItem(i.id),
+        onAskDelete: () => this.setState({ confirmDeleteItemId: i.id }),
+        onConfirmDelete: () => this.deleteItem(i.id),
+        onCancelDelete: () => this.setState({ confirmDeleteItemId: null }),
+        onEditQtyStart: () => this.setState({ editQtyItemId: i.id, qtyDraft: i.qtd || '' }),
+        onQtySave: () => this.saveQty(i.id),
+        onQtyKeyDown: (e) => { if (e.key === 'Enter') this.saveQty(i.id); },
+      }));
+      return { key, label: cfg.label, color: cfg.color, desc: cfg.desc, items: its, count: its.length, done: its.filter(i => i.comprado).length, delay: gi * 60 };
+    }).filter(g => g.count > 0);
+    const comprasTotal = s.items.length;
+    const comprasComprados = s.items.filter(i => i.comprado).length;
+    const pctComprasTarget = this.computePctCompras();
+    const pctComprasDisplay = Math.round(s.animCompras || 0);
+    const ringOffsetCompras = RING_CIRC * (1 - (s.animCompras || 0) / 100);
+
+    const currentTrip = s.trips.find(t => t.id === s.currentTripId) || { title: 'Viagem' };
+    const tripsMenuList = s.trips.map(t => ({
+      id: t.id, title: t.title,
+      dateStr: new Date(t.created_at).toLocaleDateString('pt-PT'),
+      rowBg: t.id === s.currentTripId ? 'rgba(255,90,38,0.14)' : 'transparent',
+      rowColor: t.id === s.currentTripId ? '#FF5A26' : '#D4D4D8',
+      onSwitch: () => this.switchTrip(t.id),
+    }));
+    const templatesList = TEMPLATES.map(t => ({ ...t, onUse: () => this.useTemplate(t) }));
+
+    return {
+      headerShadow: s.scrolled ? '0 4px 16px rgba(0,0,0,0.5)' : 'none',
+      refreshRotation: s.refreshing ? 360 : 0,
+      onRefresh: () => this.onRefresh(),
+      onShareOpen: () => this.setState({ showShare: true }),
+      currentTripTitle: currentTrip.title,
+      toggleTripsMenu: () => this.toggleTripsMenu(),
+      showTripsMenu: s.showTripsMenu,
+      showUpsell: s.showUpsell,
+      onUpsellUnlock: () => this.setState({ showPricing: true, showTripsMenu: false }),
+      onNovaViagem: () => this.onNovaViagem(),
+      onTemplatesClick: () => this.onTemplatesClick(),
+      tripsMenuList,
+      stop: (e) => e.stopPropagation(),
+
+      tabPillTranslate: `${tabIndex * 100}%`,
+      tab1Color: s.tab === 'refeicoes' ? '#FFFFFF' : muted,
+      tab2Color: s.tab === 'plano' ? '#FFFFFF' : muted,
+      tab3Color: s.tab === 'compras' ? '#FFFFFF' : muted,
+      goRefeicoes: () => this.setTab('refeicoes'),
+      goPlano: () => this.setTab('plano'),
+      goCompras: () => this.setTab('compras'),
+      isRefeicoes: s.tab === 'refeicoes',
+      isPlano: s.tab === 'plano',
+      isCompras: s.tab === 'compras',
+
+      statMealsFraction: `${filledSlotsCount}/${totalSlotsCount}`,
+      statPending: comprasTotal - comprasComprados,
+
+      mealsList,
+      onAddMealOpen: () => this.openAddMeal(),
+
+      hasMeals: s.meals.length > 0,
+      noMeals: s.meals.length === 0,
+      planoDias, filledSlotsCount, totalSlotsCount,
+      pctPlanoDisplay, ringOffsetPlano,
+
+      groups,
+      pctComprasDisplay, ringOffsetCompras, comprasComprados, comprasTotal,
+      pctComprasColor: pctComprasTarget === 100 ? '#34D399' : '#FF5A26',
+      onRecategorize: () => this.onRecategorize(),
+      aiLoading: s.aiLoading,
+      aiSpinStyle: s.aiLoading ? 'animation:spin 0.9s linear infinite' : '',
+      recategorizeLabel: s.aiLoading ? 'A analisar…' : 'Recategorizar',
+      onResetTicks: () => this.onResetTicks(),
+      onExportPdf: () => this.onExportPdf(),
+      novoItem: s.novoItem,
+      hasNovoItem: s.novoItem.trim().length > 0,
+      onNovoItemChange: (e) => this.setState({ novoItem: e.target.value }),
+      onItemKeyDown: (e) => { if (e.key === 'Enter') this.addItem(); },
+      onAddItemSubmit: () => this.addItem(),
+      qtyDraft: s.qtyDraft,
+      onQtyChange: (e) => this.setState({ qtyDraft: e.target.value }),
+
+      showAddMeal: s.showAddMeal,
+      addMealPointerEvents: s.showAddMeal ? 'auto' : 'none',
+      addMealOpacity: s.showAddMeal ? 1 : 0,
+      addMealOffset: s.showAddMeal ? '0%' : '100%',
+      onCloseAddMeal: () => this.closeAddMeal(),
+      mealModalTitle: s.addMealEditingId ? 'Editar refeição' : 'Nova refeição',
+      mealSubmitLabel: s.addMealEditingId ? 'Guardar' : 'Adicionar Refeição',
+      submitMealBg: s.addMealDraft.nome.trim() ? accent : '#3F3F46',
+      addMealDraft: s.addMealDraft,
+      addMealNewIng: s.addMealNewIng,
+      emojiList: EMOJIS.map(em => ({
+        char: em, borderColor: s.addMealDraft.emoji === em ? accent : 'transparent',
+        bg: s.addMealDraft.emoji === em ? 'rgba(255,90,38,0.14)' : 'rgba(255,255,255,0.06)',
+        onClick: () => this.setState({ addMealDraft: { ...s.addMealDraft, emoji: em } }),
+      })),
+      addMealIngredients: s.addMealDraft.ingredientes.map((t, i) => ({
+        text: t, onRemove: () => this.setState({ addMealDraft: { ...s.addMealDraft, ingredientes: s.addMealDraft.ingredientes.filter((_, ii) => ii !== i) } }),
+      })),
+      onDraftNomeChange: (e) => this.setState({ addMealDraft: { ...s.addMealDraft, nome: e.target.value } }),
+      onDraftTipoChange: (e) => this.setState({ addMealDraft: { ...s.addMealDraft, tipo: e.target.value } }),
+      onDraftNewIngChange: (e) => this.setState({ addMealNewIng: e.target.value }),
+      onDraftAddIng: () => {
+        const v = s.addMealNewIng.trim();
+        if (!v) return;
+        this.setState({ addMealDraft: { ...s.addMealDraft, ingredientes: [...s.addMealDraft.ingredientes, v] }, addMealNewIng: '' });
+      },
+      onIngKeyDown: (e) => { if (e.key === 'Enter') { const v = s.addMealNewIng.trim(); if (v) this.setState({ addMealDraft: { ...s.addMealDraft, ingredientes: [...s.addMealDraft.ingredientes, v] }, addMealNewIng: '' }); } },
+      onSubmitMeal: () => this.submitMeal(),
+
+      showShare: s.showShare,
+      sharePointerEvents: s.showShare ? 'auto' : 'none',
+      shareOpacity: s.showShare ? 1 : 0,
+      shareOffset: s.showShare ? '0%' : '100%',
+      onCloseShare: () => this.setState({ showShare: false }),
+      shareUrl: this.shareUrl(),
+      copyBg: s.shareCopied ? 'rgba(52,211,153,0.14)' : 'rgba(255,255,255,0.08)',
+      copyColor: s.shareCopied ? '#34D399' : '#D4D4D8',
+      copyLabel: s.shareCopied ? 'Copiado!' : 'Copiar link',
+      onCopyShare: () => this.copyShare(),
+      joinLink: s.joinLink,
+      joinError: s.joinError,
+      joinBorderColor: s.joinError ? '#FF5A5A' : 'rgba(255,255,255,0.08)',
+      onJoinLinkChange: (e) => this.setState({ joinLink: e.target.value, joinError: false }),
+      onJoinKeyDown: (e) => { if (e.key === 'Enter') this.doJoin(); },
+      onDoJoin: () => this.doJoin(),
+
+      tripsModalPointerEvents: (s.showCreateTrip || s.showTemplates) ? 'auto' : 'none',
+      createTripOpacity: s.showCreateTrip ? 1 : 0,
+      createTripOffset: s.showCreateTrip ? '0%' : '100%',
+      onCloseCreateTrip: () => this.setState({ showCreateTrip: false }),
+      newTripName: s.newTripName,
+      onNewTripNameChange: (e) => this.setState({ newTripName: e.target.value }),
+      onNewTripKeyDown: (e) => { if (e.key === 'Enter') this.createTrip(); },
+      onCreateTripSubmit: () => this.createTrip(),
+
+      templatesOpacity: s.showTemplates ? 1 : 0,
+      templatesOffset: s.showTemplates ? '0%' : '100%',
+      onCloseTemplates: () => this.setState({ showTemplates: false }),
+      templatesList,
+
+      pricingOffset: s.showPricing ? '0%' : '100%',
+      pricingVisibility: s.showPricing ? 'visible' : 'hidden',
+      pricingPointerEvents: s.showPricing ? 'auto' : 'none',
+      onClosePricing: () => this.setState({ showPricing: false }),
+      onUnlockPro: () => this.onUnlockPro(),
+      pricingFeatures: [
+        { text: 'Viagens ilimitadas' },
+        { text: 'Templates de viagem prontos' },
+        { text: 'Partilha em tempo real com o grupo' },
+        { text: 'Categorização automática da lista de compras' },
+        { text: 'Exportação da lista em PDF' },
+      ],
+
+      toast: s.toast,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -11,6 +11,24 @@ import { v4 as uuid } from "uuid"
 const LS_TRIPS = "ferias_trips"
 const LS_TRIP_ID = "ferias_trip_id"
 
+/**
+ * Expand a YYYY-MM-DD range into an array of Date objects (inclusive).
+ * Used by the New Trip Wizard to generate Almoço/Jantar slots per day.
+ * @param {string} startDate - YYYY-MM-DD
+ * @param {string} endDate   - YYYY-MM-DD
+ * @returns {Date[]}
+ */
+export function dateRange(startDate, endDate) {
+  if (!startDate || !endDate) return []
+  const start = new Date(startDate + "T00:00:00")
+  const end = new Date(endDate + "T00:00:00")
+  const days = []
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    days.push(new Date(d))
+  }
+  return days
+}
+
 export function useTrips() {
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
@@ -104,9 +122,9 @@ export function useTrips() {
     return () => { cancelled = true }
   }, [loadTrips])
 
-  // Create a new trip
+  // Create a new trip (optionally with a date range for slot generation)
   const createTrip = useCallback(
-    async (title, template = null) => {
+    async (title, template = null, startDate = null, endDate = null) => {
       const tripId = uuid().slice(0, 8)
       const now = new Date().toISOString()
 
@@ -114,6 +132,8 @@ export function useTrips() {
         id: tripId,
         title: title || "Nova Viagem",
         template_type: template || null,
+        start_date: startDate || null,
+        end_date: endDate || null,
         created_at: now,
         updated_at: now,
       }

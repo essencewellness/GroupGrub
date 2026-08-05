@@ -2,11 +2,36 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { v4 as uuid } from 'uuid'
 import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip } from '../lib/db'
 import { hasSupabase } from '../lib/supabase'
-import { refeicoes as seedMeals, listaInicial as seedItems } from '../data'
 
 const GROQ_KEY   = import.meta.env.VITE_GROQ_KEY
 const LS_TRIP_ID = 'ferias_trip_id'
 const PESSOAS    = ['João', 'Maria', 'Pedro', 'Ana', '—']
+
+const WEEKDAY_PT = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+const WEEKDAY_EMOJI = ['🌅', '🌤️', '⛅', '🌥️', '🌞', '🌆', '☀️']
+
+// Gera a estrutura de dias (Almoço + Jantar) a partir de um range de datas.
+// Cada dia: { id, label, emoji, slots: ['almoco','jantar'] }
+export function buildTripStructure(startDate, endDate) {
+  if (!startDate || !endDate) return []
+  const start = new Date(startDate + 'T00:00:00')
+  const end = new Date(endDate + 'T00:00:00')
+  if (isNaN(start) || isNaN(end) || end < start) return []
+  const days = []
+  const cursor = new Date(start)
+  while (cursor <= end) {
+    const dow = cursor.getDay()
+    days.push({
+      id: 'd' + cursor.toISOString().slice(0, 10),
+      label: WEEKDAY_PT[dow],
+      date: cursor.toISOString().slice(0, 10),
+      emoji: WEEKDAY_EMOJI[dow],
+      slots: ['almoco', 'jantar'],
+    })
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return days
+}
 
 function getTripId() {
   // 1. Tenta query param ?trip= (prioritário — vem de links partilhados)
@@ -83,9 +108,11 @@ export default function useTrip() {
   const [plano, setPlano]     = useState(() => {
     try { return JSON.parse(localStorage.getItem('ferias_plano')) ?? {} } catch { return {} }
   })
+  const [meta, setMeta]       = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ferias_meta')) ?? null } catch { return null }
+  })
   const [loading, setLoading] = useState(true)
   const [aiLoading, setAiLoading] = useState(false)
-  const seeded = useRef(false)
 
   // Refs vivas dos dados — permitem que os callbacks (toggleItem, updateMeal,
   // categorizarTudo…) leiam o estado atual sem o listarem nas dependências, e
@@ -95,8 +122,6 @@ export default function useTrip() {
   useEffect(() => { itemsRef.current = items }, [items])
   const mealsRef = useRef(meals)
   useEffect(() => { mealsRef.current = meals }, [meals])
-  // Ref para quebrar a dependência circular loadData <-> categorizarTudo
-  const categorizarRef = useRef(null)
 
   /** Switch to a different trip — updates localStorage/sessionStorage/URL then reloads */
   const setTripId = useCallback((newId) => {
@@ -115,23 +140,11 @@ export default function useTrip() {
   /* ── load data ── */
   const loadData = useCallback(async (isFirst = false) => {
     try {
-      let [dbItems, dbMeals] = await Promise.all([fetchItems(tripId), fetchMeals(tripId)])
-
-      if (isFirst && dbItems.length === 0 && dbMeals.length === 0 && !seeded.current) {
-        seeded.current = true
-        const ts = Date.now()
-        const mealRows = seedMeals.map((m, i) => cleanMeal({ ...m, id: uuid(), created_at: new Date(ts + i).toISOString() }, tripId))
-        const itemRows = seedItems.map((it, i) => cleanItem({ ...it, id: uuid(), created_at: new Date(ts + i).toISOString() }, tripId))
-        await bulkUpsertItems(tripId, itemRows)
-        await Promise.all(mealRows.map(m => upsertMeal(tripId, m)))
-        dbItems = itemRows
-        dbMeals = mealRows
-        setTimeout(() => categorizarRef.current?.(itemRows), 800)
-      }
-
+      // In a real SaaS, trips start completely empty. No auto-seed.
+      const [dbItems, dbMeals] = await Promise.all([fetchItems(tripId), fetchMeals(tripId)])
       setItems(dbItems)
       setMeals(dbMeals)
-    } catch(e) {
+    } catch (e) {
       console.error('loadData error', e)
     } finally {
       if (isFirst) setLoading(false)
@@ -341,8 +354,22 @@ export default function useTrip() {
     }
   }, [tripId])
 
-  // Liga a ref usada pelo seed inicial (evita TDZ / dependência circular)
-  useEffect(() => { categorizarRef.current = categorizarTudo }, [categorizarTudo])
+  // ── Wizard: configurar meta da viagem e gerar slots automaticamente ──
+  const setTripMeta = useCallback((newMeta) => {
+    // Gera os slots Almoço/Jantar por dia no range de datas
+    const structure = buildTripStructure(newMeta.startDate, newMeta.endDate)
+    const generated = {}
+    structure.forEach((dia) => {
+      dia.slots.forEach((slot) => {
+        generated[`${dia.id}-${slot}`] = {}
+      })
+    })
+    const nextMeta = { ...newMeta, structure }
+    setMeta(nextMeta)
+    setPlano((prev) => ({ ...generated, ...prev }))
+    localStorage.setItem('ferias_meta', JSON.stringify(nextMeta))
+    localStorage.setItem('ferias_plano', JSON.stringify({ ...generated, ...JSON.parse(localStorage.getItem('ferias_plano') || '{}') }))
+  }, [])
 
   const updatePlano = useCallback((slotKey, selection) => {
     setPlano(prev => {
@@ -362,6 +389,9 @@ export default function useTrip() {
     items, toggleItem, updateItem, addItem, addIngredientes, removeItem, resetTicks, categorizarTudo,
     meals, addMeal, updateMeal, removeMeal,
     plano, updatePlano,
+    meta, setTripMeta,
+    needsSetup: !meta || !meta.startDate || !meta.endDate,
+    structure: meta?.structure || null,
     refresh,
     pessoas: PESSOAS,
     shareUrl: `${window.location.origin}${window.location.pathname}?trip=${tripId}`,

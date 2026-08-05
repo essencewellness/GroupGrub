@@ -1,0 +1,56 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        // Premium Fintech palette
+        ink: '#000000',
+        carbon: '#0a0a0b',
+        panel: '#111113',
+        line: 'rgba(255,255,255,0.08)',
+        lineStrong: 'rgba(255,255,255,0.14)',
+        brand: {
+          DEFAULT: '#FF5A26',
+          dim: 'rgba(255,90,38,0.12)',
+          glow: 'rgba(255,90,38,0.35)',
+        },
+        cream: '#f5f5f4',
+        muted: 'rgba(245,245,244,0.55)',
+        faint: 'rgba(245,245,244,0.32)',
+        // category accents (fintech-tinted, still readable on dark)
+        duradouro: '#f5a623',
+        congelado: '#3aa0ff',
+        refrigerado: '#9b7bff',
+        fresco: '#34d399',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['"Space Grotesk"', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      boxShadow: {
+        glow: '0 0 24px rgba(255,90,38,0.22)',
+        card: '0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 50px rgba(0,0,0,0.6)',
+      },
+      borderRadius: {
+        xl2: '1.25rem',
+      },
+      keyframes: {
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(12px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      animation: {
+        'fade-up': 'fade-up 0.3s ease-out both',
+        shimmer: 'shimmer 2.2s linear infinite',
+      },
+    },
+  },
+  plugins: [],
+}

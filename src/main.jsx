@@ -1,6 +1,7 @@
 import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './i18n'
 import App from './App.jsx'
 import InstallBanner from './InstallBanner.jsx'
 
@@ -31,15 +32,18 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ minHeight: '100dvh', background: '#04070d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 24, padding: '0 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', filter: 'drop-shadow(0 0 20px rgba(255,43,214,0.6))' }}>⚠</div>
+        <div className="min-h-dvh bg-black flex flex-col items-center justify-center gap-6 p-5 text-center">
+          <div className="text-5xl drop-shadow-[0_0_20px_rgba(255,90,38,0.6)]">⚠</div>
           <div>
-            <h2 className="cyber-title" style={{ fontSize: '1rem', color: '#ff2bd6', textShadow: '0 0 14px rgba(255,43,214,0.5)' }}>FALHA DE SISTEMA</h2>
-            <p className="mono" style={{ fontSize: '0.78rem', color: 'rgba(223,246,255,0.42)', marginTop: 10, maxWidth: 320, lineHeight: 1.7 }}>
+            <h2 className="font-display text-lg text-brand tracking-tight">FALHA DE SISTEMA</h2>
+            <p className="font-mono text-xs text-muted mt-2.5 max-w-[320px] leading-relaxed">
               Ocorreu um erro inesperado. Reinicia a aplicação.
             </p>
           </div>
-          <button onClick={() => window.location.reload()} className="mono" style={{ padding: '13px 30px', border: '1px solid rgba(0,240,255,0.6)', clipPath: 'polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)', background: 'rgba(0,240,255,0.13)', color: '#00f0ff', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.12em', cursor: 'pointer', boxShadow: '0 0 22px rgba(0,240,255,.28)' }}>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn-brand px-8 py-3 text-xs tracking-[0.12em] uppercase"
+          >
             REINICIAR
           </button>
         </div>
@@ -49,9 +53,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Guarda o root entre hot-reloads do Vite. Sem isto o HMR chamava createRoot()
-// sobre um container já montado → "You are calling createRoot() on a container
-// that has already been passed to createRoot()" e nós DOM órfãos (removeChild).
+// Guarda o root entre hot-reloads do Vite.
 const container = document.getElementById('root')
 const root = (globalThis.__feriasRoot ??= createRoot(container))
 
