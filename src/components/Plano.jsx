@@ -257,7 +257,11 @@ export default function Plano({ meals, plano, onUpdate, structure }) {
           <div key={dia.id} className="mb-8">
             <div className="flex items-center gap-2.5 mb-3">
               <span className="text-xl" style={{ filter: 'drop-shadow(0 0 6px rgba(255,90,38,0.4))' }}>{dia.emoji}</span>
-              <span className="font-display text-lg font-bold text-brand">{t(`plan.${dia.id}`)}</span>
+              <span className="font-display text-lg font-bold text-brand">
+                {dia.date
+                  ? `${dia.label}, ${dia.date.slice(8, 10)}/${dia.date.slice(5, 7)}`
+                  : t(`plan.${dia.id}`)}
+              </span>
               {diaFilledSlots > 0 && (
                 <div
                   className="px-2 py-0.5 font-mono text-[0.62rem] font-bold uppercase tracking-[0.06em] rounded"
