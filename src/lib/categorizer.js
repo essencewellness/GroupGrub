@@ -75,13 +75,17 @@ function encontrarCategoria(nomeNorm) {
  * Categoriza um item de compra com base no dicionário local.
  * @param {string} nome - nome do item (ex: "Atum em conserva")
  * @returns {{ categoria: string, antecipado: boolean }}
+ *  - devolve uma categoria conhecida (duradouro/fresco/congelado/refrigerado) quando houver match;
+ *  - caso contrário devolve categoria 'desconhecido' (não categorizado → item preca de atenção manual).
  */
+export const UNCATEGORIZED = 'desconhecido'
+
 export function categorizeItem(nome) {
   const nomeNorm = normalizar(nome)
   const cat = encontrarCategoria(nomeNorm)
 
   if (!cat) {
-    return { categoria: 'outro', antecipado: false }
+    return { categoria: UNCATEGORIZED, antecipado: false }
   }
 
   // duradouro e congelado são, por defeito, comprados com antecedência

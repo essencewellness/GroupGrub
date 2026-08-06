@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Trash2, User } from 'lucide-react'
+import { Check, Trash2, User, Tag } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const CAT_COLORS = {
@@ -9,7 +9,20 @@ const CAT_COLORS = {
   refrigerado: '#9b7bff',
   fresco: '#34d399',
   outro: 'rgba(255,90,38,0.55)',
+  desconhecido: 'rgba(255,90,38,0.75)', // item sem categoria → colore para chamar atenção
 }
+
+// Map de labels PT para as opções do selector
+const CAT_LABELS = {
+  duradouro: 'Duradouro',
+  congelado: 'Congelado',
+  refrigerado: 'Refrigerado',
+  fresco: 'Fresco',
+  outro: 'Outro',
+  desconhecido: 'Sem categoria',
+}
+
+const CAT_OPTIONS = ['duradouro', 'congelado', 'refrigerado', 'fresco', 'outro']
 
 export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pessoas }) {
   const { t } = useTranslation()
@@ -18,6 +31,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
   const [qtdVal, setQtdVal] = useState(item.qtd || '')
   const [assigneeVal, setAssigneeVal] = useState(item.assignee || '')
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showCatPicker, setShowCatPicker] = useState(false)
 
   const saveQtd = () => { onUpdate({ qtd: qtdVal }); setEditQtd(false) }
   const saveAssignee = () => { onUpdate({ assignee: assigneeVal }); setEditAssignee(false) }
@@ -78,6 +92,25 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
               <User size={8} className="inline mr-1" />
               {item.assignee}
             </span>
+          )}
+
+          {(catKey === 'desconhecido' || catKey === 'outro') && (
+            <span
+              className="font-mono text-[0.58rem] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded"
+              style={{ background: 'rgba(255,90,38,0.25)', color: '#ff5a06', border: '1px solid rgba(255,90,38,0.5)' }}
+              title={t('shopping.uncategorizedHint')}
+            >
+              ⚠ {t('shopping.uncategorized')}</span>
+          )}
+          {(catKey === 'desconhecido' || catKey === 'outro') && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowCatPicker(v => !v) }}
+              className="p-1 rounded text-muted hover:text-white hover:bg-white/10 transition-colors"
+              title={t('shopping.changeCategory')}
+            >
+              <Tag size={11} />
+            </button>
           )}
 
           {editQtd ? (
@@ -169,6 +202,33 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                 }`}
               >
                 {p}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showCatPicker && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="absolute top-full right-0 mt-1 z-10 flex gap-1 bg-[#121212] border border-white/20 rounded-lg p-1 shadow-lg shadow-black/50"
+          >
+            {CAT_OPTIONS.map((catKeyOpt) => (
+              <button
+                key={catKeyOpt}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onUpdate({ categoria: catKeyOpt, antecipado: ['duradouro', 'congelado'].includes(catKeyOpt) })
+                  setShowCatPicker(false)
+                }}
+                className="font-mono text-[0.62rem] uppercase tracking-[0.04em] px-2 py-1 rounded whitespace-nowrap transition-colors"
+                style={{ color: CAT_COLORS[catKeyOpt] }}
+                title={catKeyOpt}
+              >
+                {CAT_LABELS[catKeyOpt]}
               </button>
             ))}
           </motion.div>
