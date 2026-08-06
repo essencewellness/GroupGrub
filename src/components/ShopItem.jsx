@@ -52,16 +52,20 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
       }}
     >
       {!confirmDelete ? (
-        <div className="flex items-center gap-3 p-3.5 cursor-pointer" onClick={onToggle}>
+        <div className="flex items-center gap-3 p-3.5 relative">
           <motion.div
             whileTap={{ scale: 1.2 }}
-            className="w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center transition-all"
+            className="w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center transition-all cursor-pointer"
             style={{
               background: item.comprado ? '#34d399' : 'transparent',
               border: item.comprado ? 'none' : '2px solid rgba(255,255,255,0.2)',
               boxShadow: item.comprado ? '0 0 12px rgba(52,211,153,0.5)' : 'none',
               animation: item.comprado ? 'checkPop 0.4s ease' : 'none',
             }}
+            onClick={onToggle}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
           >
             <AnimatePresence>
               {item.comprado && (
