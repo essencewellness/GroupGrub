@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Receipt, Trash2, Share2, Plus, ArrowRight, Check } from 'lucide-react'
+import { Receipt, Trash2, Share2, Plus, ArrowRight, Check, UserPlus, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { calculateSettlement, formatSettlementWA } from '../lib/expenseSplitter'
 import AddExpenseModal from './AddExpenseModal'
 
-export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense, onRemoveExpense }) {
+export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense, onRemoveExpense, onAddPessoa, onRemovePessoa, isOwner = false }) {
   const { t } = useTranslation()
   const [modalOpen, setModalOpen] = useState(false)
   const [shared, setShared] = useState(false)
+  const [newPessoa, setNewPessoa] = useState('')
 
   const totalGasto = expenses.reduce((sum, e) => sum + (parseFloat(e.valor) || 0), 0)
   const { settlements } = calculateSettlement(expenses, pessoas)
@@ -95,6 +96,46 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                 </motion.div>
               ))}
             </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      {/* Pessoas na viagem */}
+      <div className="rounded-2xl border border-line bg-black/40 p-5">
+        <div className="font-mono text-[0.62rem] font-bold tracking-[0.14em] text-muted uppercase mb-3">
+          👥 PESSOAS NA VIAGEM
+        </div>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {pessoas.length === 0 && (
+            <span className="text-[0.75rem] text-faint font-mono">Nenhuma pessoa adicionada ainda.</span>
+          )}
+          {pessoas.map(p => (
+            <div key={p} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-line text-[0.8rem] text-cream font-mono">
+              {p}
+              {isOwner && (
+                <button onClick={() => onRemovePessoa?.(p)} className="text-muted hover:text-brand transition-colors">
+                  <X size={11} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        {isOwner && (
+          <div className="flex gap-2">
+            <input
+              value={newPessoa}
+              onChange={e => setNewPessoa(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && newPessoa.trim()) { onAddPessoa?.(newPessoa.trim()); setNewPessoa('') } }}
+              placeholder="Adicionar pessoa…"
+              className="flex-1 bg-black/50 border border-line rounded-xl px-3.5 py-2 text-[0.85rem] text-cream outline-none"
+            />
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              onClick={() => { if (newPessoa.trim()) { onAddPessoa?.(newPessoa.trim()); setNewPessoa('') } }}
+              className="px-3.5 rounded-xl bg-brand/20 border border-brand/50 text-brand"
+            >
+              <UserPlus size={15} />
+            </motion.button>
           </div>
         )}
       </div>

@@ -18,7 +18,7 @@ function slotKey(diaId, slot) {
   return `${diaId}-${slot.toLowerCase().replace(/\s/g, '_')}`
 }
 
-function MealPicker({ curso, meals, selectedId, onSelect }) {
+function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const selected = meals.find((m) => m.id === selectedId)
@@ -70,24 +70,31 @@ function MealPicker({ curso, meals, selectedId, onSelect }) {
             className="overflow-hidden"
           >
             <div className="pt-1.5 grid gap-1.5">
-              {meals.map((meal) => (
-                <motion.button
-                  key={meal.id}
-                  whileTap={{ scale: 0.97 }}
-                  whileHover={{ background: 'rgba(255,90,38,0.08)', x: 2 }}
-                  onClick={() => { onSelect(meal.id); setOpen(false) }}
-                  className={`w-full text-left cursor-pointer rounded-xl border px-3 py-2.5 flex items-center gap-2.5 transition-colors ${
-                    meal.id === selectedId ? 'border-brand/55 bg-brand/[0.12]' : 'bg-white/[0.03] border-line'
-                  }`}
-                >
-                  <span className="text-lg flex-shrink-0">{meal.emoji}</span>
-                  <div className="flex-1">
-                    <div className="text-[0.85rem] font-semibold text-cream">{meal.nome}</div>
-                    <div className="text-[0.7rem] text-muted font-mono uppercase tracking-[0.03em]">{meal.tipo}</div>
-                  </div>
-                  {meal.id === selectedId && <Check size={14} color="#ff5a26" strokeWidth={3} className="flex-shrink-0" />}
-                </motion.button>
-              ))}
+              {meals.map((meal) => {
+                const isSelected = meal.id === selectedId
+                const isUsed = !isSelected && usedIds.has(meal.id)
+                return (
+                  <motion.button
+                    key={meal.id}
+                    whileTap={{ scale: 0.97 }}
+                    whileHover={!isUsed ? { background: 'rgba(255,90,38,0.08)', x: 2 } : {}}
+                    onClick={() => { if (!isUsed) { onSelect(meal.id); setOpen(false) } }}
+                    className={`w-full text-left rounded-xl border px-3 py-2.5 flex items-center gap-2.5 transition-colors ${
+                      isSelected ? 'border-brand/55 bg-brand/[0.12] cursor-pointer' :
+                      isUsed ? 'border-line bg-white/[0.02] opacity-50 cursor-not-allowed' :
+                      'bg-white/[0.03] border-line cursor-pointer'
+                    }`}
+                  >
+                    <span className="text-lg flex-shrink-0">{meal.emoji}</span>
+                    <div className="flex-1">
+                      <div className="text-[0.85rem] font-semibold text-cream">{meal.nome}</div>
+                      <div className="text-[0.7rem] text-muted font-mono uppercase tracking-[0.03em]">{meal.tipo}</div>
+                    </div>
+                    {isSelected && <Check size={14} color="#ff5a26" strokeWidth={3} className="flex-shrink-0" />}
+                    {isUsed && <span className="text-[0.62rem] font-mono text-muted flex-shrink-0">Já no plano</span>}
+                  </motion.button>
+                )
+              })}
             </div>
           </motion.div>
         )}
@@ -96,7 +103,7 @@ function MealPicker({ curso, meals, selectedId, onSelect }) {
   )
 }
 
-function SlotCard({ diaId, slot, meals, plano, onUpdate }) {
+function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const key = slotKey(diaId, slot)
@@ -160,15 +167,22 @@ function SlotCard({ diaId, slot, meals, plano, onUpdate }) {
             className="overflow-hidden"
           >
             <div className="border-t border-line p-4">
-              {CURSOS.map((curso) => (
-                <MealPicker
-                  key={curso.key}
-                  curso={curso}
-                  meals={meals}
-                  selectedId={selection[curso.key] || null}
-                  onSelect={(mealId) => onUpdate(key, { ...selection, [curso.key]: mealId })}
-                />
-              ))}
+              {CURSOS.map((curso) => {
+                const thisSelected = selection[curso.key] || null
+                const usedExcludingThis = new Set(
+                  [...(allUsedIds || [])].filter(id => id !== thisSelected)
+                )
+                return (
+                  <MealPicker
+                    key={curso.key}
+                    curso={curso}
+                    meals={meals}
+                    selectedId={thisSelected}
+                    usedIds={usedExcludingThis}
+                    onSelect={(mealId) => onUpdate(key, { ...selection, [curso.key]: mealId })}
+                  />
+                )
+              })}
             </div>
           </motion.div>
         )}
@@ -178,6 +192,10 @@ function SlotCard({ diaId, slot, meals, plano, onUpdate }) {
 }
 
 export default function Plano({ meals, plano, onUpdate, structure }) {
+  // Collect all mealIds currently used anywhere in the plan
+  const allUsedIds = new Set(
+    Object.values(plano).flatMap(sel => Object.values(sel).filter(Boolean))
+  )
   const { t } = useTranslation()
   const ESTRUTURA_FINAL = structure && structure.length ? structure : ESTRUTURA
   const allSlotKeys = ESTRUTURA_FINAL.flatMap((dia) => dia.slots.map((slot) => slotKey(dia.id, slot)))
@@ -276,7 +294,7 @@ export default function Plano({ meals, plano, onUpdate, structure }) {
             <div className="grid gap-2">
               {dia.slots.map((slot, si) => (
                 <motion.div key={slot} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: di * 0.08 + si * 0.05 }}>
-                  <SlotCard diaId={dia.id} slot={slot} meals={meals} plano={plano} onUpdate={onUpdate} />
+                  <SlotCard diaId={dia.id} slot={slot} meals={meals} plano={plano} allUsedIds={allUsedIds} onUpdate={onUpdate} />
                 </motion.div>
               ))}
             </div>

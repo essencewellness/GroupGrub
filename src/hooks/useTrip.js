@@ -8,7 +8,14 @@ import { categorizeItem } from '../lib/categorizer'
 export { CATEGORIA_PADRAO } from '../lib/categorizer'
 
 const LS_TRIP_ID = 'ferias_trip_id'
-const PESSOAS    = ['João', 'Maria', 'Pedro', 'Ana', '—']
+
+function pessoasKey(tripId) { return `ferias_pessoas_${tripId}` }
+function loadPessoas(tripId) {
+  try { return JSON.parse(localStorage.getItem(pessoasKey(tripId)) || '[]') } catch { return [] }
+}
+function savePessoas(tripId, arr) {
+  try { localStorage.setItem(pessoasKey(tripId), JSON.stringify(arr)) } catch { /* quota */ }
+}
 
 const WEEKDAY_PT = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const WEEKDAY_EMOJI = ['🌅', '🌤️', '⛅', '🌥️', '🌞', '🌆', '☀️']
@@ -109,6 +116,7 @@ export default function useTrip() {
   const [items, setItems]         = useState([])
   const [meals, setMeals]         = useState([])
   const [expenses, setExpenses]   = useState([])
+  const [pessoas, setPessoas]     = useState(() => loadPessoas(getTripId()))
   const [plano, setPlano]     = useState(() => {
     try { return JSON.parse(localStorage.getItem('ferias_plano')) ?? {} } catch { return {} }
   })
@@ -333,6 +341,24 @@ export default function useTrip() {
     await deleteExpense(tripId, id)
   }, [tripId])
 
+  const addPessoa = useCallback((nome) => {
+    if (!nome.trim()) return
+    setPessoas(prev => {
+      if (prev.includes(nome.trim())) return prev
+      const next = [...prev, nome.trim()]
+      savePessoas(tripId, next)
+      return next
+    })
+  }, [tripId])
+
+  const removePessoa = useCallback((nome) => {
+    setPessoas(prev => {
+      const next = prev.filter(p => p !== nome)
+      savePessoas(tripId, next)
+      return next
+    })
+  }, [tripId])
+
   const refresh = useCallback(async () => {
     await loadData(false)
   }, [loadData])
@@ -348,7 +374,7 @@ export default function useTrip() {
     needsSetup: !meta || !meta.startDate || !meta.endDate,
     structure: meta?.structure || null,
     refresh,
-    pessoas: PESSOAS,
+    pessoas, addPessoa, removePessoa,
     shareUrl: `${window.location.origin}${window.location.pathname}?trip=${tripId}`,
   }
 }

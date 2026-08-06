@@ -8,13 +8,12 @@ import { suggestEmoji } from '../lib/mealEmoji'
 const EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🍖', '🥪', '🍕', '🌮', '🍲', '🫙', '🍰', '🤌', '🦐', '🥩', '🍝', '🍔', '🥞', '🌯', '🍱']
 
 const TIPOS = [
-  { key: 'almoco',         label: '☀️ Almoço' },
-  { key: 'jantar',         label: '🌙 Jantar' },
-  { key: 'petisco',        label: '🫙 Petisco' },
-  { key: 'pequeno_almoco', label: '🌅 Pequeno-almoço' },
-  { key: 'sobremesa',      label: '🍰 Sobremesa' },
-  { key: 'brunch',         label: '☕ Brunch' },
-  { key: 'bebidas',        label: '🥤 Bebidas' },
+  { key: 'prato_principal', label: '🍽️ Prato Principal' },
+  { key: 'petisco',         label: '🫙 Petisco' },
+  { key: 'pequeno_almoco',  label: '🌅 Pequeno-almoço' },
+  { key: 'sobremesa',       label: '🍰 Sobremesa' },
+  { key: 'brunch',          label: '☕ Brunch' },
+  { key: 'bebidas',         label: '🥤 Bebidas' },
 ]
 
 export default function AddMealModal({ open, onClose, onAdd }) {

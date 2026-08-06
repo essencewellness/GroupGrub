@@ -64,6 +64,8 @@ export default function App() {
   const trips = useTrips()
   const { isPremium, verifying } = usePremium()
   const { isOwner, isGuest } = useRole(trip.tripId)
+  const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
+  const [guestNameInput, setGuestNameInput] = useState('')
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
@@ -308,7 +310,17 @@ export default function App() {
                   isOpen={expanded === meal.id}
                   isOwner={isOwner}
                   onClick={() => setExpanded(expanded === meal.id ? null : meal.id)}
-                  onUpdate={(patch) => trip.updateMeal(meal.id, patch)}
+                  onUpdate={async (patch) => {
+                    const prevIngs = meal.ingredientes || []
+                    await trip.updateMeal(meal.id, patch)
+                    if (patch.ingredientes?.length > prevIngs.length) {
+                      const novos = patch.ingredientes.filter(i => !prevIngs.includes(i))
+                      if (novos.length) {
+                        const count = await trip.addIngredientes(novos, trip.items)
+                        if (count > 0) showToast(`${count} ingrediente(s) → Lista de compras!`)
+                      }
+                    }
+                  }}
                   onDelete={() => {
                     trip.removeMeal(meal.id)
                     if (expanded === meal.id) setExpanded(null)
@@ -341,9 +353,12 @@ export default function App() {
             >
               <ExpensesTab
                 expenses={trip.expenses}
-                pessoas={trip.pessoas.filter(p => p !== '—')}
+                pessoas={trip.pessoas}
                 onAddExpense={trip.addExpense}
                 onRemoveExpense={trip.removeExpense}
+                onAddPessoa={trip.addPessoa}
+                onRemovePessoa={trip.removePessoa}
+                isOwner={isOwner}
               />
             </motion.div>
           )}
@@ -560,6 +575,64 @@ export default function App() {
           </div>
         </div>
       )}
+      {/* Guest name prompt — shown once when a guest opens the app without a name */}
+      <AnimatePresence>
+        {isGuest && !guestName && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[500] flex items-center justify-center px-5"
+            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-[340px] rounded-2xl p-7"
+              style={{ background: '#0e0e10', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <div className="text-3xl mb-4 text-center">👋</div>
+              <h2 className="font-display text-xl font-bold text-cream text-center mb-1">Bem-vindo!</h2>
+              <p className="text-[0.8rem] text-muted text-center mb-5">Como te chamas? O teu nome aparece nas despesas e na lista.</p>
+              <input
+                value={guestNameInput}
+                onChange={e => setGuestNameInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && guestNameInput.trim()) {
+                    const n = guestNameInput.trim()
+                    localStorage.setItem('groupgrub_guest_name', n)
+                    trip.addPessoa(n)
+                    setGuestName(n)
+                  }
+                }}
+                placeholder="O teu nome"
+                autoFocus
+                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.95rem] outline-none mb-4"
+              />
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                disabled={!guestNameInput.trim()}
+                onClick={() => {
+                  const n = guestNameInput.trim()
+                  if (!n) return
+                  localStorage.setItem('groupgrub_guest_name', n)
+                  trip.addPessoa(n)
+                  setGuestName(n)
+                }}
+                className="w-full py-3.5 rounded-xl font-bold text-[0.95rem]"
+                style={{
+                  background: guestNameInput.trim() ? 'linear-gradient(135deg,#c8431a,#ff5a26)' : 'rgba(255,255,255,0.06)',
+                  color: guestNameInput.trim() ? '#fff' : 'rgba(255,255,255,0.3)',
+                  cursor: guestNameInput.trim() ? 'pointer' : 'not-allowed',
+                }}
+              >
+                Entrar na lista →
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Toast toast={toast} />
     </div>
   )

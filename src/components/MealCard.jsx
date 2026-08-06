@@ -6,13 +6,12 @@ import { useTranslation } from 'react-i18next'
 const EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🍖', '🥪', '🍕', '🌮', '🍲', '🫙', '🍰', '🦐', '🍝', '🍔', '🥞', '🌯']
 
 const TIPOS = [
-  { key: 'almoco',         label: '☀️ Almoço' },
-  { key: 'jantar',         label: '🌙 Jantar' },
-  { key: 'petisco',        label: '🫙 Petisco' },
-  { key: 'pequeno_almoco', label: '🌅 Pequeno-almoço' },
-  { key: 'sobremesa',      label: '🍰 Sobremesa' },
-  { key: 'brunch',         label: '☕ Brunch' },
-  { key: 'bebidas',        label: '🥤 Bebidas' },
+  { key: 'prato_principal', label: '🍽️ Prato Principal' },
+  { key: 'petisco',         label: '🫙 Petisco' },
+  { key: 'pequeno_almoco',  label: '🌅 Pequeno-almoço' },
+  { key: 'sobremesa',       label: '🍰 Sobremesa' },
+  { key: 'brunch',          label: '☕ Brunch' },
+  { key: 'bebidas',         label: '🥤 Bebidas' },
 ]
 
 function tipoLabel(tipo) {
