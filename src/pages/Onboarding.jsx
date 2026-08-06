@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowRight, UtensilsCrossed, ShoppingCart, Receipt, Users } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowRight, UtensilsCrossed, ShoppingCart, Receipt, Users, RotateCcw, Check } from 'lucide-react'
+
+const PREMIUM_KEY = 'groupgrub_lifetime_pro'
 
 const FEATURES = [
   { icon: UtensilsCrossed, emoji: '🍽️', title: 'Plano de refeições', desc: 'Organiza todos os jantares e almoços, com lista de ingredientes automática.' },
@@ -15,6 +17,36 @@ export default function Onboarding({ tripId }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [focusedField, setFocusedField] = useState(null)
+  const [showRecovery, setShowRecovery] = useState(false)
+  const [recoveryEmail, setRecoveryEmail] = useState('')
+  const [recovering, setRecovering] = useState(false)
+  const [recoveryError, setRecoveryError] = useState(null)
+  const [recoveryOk, setRecoveryOk] = useState(false)
+
+  const handleRecovery = async () => {
+    if (!recoveryEmail.trim()) { setRecoveryError('Indica o teu email.'); return }
+    setRecovering(true)
+    setRecoveryError(null)
+    try {
+      const res = await fetch('/api/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: recoveryEmail.trim() }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setRecoveryOk(true)
+        localStorage.setItem(PREMIUM_KEY, 'true')
+        setTimeout(() => window.location.reload(), 1200)
+      } else {
+        setRecoveryError('Email não encontrado. Verifica se usaste o mesmo email no pagamento.')
+      }
+    } catch {
+      setRecoveryError('Sem ligação. Tenta novamente.')
+    } finally {
+      setRecovering(false)
+    }
+  }
 
   const handleCheckout = async () => {
     if (!name.trim()) { setError('Indica o teu nome para continuar.'); return }
@@ -175,7 +207,7 @@ export default function Onboarding({ tripId }) {
             </motion.button>
           </div>
 
-          <div className="text-center space-y-1">
+          <div className="text-center space-y-1 mb-6">
             <div className="text-[0.7rem] text-faint">
               Pagamento único · Acesso vitalício · Sem subscrição
             </div>
@@ -183,6 +215,85 @@ export default function Onboarding({ tripId }) {
               Pagamento seguro via <span className="text-muted">Stripe</span> · Os teus amigos entram grátis
             </div>
           </div>
+
+          {/* Recovery section */}
+          <div className="text-center">
+            <button
+              onClick={() => { setShowRecovery(v => !v); setRecoveryError(null); setRecoveryOk(false) }}
+              className="text-[0.78rem] text-muted hover:text-cream transition-colors inline-flex items-center gap-1.5"
+            >
+              <RotateCcw size={13} />
+              Já compraste? Recuperar acesso
+            </button>
+          </div>
+
+          <AnimatePresence>
+            {showRecovery && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden"
+              >
+                <div className="p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="font-mono text-[0.6rem] font-bold tracking-[0.14em] text-muted uppercase mb-3 text-center">
+                    Recuperar acesso anterior
+                  </div>
+                  {recoveryOk ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center justify-center gap-2 py-3"
+                      style={{ color: '#34d399' }}
+                    >
+                      <Check size={18} strokeWidth={3} />
+                      <span className="font-bold text-[0.9rem]">Acesso recuperado! A recarregar…</span>
+                    </motion.div>
+                  ) : (
+                    <>
+                      <input
+                        type="email"
+                        value={recoveryEmail}
+                        onChange={e => { setRecoveryEmail(e.target.value); setRecoveryError(null) }}
+                        placeholder="Email usado no pagamento"
+                        onKeyDown={e => { if (e.key === 'Enter') handleRecovery() }}
+                        className="w-full bg-black/70 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.9rem] outline-none transition-all mb-2.5"
+                        style={{ borderColor: recoveryError ? 'rgba(255,90,38,0.5)' : undefined }}
+                      />
+                      {recoveryError && (
+                        <div className="text-[0.73rem] text-brand mb-2.5 font-mono leading-relaxed">{recoveryError}</div>
+                      )}
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleRecovery}
+                        disabled={recovering}
+                        className="w-full py-3 rounded-xl font-bold text-[0.9rem] flex items-center justify-center gap-2 transition-all"
+                        style={{
+                          background: recovering ? 'rgba(255,90,38,0.25)' : 'rgba(255,90,38,0.15)',
+                          color: recovering ? 'rgba(255,90,38,0.5)' : '#ff5a26',
+                          border: '1px solid rgba(255,90,38,0.3)',
+                          cursor: recovering ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {recovering ? (
+                          <>
+                            <span
+                              className="inline-block w-3.5 h-3.5 border-2 rounded-full border-brand/30 border-t-brand"
+                              style={{ animation: 'spin 0.7s linear infinite' }}
+                            />
+                            A verificar…
+                          </>
+                        ) : (
+                          <><RotateCcw size={14} /> Recuperar acesso</>
+                        )}
+                      </motion.button>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </div>

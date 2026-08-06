@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { supabase, hasSupabase } from "../lib/supabase"
 import { v4 as uuid } from "uuid"
 import { claimOwner } from "./useRole"
+import { getOrCreateInviteKey } from "../lib/inviteKey"
 
 /**
  * Multi-trips hook.
@@ -155,10 +156,11 @@ export function useTrips() {
       const all = JSON.parse(localStorage.getItem(LS_TRIPS) || "[]")
       localStorage.setItem(LS_TRIPS, JSON.stringify([newTrip, ...all]))
 
-      // Set as active and claim ownership
+      // Set as active, claim ownership, and generate invite key
       localStorage.setItem(LS_TRIP_ID, tripId)
       sessionStorage.setItem(LS_TRIP_ID, tripId)
       claimOwner(tripId)
+      getOrCreateInviteKey(tripId)
 
       setTrips((prev) => [newTrip, ...prev])
       return tripId

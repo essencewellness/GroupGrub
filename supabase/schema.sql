@@ -1,87 +1,73 @@
--- Schema para Férias Celorico — App PWA (1 app only)
--- Corre isto no SQL Editor do teu projeto Supabase
+-- GroupGrub schema
 
--- ═══════════════════════════════════════════════
--- 1. TRIPS TABLE (multi-trip support)
--- ═══════════════════════════════════════════════
+-- Trips
 create table if not exists trips (
-  id              uuid default gen_random_uuid() primary key,
-  title           text not null default 'Nova Viagem',
-  owner_id        text, -- optional — free users use anonymous IDs
-  template_type   text, -- 'praia', 'montanha', 'camping', 'city'
-  created_at      timestamptz default now(),
-  updated_at      timestamptz default now()
-);
-
--- ═══════════════════════════════════════════════
--- 2. ITEMS TABLE (existing — updated with assignee)
--- ═══════════════════════════════════════════════
-create table if not exists items (
-  id          text primary key,
-  trip_id     text not null,
-  nome        text not null,
-  qtd         text default '',
-  categoria   text,
-  antecipado  boolean default false,
-  comprado    boolean default false,
-  assignee    text default '',
-  created_at  timestamptz default now()
-);
-
--- ═══════════════════════════════════════════════
--- 3. MEALS TABLE (existing)
--- ═══════════════════════════════════════════════
-create table if not exists meals (
   id           text primary key,
-  trip_id      text not null,
+  title        text not null default 'Nova Viagem',
+  owner_id     uuid,
+  template_type text,
+  start_date   date,
+  end_date     date,
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+
+-- Meals
+create table if not exists meals (
+  id           uuid primary key default gen_random_uuid(),
+  trip_id      text not null references trips(id) on delete cascade,
   nome         text not null,
   emoji        text default '🍽️',
-  tipo         text default 'Refeição',
+  tipo         text,
+  dia          text,
   ingredientes jsonb default '[]',
   created_at   timestamptz default now()
 );
 
--- ═══════════════════════════════════════════════
--- 4. PLANNING (meal plan grid)
--- ═══════════════════════════════════════════════
-create table if not exists plano (
-  id          text primary key,
-  trip_id     text not null,
-  slot_key    text not null,  -- ex: "segunda-almoco"
-  selection   text,          -- meal ID selected
-  created_at  timestamptz default now()
+-- Shopping items
+create table if not exists items (
+  id           uuid primary key default gen_random_uuid(),
+  trip_id      text not null references trips(id) on delete cascade,
+  nome         text not null,
+  categoria    text default 'outro',
+  qtd          text,
+  comprado     boolean default false,
+  antecipado   boolean default false,
+  assignee     text,
+  created_at   timestamptz default now()
 );
 
--- ═══════════════════════════════════════════════
--- 5. TEMPLATES SEED DATA (for template selector)
--- ═══════════════════════════════════════════════
-insert into trips (id, title, owner_id, template_type, created_at, updated_at) values
-  ('template-praia', 'Template: Praia', null, 'praia', now(), now()),
-  ('template-montanha', 'Template: Montanha', null, 'montanha', now(), now()),
-  ('template-camping', 'Template: Camping', null, 'camping', now(), now()),
-  ('template-city', 'Template: City Break', null, 'city', now(), now())
-on conflict (id) do update set
-  title = excluded.title,
-  template_type = excluded.template_type;
+-- Expenses
+create table if not exists expenses (
+  id           uuid primary key default gen_random_uuid(),
+  trip_id      text not null references trips(id) on delete cascade,
+  descricao    text not null,
+  valor        numeric(10,2) not null,
+  pago_por     text not null,
+  participantes jsonb default '[]',
+  created_at   timestamptz default now()
+);
 
--- ═══════════════════════════════════════════════
--- 6. POLICIES (public access — uses unique trip IDs)
--- ═══════════════════════════════════════════════
-alter table items enable row level security;
-alter table meals enable row level security;
-alter table trips enable row level security;
-alter table plano enable row level security;
+-- Paid customers (for cross-device premium recovery)
+create table if not exists customers (
+  id                uuid primary key default gen_random_uuid(),
+  email             text unique not null,
+  stripe_session_id text,
+  paid_at           timestamptz default now()
+);
 
--- Public access via trip_id (no auth required for collaboration)
-create policy "Public items" on items for all using (true) with check (true);
-create policy "Public meals" on meals for all using (true) with check (true);
-create policy "Public trips" on trips for all using (true) with check (true);
-create policy "Public plano" on plano for all using (true) with check (true);
+-- Public read/write (no auth for MVP)
+alter table trips     enable row level security;
+alter table meals     enable row level security;
+alter table items     enable row level security;
+alter table expenses  enable row level security;
+alter table customers enable row level security;
 
--- ═══════════════════════════════════════════════
--- 7. REALTIME (subscribe to changes)
--- ═══════════════════════════════════════════════
-alter publication supabase_realtime add table items;
-alter publication supabase_realtime add table meals;
-alter publication supabase_realtime add table trips;
-alter publication supabase_realtime add table plano;
+create policy "public trips"    on trips     for all using (true) with check (true);
+create policy "public meals"    on meals     for all using (true) with check (true);
+create policy "public items"    on items     for all using (true) with check (true);
+create policy "public expenses" on expenses  for all using (true) with check (true);
+
+-- customers: write via service role only (API), read by email match
+create policy "insert customers" on customers for insert with check (true);
+create policy "select customers" on customers for select using (true);

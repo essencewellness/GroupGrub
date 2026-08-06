@@ -18,8 +18,10 @@ import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
 import { exportShoppingList } from './lib/exportPdf'
 
-// Captured at module load time, before the app modifies the URL with a generated trip ID
-const INITIAL_TRIP_FROM_URL = new URLSearchParams(window.location.search).get('trip')
+// Captured at module load time, before the app modifies the URL.
+// A valid guest invite requires BOTH ?trip=X and ?key=Y — just guessing a trip ID is not enough.
+const _ip = new URLSearchParams(window.location.search)
+const INITIAL_INVITE_VALID = !!(_ip.get('trip') && _ip.get('key'))
 
 const CATS = {
   dispensa:   { label: 'Dispensa',         icon: '🥫', color: '#f5a623', desc: 'Compra com antecedência' },
@@ -174,8 +176,8 @@ export default function App() {
     )
   }
 
-  // Non-premium users who didn't arrive via a shared link see the onboarding paywall
-  if (!isPremium && !verifying && !INITIAL_TRIP_FROM_URL) {
+  // Non-premium users who didn't arrive via a valid invite link see the onboarding paywall
+  if (!isPremium && !verifying && !INITIAL_INVITE_VALID) {
     return <Onboarding tripId={trip.tripId} />
   }
 
@@ -538,7 +540,7 @@ export default function App() {
       </main>
 
       <AddMealModal open={showAddMeal} onClose={() => setAddMeal(false)} onAdd={handleAddMealWithIngredientes} />
-      <ShareModal open={showShare} onClose={() => setShare(false)} shareUrl={trip.shareUrl} isOwner={isOwner} />
+      <ShareModal open={showShare} onClose={() => setShare(false)} shareUrl={trip.shareUrl} tripId={trip.tripId} isOwner={isOwner} />
       <NewTripWizard
         open={showWizard}
         onClose={() => { setWizardDismissed(true); setShowWizard(false) }}

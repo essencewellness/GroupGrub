@@ -16,7 +16,25 @@ export default async function handler(req) {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
 
     if (session.payment_status === 'paid') {
-      return new Response(JSON.stringify({ ok: true, email: session.customer_email }), { status: 200 })
+      const email = session.customer_email
+      // Persist email → Supabase for cross-device recovery
+      if (email) {
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        if (supabaseUrl && supabaseKey) {
+          await fetch(`${supabaseUrl}/rest/v1/customers`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: supabaseKey,
+              Authorization: `Bearer ${supabaseKey}`,
+              Prefer: 'resolution=ignore-duplicates',
+            },
+            body: JSON.stringify({ email: email.trim().toLowerCase(), stripe_session_id: sessionId }),
+          }).catch(() => { /* non-fatal */ })
+        }
+      }
+      return new Response(JSON.stringify({ ok: true, email }), { status: 200 })
     }
     return new Response(JSON.stringify({ ok: false }), { status: 200 })
   } catch (err) {

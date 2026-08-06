@@ -31,9 +31,10 @@ export default function usePremium() {
       body: JSON.stringify({ sessionId }),
     })
       .then(r => r.json())
-      .then(({ ok }) => {
+      .then(({ ok, email }) => {
         if (ok) {
           localStorage.setItem(PREMIUM_KEY, 'true')
+          if (email) localStorage.setItem('groupgrub_user_email', email)
           setIsPremium(true)
         }
       })
