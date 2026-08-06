@@ -91,7 +91,7 @@ export async function exportShoppingList({ tripId, items, tripName }) {
     doc.setFont("helvetica", "normal")
     y += 10
 
-    // Items
+    // Items — inclui assignee quando atribuído
     itemsInCat.forEach((item) => {
       const isComprado = item.comprado ? "✓ " : "☐ "
       const qtd = item.qtd ? ` (${item.qtd})` : ""
@@ -117,7 +117,7 @@ export async function exportShoppingList({ tripId, items, tripName }) {
   doc.setFontSize(8)
   doc.setTextColor(130, 130, 130)
   doc.text(
-    `Exportado em ${new Date().toLocaleDateString("pt-PT")} · Férias Celorico Pro`,
+    `Exportado em ${new Date().toLocaleDateString("pt-PT")} · GroupGrub Pro`,
     margin,
     pageHeight - 10
   )
@@ -173,7 +173,7 @@ export async function exportMealPlan({ tripId, meals, tripName }) {
   doc.setFontSize(8)
   doc.setTextColor(130, 130, 130)
   doc.text(
-    `Exportado em ${new Date().toLocaleDateString("pt-PT")} · Férias Celorico Pro`,
+    `Exportado em ${new Date().toLocaleDateString("pt-PT")} · GroupGrub Pro`,
     20,
     290
   )

@@ -9,7 +9,6 @@ const CAT_COLORS = {
   refrigerado: '#9b7bff',
   fresco: '#34d399',
   outro: 'rgba(255,90,38,0.55)',
-  desconhecido: 'rgba(255,90,38,0.75)', // item sem categoria → colore para chamar atenção
 }
 
 // Map de labels PT para as opções do selector
@@ -19,7 +18,6 @@ const CAT_LABELS = {
   refrigerado: 'Refrigerado',
   fresco: 'Fresco',
   outro: 'Outro',
-  desconhecido: 'Sem categoria',
 }
 
 const CAT_OPTIONS = ['duradouro', 'congelado', 'refrigerado', 'fresco', 'outro']
@@ -39,6 +37,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
   const catKey = cat || item.categoria || 'outro'
   const catColor = CAT_COLORS[catKey] || CAT_COLORS.outro
   const borderColor = item.comprado ? '#34d399' : catColor
+  const isUncategorized = catKey === 'outro' // apenas 'outro' → aviso de categoria
 
   return (
     <motion.div
@@ -94,7 +93,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
             </span>
           )}
 
-          {(catKey === 'desconhecido' || catKey === 'outro') && (
+          {isUncategorized && (
             <span
               className="font-mono text-[0.58rem] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded"
               style={{ background: 'rgba(255,90,38,0.25)', color: '#ff5a06', border: '1px solid rgba(255,90,38,0.5)' }}
@@ -102,7 +101,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
             >
               ⚠ {t('shopping.uncategorized')}</span>
           )}
-          {(catKey === 'desconhecido' || catKey === 'outro') && (
+          {isUncategorized && (
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setShowCatPicker(v => !v) }}

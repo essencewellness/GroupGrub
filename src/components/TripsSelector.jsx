@@ -4,10 +4,10 @@ import { ChevronDown, Plus, Copy } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useTrips } from "../hooks/useTrips"
 
-export default function TripsSelector({ currentTripId, onSwitchTrip, onShowPricing, onShowWizard, userPlan }) {
+export default function TripsSelector({ currentTripId, onShowPricing, onShowWizard, userPlan }) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
-  const { trips, duplicateTrip, loading } = useTrips()
+  const { trips, duplicateTrip, switchTrip, loading } = useTrips()
 
   const currentTrip = trips.find((trip) => trip.id === currentTripId) || {
     title: loading ? t("app.initializing") : "Minha Viagem",
@@ -15,7 +15,7 @@ export default function TripsSelector({ currentTripId, onSwitchTrip, onShowPrici
 
   const handleDuplicate = async (tripId, title) => {
     const newId = await duplicateTrip(tripId, title + " (cópia)")
-    onSwitchTrip(newId)
+    switchTrip(newId)
   }
 
   if (loading) return null
@@ -57,8 +57,7 @@ export default function TripsSelector({ currentTripId, onSwitchTrip, onShowPrici
                   <div key={trip.id} className="mb-1">
                     <button
                       onClick={() => {
-                        onSwitchTrip(trip.id)
-                        window.location.href = window.location.pathname + "?trip=" + trip.id
+                        switchTrip(trip.id)
                         setIsOpen(false)
                       }}
                       className={`w-full py-2.5 px-3 rounded-xl border text-left text-sm transition-colors ${

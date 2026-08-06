@@ -4,6 +4,9 @@ import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal,
 import { hasSupabase } from '../lib/supabase'
 import { categorizeItem } from '../lib/categorizer'
 
+// Re-exporta para componentes que importam do useTrip
+export { CATEGORIA_PADRAO } from '../lib/categorizer'
+
 const LS_TRIP_ID = 'ferias_trip_id'
 const PESSOAS    = ['João', 'Maria', 'Pedro', 'Ana', '—']
 
@@ -157,8 +160,9 @@ export default function useTrip() {
     return () => { cancelled = true }
   }, [loadData])
 
-  /* ── polling: refresca a cada 5 segundos para garantir sync ── */
+  /* ── polling: refresca a cada 5 segundos SÓ quando Supabase Realtime não está ativo (fallback offline) ── */
   useEffect(() => {
+    if (hasSupabase) return // Realtime cobre updates — polling redundante
     const interval = setInterval(() => loadData(false), 5000)
     return () => clearInterval(interval)
   }, [loadData])

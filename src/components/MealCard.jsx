@@ -73,7 +73,7 @@ export default function MealCard({ meal, index, isOpen, onClick, onUpdate, onDel
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <motion.button
             whileTap={{ scale: 0.85 }}
-            onClick={(e) => { e.stopPropagation(); setEditing(true); onClick() }}
+            onClick={(e) => { e.stopPropagation(); setEditing(true) }}
             className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
           >
             <Pencil size={13} />

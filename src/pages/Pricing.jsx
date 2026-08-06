@@ -18,7 +18,8 @@ export default function Pricing({ onClose, tripId }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tripId,
-          customerEmail: email,
+          customerEmail: email || undefined,
+          email: email || undefined,
         }),
       })
       const data = await res.json()

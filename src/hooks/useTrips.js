@@ -165,11 +165,17 @@ export function useTrips() {
     []
   )
 
-  // Switch active trip
+  // Switch active trip — unificado com useTrip.setTripId
   const switchTrip = useCallback((tripId) => {
+    if (!tripId || tripId.length < 6) return
     localStorage.setItem(LS_TRIP_ID, tripId)
     sessionStorage.setItem(LS_TRIP_ID, tripId)
-    window.dispatchEvent(new Event("storage"))
+    const url = new URL(window.location)
+    url.searchParams.set('trip', tripId)
+    url.hash = ''
+    window.history.replaceState({}, '', url)
+    // Apenas evento — o App recarrega via useTrip (evita reload duplo)
+    window.dispatchEvent(new Event('trip-change', { detail: tripId }))
   }, [])
 
   // Duplicate an existing trip

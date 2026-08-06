@@ -5,6 +5,7 @@ import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, S
 import { useTranslation } from 'react-i18next'
 import useTrip from './hooks/useTrip'
 import { useTrips } from './hooks/useTrips'
+import usePremium from './hooks/usePremium'
 import MealCard from './components/MealCard'
 import ShopItem from './components/ShopItem'
 import AddMealModal from './components/AddMealModal'
@@ -53,6 +54,7 @@ export default function App() {
   const { t } = useTranslation()
   const trip = useTrip()
   const trips = useTrips()
+  const { isPremium } = usePremium()
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
@@ -101,7 +103,7 @@ export default function App() {
   const comprados = trip.items.filter((i) => i.comprado).length
   const pct = total ? Math.round((comprados / total) * 100) : 0
 
-  // Agrupa itens por categoria. Itens "desconhecido" (não categorizados
+  // Agrupa itens por categoria. Itens "outro" (não categorizados
   // pelo dicionário local) mostram-se na secção "Outros" para o utilizador
   // recolher manualmente — e marcam distinto no ShopItem.
   const grupos = {}
@@ -164,7 +166,7 @@ export default function App() {
                 {trip.tripId && <span className="font-mono">#{trip.tripId}</span>}
               </p>
               <div className="mt-2.5 max-w-[420px]">
-                <TripsSelector currentTripId={trip.tripId} onSwitchTrip={trip.setTripId} onShowPricing={() => setShowPricing(true)} onShowWizard={() => setShowWizard(true)} userPlan="pro" />
+                <TripsSelector currentTripId={trip.tripId} onSwitchTrip={trip.setTripId} onShowPricing={() => setShowPricing(true)} onShowWizard={() => setShowWizard(true)} userPlan={isPremium ? 'pro' : 'free'} />
               </div>
             </div>
             <div className="flex gap-2 items-center">

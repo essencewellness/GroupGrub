@@ -6,9 +6,9 @@ const pwaOptions = {
   registerType: 'autoUpdate',
   includeAssets: ['favicon.svg', 'favicon-16.png', 'favicon-32.png', 'favicon-180.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
   manifest: {
-    name: 'Férias Celorico',
-    short_name: 'Férias',
-    description: 'Lista de compras e refeições para as férias',
+    short_name: 'GroupGrub',
+    name: 'GroupGrub',
+    description: 'Lista de compras e plano de refeições partilhado para grupos em férias.',
     theme_color: '#04070d',
     background_color: '#04070d',
     display: 'standalone',
@@ -63,7 +63,7 @@ const pwaOptions = {
     cleanupOutdatedCaches: true,
   },
   devOptions: {
-    enabled: true,
+    enabled: false, // PWA off em dev — evita SW cache interferir com HMR
   },
   injectRegister: 'auto',
 }

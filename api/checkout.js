@@ -11,13 +11,13 @@ export default async function handler(req) {
   }
 
   try {
-    const { priceId, tripId, customerEmail } = await req.json()
+    const { priceId, tripId, customerEmail, email } = await req.json()
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment', // 👈 Alinhado para Pagamento Único (Lifetime)
-      customer_email: customerEmail || undefined,
+      customer_email: customerEmail || email || undefined,
       line_items: [
         {
           price: priceId || process.env.VITE_STRIPE_PRICE_ID,
