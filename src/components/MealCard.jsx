@@ -95,35 +95,37 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
               <Pencil size={13} />
             </motion.button>
           )}
-          {isOwner && (!confirmDelete ? (
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
-            >
-              <Trash2 size={13} />
-            </motion.button>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-1"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={onDelete}
-                className="px-2.5 py-1 rounded-lg bg-brand text-black font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em]"
+          {isOwner && (
+            !confirmDelete ? (
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
               >
-                {t('shopping.remove')}
-              </button>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="px-2.5 py-1 rounded-lg border border-line bg-white/[0.03] text-muted font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em]"
+                <Trash2 size={13} />
+              </motion.button>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-1"
+                onClick={(e) => e.stopPropagation()}
               >
-                {t('pricing.cancel')}
-              </button>
-            </motion.div>
-          ))}
+                <button
+                  onClick={onDelete}
+                  className="px-2.5 py-1 rounded-lg bg-brand text-black font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em]"
+                >
+                  {t('shopping.remove')}
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="px-2.5 py-1 rounded-lg border border-line bg-white/[0.03] text-muted font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em]"
+                >
+                  {t('pricing.cancel')}
+                </button>
+              </motion.div>
+            )
+          )}
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}

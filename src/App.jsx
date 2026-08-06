@@ -18,6 +18,9 @@ import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
 import { exportShoppingList } from './lib/exportPdf'
 
+// Captured at module load time, before the app modifies the URL with a generated trip ID
+const INITIAL_TRIP_FROM_URL = new URLSearchParams(window.location.search).get('trip')
+
 const CATS = {
   dispensa:   { label: 'Dispensa',         icon: '🥫', color: '#f5a623', desc: 'Compra com antecedência' },
   bebidas:    { label: 'Bebidas',           icon: '🍷', color: '#3aa0ff', desc: 'Compra com antecedência' },
@@ -139,9 +142,6 @@ export default function App() {
     }
   }, [trip.loading, trip.needsSetup, wizardDismissed])
 
-  // Guests arriving via shared link bypass the paywall
-  const hasSharedTrip = !!new URLSearchParams(window.location.search).get('trip')
-
   if (trip.loading) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
@@ -174,8 +174,8 @@ export default function App() {
     )
   }
 
-  // Non-premium users without a shared trip link see the onboarding paywall
-  if (!isPremium && !verifying && !hasSharedTrip) {
+  // Non-premium users who didn't arrive via a shared link see the onboarding paywall
+  if (!isPremium && !verifying && !INITIAL_TRIP_FROM_URL) {
     return <Onboarding tripId={trip.tripId} />
   }
 
@@ -495,41 +495,43 @@ export default function App() {
                   </span>
                 </div>
               )}
-              {isOwner && <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className={`flex gap-2.5 items-center p-3.5 rounded-xl border transition-all duration-200 ${
-                  inputFocused ? 'border-brand/60 bg-brand/[0.06]' : 'border-line bg-panel'
-                }`}
-                style={{ boxShadow: inputFocused ? '0 0 24px rgba(255,90,38,.2)' : 'none' }}
-              >
-                <span className="font-mono text-cream/60 text-sm font-bold flex-shrink-0">&gt;</span>
-                <input
-                  value={novoItem}
-                  onChange={(e) => setNovoItem(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
-                  onFocus={() => setInputFocused(true)}
-                  onBlur={() => setInputFocused(false)}
-                  placeholder={t('shopping.addItem')}
-                  className="flex-1 bg-transparent border-none outline-none text-[0.88rem] text-cream font-medium placeholder:text-faint"
-                />
-                <AnimatePresence>
-                  {novoItem.trim() && (
-                    <motion.button
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      whileTap={{ scale: 0.88 }}
-                      onClick={handleAddItem}
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-brand/20 text-brand border border-brand/60"
-                      style={{ boxShadow: '0 0 16px rgba(255,90,38,.35)' }}
-                    >
-                      <Plus size={17} strokeWidth={2.5} />
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-              </motion.div>}
+              {isOwner && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className={`flex gap-2.5 items-center p-3.5 rounded-xl border transition-all duration-200 ${
+                    inputFocused ? 'border-brand/60 bg-brand/[0.06]' : 'border-line bg-panel'
+                  }`}
+                  style={{ boxShadow: inputFocused ? '0 0 24px rgba(255,90,38,.2)' : 'none' }}
+                >
+                  <span className="font-mono text-cream/60 text-sm font-bold flex-shrink-0">&gt;</span>
+                  <input
+                    value={novoItem}
+                    onChange={(e) => setNovoItem(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
+                    onFocus={() => setInputFocused(true)}
+                    onBlur={() => setInputFocused(false)}
+                    placeholder={t('shopping.addItem')}
+                    className="flex-1 bg-transparent border-none outline-none text-[0.88rem] text-cream font-medium placeholder:text-faint"
+                  />
+                  <AnimatePresence>
+                    {novoItem.trim() && (
+                      <motion.button
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        whileTap={{ scale: 0.88 }}
+                        onClick={handleAddItem}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-brand/20 text-brand border border-brand/60"
+                        style={{ boxShadow: '0 0 16px rgba(255,90,38,.35)' }}
+                      >
+                        <Plus size={17} strokeWidth={2.5} />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
