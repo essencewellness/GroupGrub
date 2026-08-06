@@ -11,7 +11,15 @@ const LS_TRIP_ID = 'ferias_trip_id'
 
 function pessoasKey(tripId) { return `ferias_pessoas_${tripId}` }
 function loadPessoas(tripId) {
-  try { return JSON.parse(localStorage.getItem(pessoasKey(tripId)) || '[]') } catch { return [] }
+  try {
+    const saved = JSON.parse(localStorage.getItem(pessoasKey(tripId)) || '[]')
+    // Auto-add owner name if list is empty
+    if (saved.length === 0) {
+      const ownerName = localStorage.getItem('groupgrub_user_name')
+      if (ownerName) return [ownerName]
+    }
+    return saved
+  } catch { return [] }
 }
 function savePessoas(tripId, arr) {
   try { localStorage.setItem(pessoasKey(tripId), JSON.stringify(arr)) } catch { /* quota */ }
@@ -295,12 +303,39 @@ export default function useTrip() {
   const categorizarTudo = useCallback(async (sourceItems) => {
     const lista = sourceItems ?? itemsRef.current
     if (!lista.length) return
-    const patched = lista.map(item => {
+
+    // First apply local dictionary for speed
+    const localPatched = lista.map(item => {
       const { categoria, antecipado } = categorizeItem(item.nome)
       return cleanItem({ ...item, categoria, antecipado }, tripId)
     })
-    setItems(patched)
-    await bulkUpsertItems(tripId, patched)
+    setItems(localPatched)
+
+    // Then refine with Groq for items still in 'outro'
+    const outroItems = localPatched.filter(i => i.categoria === 'outro').map(i => ({ id: i.id, nome: i.nome }))
+    if (outroItems.length > 0) {
+      try {
+        const res = await fetch('/api/categorize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: outroItems }),
+        })
+        if (res.ok) {
+          const { results } = await res.json()
+          if (results?.length) {
+            const map = Object.fromEntries(results.map(r => [r.id, r.categoria]))
+            const aiPatched = localPatched.map(item =>
+              map[item.id] ? cleanItem({ ...item, categoria: map[item.id] }, tripId) : item
+            )
+            setItems(aiPatched)
+            await bulkUpsertItems(tripId, aiPatched)
+            return
+          }
+        }
+      } catch { /* fallback to local */ }
+    }
+
+    await bulkUpsertItems(tripId, localPatched)
   }, [tripId])
 
   // ── Wizard: configurar meta da viagem e gerar slots automaticamente ──
