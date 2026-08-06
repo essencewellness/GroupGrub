@@ -303,28 +303,15 @@ export default function App() {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => trip.categorizarTudo()}
-                  disabled={trip.aiLoading}
                   className="flex-1 py-3 rounded-xl border text-xs font-semibold tracking-[0.1em] transition-all"
                   style={{
-                    borderColor: trip.aiLoading ? 'rgba(255,90,38,0.2)' : 'rgba(255,90,38,0.55)',
-                    background: trip.aiLoading ? 'rgba(255,90,38,0.04)' : 'rgba(255,90,38,0.11)',
+                    borderColor: 'rgba(255,90,38,0.55)',
+                    background: 'rgba(255,90,38,0.11)',
                     color: '#ff5a26',
-                    boxShadow: trip.aiLoading ? 'none' : '0 0 20px rgba(255,90,38,0.18)',
+                    boxShadow: '0 0 20px rgba(255,90,38,0.18)',
                   }}
                 >
-                  {trip.aiLoading ? (
-                    <>
-                      <span
-                        className="inline-block w-3 h-3 border-2 border-brand/25 border-t-brand rounded-full align-middle mr-1.5"
-                        style={{ animation: 'spin .7s linear infinite' }}
-                      />
-                      {t('shopping.analyzing')}
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={13} className="inline mr-1.5" /> {t('shopping.recategorize')}
-                    </>
-                  )}
+                  <Sparkles size={13} className="inline mr-1.5" /> {t('shopping.recategorize')}
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.93 }}

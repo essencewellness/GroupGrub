@@ -51,15 +51,6 @@ const pwaOptions = {
         }
       },
       {
-        urlPattern: /^https:\/\/api\.groq\.com/,
-        handler: 'NetworkFirst',
-        options: {
-          cacheName: 'groq-api',
-          networkTimeoutSeconds: 10,
-          expiration: { maxEntries: 20, maxAgeSeconds: 60 * 6 },
-        }
-      },
-      {
         urlPattern: /^https:\/\/[^.]+\.supabase\.co/,
         handler: 'NetworkFirst',
         options: {

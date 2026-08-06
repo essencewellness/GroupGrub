@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { v4 as uuid } from 'uuid'
 import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip } from '../lib/db'
 import { hasSupabase } from '../lib/supabase'
+import { categorizeItem } from '../lib/categorizer'
 
-const GROQ_KEY   = import.meta.env.VITE_GROQ_KEY
 const LS_TRIP_ID = 'ferias_trip_id'
 const PESSOAS    = ['João', 'Maria', 'Pedro', 'Ana', '—']
 
@@ -112,7 +112,6 @@ export default function useTrip() {
     try { return JSON.parse(localStorage.getItem('ferias_meta')) ?? null } catch { return null }
   })
   const [loading, setLoading] = useState(true)
-  const [aiLoading, setAiLoading] = useState(false)
 
   // Refs vivas dos dados — permitem que os callbacks (toggleItem, updateMeal,
   // categorizarTudo…) leiam o estado atual sem o listarem nas dependências, e
@@ -222,71 +221,27 @@ export default function useTrip() {
     await upsertItem(tripId, updated)
   }, [tripId])
 
-  const addItemRaw = useCallback(async (nome, qtd = '') => {
-    const newItem = cleanItem({ id: uuid(), nome, qtd, categoria: 'outro', antecipado: false, comprado: false, created_at: new Date().toISOString() }, tripId)
+  const addItem = useCallback(async (nome, qtd = '') => {
+    const { categoria, antecipado } = categorizeItem(nome)
+    const newItem = cleanItem({ id: uuid(), nome, qtd, categoria, antecipado, comprado: false, created_at: new Date().toISOString() }, tripId)
     setItems(p => [...p, newItem])
     await upsertItem(tripId, newItem)
     return newItem
   }, [tripId])
-
-  const addItem = useCallback(async (nome, qtd = '') => {
-    const newItem = await addItemRaw(nome, qtd)
-    if (!GROQ_KEY) return newItem
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: `Classifica: "${nome}". Só JSON: {"categoria":"duradouro|fresco|congelado|refrigerado","antecipado":true|false}` }], temperature: 0.1, max_tokens: 60 })
-      })
-      const data = await res.json()
-      const match = data.choices?.[0]?.message?.content?.match(/\{[\s\S]*\}/)
-      if (match) {
-        const result = JSON.parse(match[0])
-        const patched = cleanItem({ ...newItem, ...result }, tripId)
-        setItems(p => p.map(i => i.id === newItem.id ? patched : i))
-        await upsertItem(tripId, patched)
-      }
-    } catch (e) {
-      console.warn('Auto-categorização falhou para', nome, e)
-    }
-    return newItem
-  }, [tripId, addItemRaw])
 
   const addIngredientes = useCallback(async (nomes, itemsAtual) => {
     const existentes = new Set((itemsAtual || []).map(i => i.nome.toLowerCase().trim()))
     const novos = nomes.filter(n => !existentes.has(n.toLowerCase().trim()))
     if (!novos.length) return 0
 
-    const newItems = await Promise.all(novos.map(nome => addItemRaw(nome)))
-    if (!GROQ_KEY) return novos.length
-
-    try {
-      const prompt = `Lista:\n${novos.join('\n')}\n\nClassifica cada um: "congelado","fresco","duradouro","refrigerado". "antecipado":true se aguentar 2+ semanas sem frio.\nSó JSON array:\n[{"nome":"...","categoria":"...","antecipado":true}]`
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], temperature: 0.1, max_tokens: 500 })
-      })
-      const data = await res.json()
-      const match = data.choices?.[0]?.message?.content?.match(/\[[\s\S]*\]/)
-      if (match) {
-        const cats = JSON.parse(match[0])
-        const patchedNew = newItems.map(item => {
-          const found = cats.find(c => c.nome?.toLowerCase().trim() === item.nome?.toLowerCase().trim())
-          return found ? cleanItem({ ...item, categoria: found.categoria, antecipado: found.antecipado }, tripId) : item
-        })
-        setItems(p => p.map(i => {
-          const patched = patchedNew.find(n => n.id === i.id)
-          return patched ? patched : i
-        }))
-        await Promise.all(patchedNew.map(i => upsertItem(tripId, i)))
-      }
-    } catch (e) {
-      console.warn('Categorização de ingredientes falhou', e)
-    }
-
+    const newItems = novos.map(nome => {
+      const { categoria, antecipado } = categorizeItem(nome)
+      return cleanItem({ id: uuid(), nome, qtd: '', categoria, antecipado, comprado: false, created_at: new Date().toISOString() }, tripId)
+    })
+    setItems(p => [...p, ...newItems])
+    await bulkUpsertItems(tripId, newItems)
     return novos.length
-  }, [tripId, addItemRaw])
+  }, [tripId])
 
   const removeItem = useCallback(async (id) => {
     setItems(p => p.filter(i => i.id !== id))
@@ -320,38 +275,16 @@ export default function useTrip() {
     await deleteMeal(tripId, id)
   }, [tripId])
 
-  /* ══ AI ══ */
+  /* ══ CATEGORIZAÇÃO LOCAL ══ */
   const categorizarTudo = useCallback(async (sourceItems) => {
     const lista = sourceItems ?? itemsRef.current
     if (!lista.length) return
-    if (!GROQ_KEY) { console.warn('VITE_GROQ_KEY em falta — categorização AI desativada'); return }
-    setAiLoading(true)
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: `Lista compras:\n${lista.map(i => i.nome).join('\n')}\n\nClassifica: "congelado","fresco","duradouro","refrigerado". "antecipado":true se 2+ semanas sem frio.\nSó JSON:\n[{"nome":"...","categoria":"...","antecipado":true/false}]` }],
-          temperature: 0.1, max_tokens: 2000,
-        })
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error?.message)
-      const match = data.choices[0].message.content.match(/\[[\s\S]*\]/)
-      if (!match) throw new Error('parse error')
-      const cats = JSON.parse(match[0])
-      const patched = lista.map(item => {
-        const found = cats.find(c => c.nome?.toLowerCase().trim() === item.nome?.toLowerCase().trim())
-        return found ? cleanItem({ ...item, categoria: found.categoria, antecipado: found.antecipado }, tripId) : item
-      })
-      setItems(patched)
-      await Promise.all(patched.map(i => upsertItem(tripId, i)))
-    } catch (e) {
-      console.error('Groq error', e)
-    } finally {
-      setAiLoading(false)
-    }
+    const patched = lista.map(item => {
+      const { categoria, antecipado } = categorizeItem(item.nome)
+      return cleanItem({ ...item, categoria, antecipado }, tripId)
+    })
+    setItems(patched)
+    await bulkUpsertItems(tripId, patched)
   }, [tripId])
 
   // ── Wizard: configurar meta da viagem e gerar slots automaticamente ──
@@ -384,7 +317,7 @@ export default function useTrip() {
   }, [loadData])
 
   return {
-    tripId, loading, aiLoading, hasSupabase,
+    tripId, loading, hasSupabase,
     setTripId,
     items, toggleItem, updateItem, addItem, addIngredientes, removeItem, resetTicks, categorizarTudo,
     meals, addMeal, updateMeal, removeMeal,
