@@ -18,11 +18,12 @@ export default {
         cream: '#f5f5f4',
         muted: 'rgba(245,245,244,0.55)',
         faint: 'rgba(245,245,244,0.32)',
-        // category accents (fintech-tinted, still readable on dark)
-        duradouro: '#f5a623',
-        congelado: '#3aa0ff',
-        refrigerado: '#9b7bff',
-        fresco: '#34d399',
+        // category accents
+        dispensa:  '#f5a623',
+        bebidas:   '#3aa0ff',
+        talho:     '#ff6b6b',
+        laticinios:'#9b7bff',
+        fresco:    '#34d399',
       },
       fontFamily: {
         sans: ['"DM Sans"', 'system-ui', 'sans-serif'],

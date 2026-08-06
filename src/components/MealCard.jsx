@@ -3,9 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Pencil, Trash2, Check, X, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-const EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🫙', '🍖']
+const EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🍖', '🥪', '🍕', '🌮', '🍲', '🫙', '🍰', '🦐', '🍝', '🍔', '🥞', '🌯']
 
-export default function MealCard({ meal, index, isOpen, onClick, onUpdate, onDelete }) {
+const TIPOS = [
+  { key: 'almoco',         label: '☀️ Almoço' },
+  { key: 'jantar',         label: '🌙 Jantar' },
+  { key: 'petisco',        label: '🫙 Petisco' },
+  { key: 'pequeno_almoco', label: '🌅 Pequeno-almoço' },
+  { key: 'sobremesa',      label: '🍰 Sobremesa' },
+  { key: 'brunch',         label: '☕ Brunch' },
+  { key: 'bebidas',        label: '🥤 Bebidas' },
+]
+
+function tipoLabel(tipo) {
+  const found = TIPOS.find(t => t.key === tipo)
+  return found ? found.label : tipo
+}
+
+export default function MealCard({ meal, index, isOpen, isOwner = true, onClick, onUpdate, onDelete }) {
   const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState({ nome: meal.nome, emoji: meal.emoji, tipo: meal.tipo, ingredientes: meal.ingredientes })
@@ -59,8 +74,8 @@ export default function MealCard({ meal, index, isOpen, onClick, onUpdate, onDel
         <div className="flex-1 min-w-0">
           {meal.tipo && (
             <div className="mb-1">
-              <span className="font-mono text-[0.58rem] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded bg-brand/15 border border-brand/40 text-brand">
-                {meal.tipo}
+              <span className="font-sans text-[0.72rem] font-semibold px-2.5 py-0.5 rounded-lg bg-brand/12 border border-brand/30 text-brand/90">
+                {tipoLabel(meal.tipo)}
               </span>
             </div>
           )}
@@ -71,14 +86,16 @@ export default function MealCard({ meal, index, isOpen, onClick, onUpdate, onDel
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <motion.button
-            whileTap={{ scale: 0.85 }}
-            onClick={(e) => { e.stopPropagation(); setEditing(true) }}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
-          >
-            <Pencil size={13} />
-          </motion.button>
-          {!confirmDelete ? (
+          {isOwner && (
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={(e) => { e.stopPropagation(); setEditing(true) }}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
+            >
+              <Pencil size={13} />
+            </motion.button>
+          )}
+          {isOwner && (!confirmDelete ? (
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
@@ -106,7 +123,7 @@ export default function MealCard({ meal, index, isOpen, onClick, onUpdate, onDel
                 {t('pricing.cancel')}
               </button>
             </motion.div>
-          )}
+          ))}
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
@@ -166,14 +183,26 @@ export default function MealCard({ meal, index, isOpen, onClick, onUpdate, onDel
                     onBlur={() => setFocusedInput(null)}
                     className={inputCls('nome')}
                   />
-                  <input
-                    value={draft.tipo}
-                    onChange={(e) => setDraft((d) => ({ ...d, tipo: e.target.value }))}
-                    placeholder={t('meals.type')}
-                    onFocus={() => setFocusedInput('tipo')}
-                    onBlur={() => setFocusedInput(null)}
-                    className={inputCls('tipo')}
-                  />
+                  {/* Tipo chips */}
+                  <div className="flex flex-wrap gap-1.5 mb-3.5">
+                    {TIPOS.map(({ key, label }) => {
+                      const active = draft.tipo === key
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setDraft(d => ({ ...d, tipo: active ? '' : key }))}
+                          className="px-3 py-1.5 rounded-xl text-[0.75rem] font-medium transition-all border"
+                          style={active
+                            ? { background: 'rgba(255,90,38,0.15)', borderColor: 'rgba(255,90,38,0.5)', color: '#ff5a26' }
+                            : { background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(245,245,244,0.5)' }
+                          }
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
                   <div className="flex flex-wrap gap-1.5 mb-2.5">
                     {draft.ingredientes.map((ing, ii) => (
                       <span

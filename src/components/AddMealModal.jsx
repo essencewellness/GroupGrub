@@ -1,44 +1,87 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Plus, X, Check } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, X, Check, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal'
+import { suggestEmoji } from '../lib/mealEmoji'
 
-const EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🍖', '🥪', '🍕', '🥙', '🫙']
+const EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🍖', '🥪', '🍕', '🌮', '🍲', '🫙', '🍰', '🤌', '🦐', '🥩', '🍝', '🍔', '🥞', '🌯', '🍱']
+
+const TIPOS = [
+  { key: 'almoco',         label: '☀️ Almoço' },
+  { key: 'jantar',         label: '🌙 Jantar' },
+  { key: 'petisco',        label: '🫙 Petisco' },
+  { key: 'pequeno_almoco', label: '🌅 Pequeno-almoço' },
+  { key: 'sobremesa',      label: '🍰 Sobremesa' },
+  { key: 'brunch',         label: '☕ Brunch' },
+  { key: 'bebidas',        label: '🥤 Bebidas' },
+]
 
 export default function AddMealModal({ open, onClose, onAdd }) {
   const { t } = useTranslation()
   const [form, setForm] = useState({ emoji: '🍽️', nome: '', tipo: '', ingredientes: [] })
   const [newIng, setNewIng] = useState('')
   const [focusedInput, setFocusedInput] = useState(null)
+  const [autoEmoji, setAutoEmoji] = useState(null)
+  const debounceRef = useRef(null)
 
-  const addIng = () => { if (newIng.trim()) { setForm((f) => ({ ...f, ingredientes: [...f.ingredientes, newIng.trim()] })); setNewIng('') } }
-  const removeIng = (i) => setForm((f) => ({ ...f, ingredientes: f.ingredientes.filter((_, ii) => ii !== i) }))
+  // Auto-detect emoji from meal name
+  useEffect(() => {
+    clearTimeout(debounceRef.current)
+    if (!form.nome.trim()) { setAutoEmoji(null); return }
+    debounceRef.current = setTimeout(() => {
+      const suggested = suggestEmoji(form.nome)
+      if (suggested && suggested !== form.emoji) setAutoEmoji(suggested)
+      else setAutoEmoji(null)
+    }, 300)
+    return () => clearTimeout(debounceRef.current)
+  }, [form.nome, form.emoji])
+
+  const applyAutoEmoji = () => {
+    if (autoEmoji) {
+      setForm(f => ({ ...f, emoji: autoEmoji }))
+      setAutoEmoji(null)
+    }
+  }
+
+  const addIng = () => {
+    if (newIng.trim()) {
+      setForm(f => ({ ...f, ingredientes: [...f.ingredientes, newIng.trim()] }))
+      setNewIng('')
+    }
+  }
+
+  const removeIng = (i) => setForm(f => ({ ...f, ingredientes: f.ingredientes.filter((_, ii) => ii !== i) }))
 
   const submit = () => {
     if (!form.nome.trim()) return
     onAdd(form)
     setForm({ emoji: '🍽️', nome: '', tipo: '', ingredientes: [] })
+    setAutoEmoji(null)
     onClose()
   }
 
   const inputCls = (name) =>
-    `w-full bg-black/50 border px-4 py-3 rounded-xl text-cream font-mono text-[1rem] outline-none transition-all mb-2.5 ${
-      focusedInput === name ? 'border-brand/60 shadow-[0_0_0_2px_rgba(255,90,38,0.3)]' : 'border-line'
+    `w-full bg-black/50 border px-4 py-3 rounded-xl text-cream font-sans text-[0.95rem] outline-none transition-all mb-3 ${
+      focusedInput === name ? 'border-brand/60 shadow-[0_0_0_2px_rgba(255,90,38,0.2)]' : 'border-line'
     }`
-
-  const isReady = form.nome.trim()
 
   return (
     <Modal open={open} onClose={onClose} title={t('meals.add')}>
-      <div className="font-mono text-[0.66rem] font-bold tracking-[0.12em] text-muted uppercase mb-2">{t('meals.chooseEmoji')}</div>
-      <div className="flex flex-wrap gap-2 mb-4">
+      {/* Emoji picker */}
+      <div className="font-mono text-[0.62rem] font-bold tracking-[0.14em] text-muted uppercase mb-2">
+        {t('meals.chooseEmoji')}
+      </div>
+      <div className="flex flex-wrap gap-2 mb-1.5">
         {EMOJIS.map((e) => (
           <motion.button
             key={e}
-            onClick={() => setForm((f) => ({ ...f, emoji: e }))}
-            className={`w-10 h-10 rounded-lg text-lg cursor-pointer transition-all ${
-              form.emoji === e ? 'bg-brand/20 border border-brand/60' : 'bg-white/[0.03] border border-transparent'
+            whileTap={{ scale: 0.9 }}
+            onClick={() => { setForm(f => ({ ...f, emoji: e })); setAutoEmoji(null) }}
+            className={`w-10 h-10 rounded-xl text-xl transition-all ${
+              form.emoji === e
+                ? 'bg-brand/20 border border-brand/60 shadow-[0_0_10px_rgba(255,90,38,0.3)]'
+                : 'bg-white/[0.03] border border-transparent hover:border-line'
             }`}
           >
             {e}
@@ -46,26 +89,65 @@ export default function AddMealModal({ open, onClose, onAdd }) {
         ))}
       </div>
 
+      {/* Auto-emoji suggestion */}
+      <AnimatePresence>
+        {autoEmoji && (
+          <motion.button
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            onClick={applyAutoEmoji}
+            className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl border border-brand/40 bg-brand/[0.07] w-full text-left"
+          >
+            <Sparkles size={13} className="text-brand flex-shrink-0" />
+            <span className="font-mono text-[0.68rem] text-brand font-bold tracking-[0.06em] uppercase">
+              {t('meals.autoEmoji')}:
+            </span>
+            <span className="text-xl">{autoEmoji}</span>
+            <span className="ml-auto font-mono text-[0.62rem] text-muted">Aplicar →</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Nome */}
       <input
         value={form.nome}
-        onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-        placeholder={t('meals.name')}
+        onChange={(e) => setForm(f => ({ ...f, nome: e.target.value }))}
+        placeholder={t('meals.namePlaceholder', 'Ex: Lasanha, Churrasco…')}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
         onFocus={() => setFocusedInput('nome')}
         onBlur={() => setFocusedInput(null)}
         className={inputCls('nome')}
       />
 
-      <input
-        value={form.tipo}
-        onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
-        placeholder={t('meals.type')}
-        onFocus={() => setFocusedInput('tipo')}
-        onBlur={() => setFocusedInput(null)}
-        className={inputCls('tipo')}
-      />
+      {/* Tipo — chips */}
+      <div className="font-mono text-[0.62rem] font-bold tracking-[0.14em] text-muted uppercase mb-2">
+        {t('meals.type')}
+      </div>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {TIPOS.map(({ key, label }) => {
+          const active = form.tipo === key
+          return (
+            <motion.button
+              key={key}
+              whileTap={{ scale: 0.93 }}
+              onClick={() => setForm(f => ({ ...f, tipo: active ? '' : key }))}
+              className="px-3.5 py-2 rounded-xl text-[0.8rem] font-medium transition-all border"
+              style={active
+                ? { background: 'rgba(255,90,38,0.15)', borderColor: 'rgba(255,90,38,0.55)', color: '#ff5a26', boxShadow: '0 0 10px rgba(255,90,38,0.2)' }
+                : { background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(245,245,244,0.55)' }
+              }
+            >
+              {label}
+            </motion.button>
+          )
+        })}
+      </div>
 
-      <div className="font-mono text-[0.66rem] font-bold tracking-[0.12em] text-muted uppercase mb-2">{t('meals.ingredients')}</div>
+      {/* Ingredientes */}
+      <div className="font-mono text-[0.62rem] font-bold tracking-[0.14em] text-muted uppercase mb-2">
+        {t('meals.ingredients')}
+      </div>
       <div className="flex flex-wrap gap-1.5 mb-2.5 min-h-8">
         {form.ingredientes.map((ing, ii) => (
           <span
@@ -96,7 +178,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
         />
         <button
           onClick={addIng}
-          className="px-3.5 flex items-center justify-center rounded-xl bg-brand/20 border border-brand/60 text-brand"
+          className="px-3.5 flex items-center justify-center rounded-xl bg-brand/20 border border-brand/60 text-brand hover:bg-brand/30 transition-colors"
         >
           <Plus size={16} />
         </button>
@@ -105,9 +187,9 @@ export default function AddMealModal({ open, onClose, onAdd }) {
       <motion.button
         whileTap={{ scale: 0.96 }}
         onClick={submit}
-        disabled={!isReady}
+        disabled={!form.nome.trim()}
         className={`w-full py-3.5 rounded-xl font-bold text-[0.92rem] tracking-[0.06em] uppercase flex items-center justify-center gap-2 transition-all ${
-          isReady ? 'btn-brand' : 'bg-white/[0.06] text-muted cursor-not-allowed'
+          form.nome.trim() ? 'btn-brand' : 'bg-white/[0.06] text-muted cursor-not-allowed'
         }`}
       >
         <Check size={17} /> {t('meals.addMeal')}

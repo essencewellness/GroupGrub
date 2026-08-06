@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Sparkles, RotateCcw, FileText, Receipt } from 'lucide-react'
+import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Sparkles, RotateCcw, FileText, Receipt, ShieldAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import useTrip from './hooks/useTrip'
 import { useTrips } from './hooks/useTrips'
 import usePremium from './hooks/usePremium'
+import { useRole } from './hooks/useRole'
 import Pricing from './pages/Pricing'
 import MealCard from './components/MealCard'
 import ShopItem from './components/ShopItem'
@@ -17,13 +18,14 @@ import ExpensesTab from './components/ExpensesTab'
 import { exportShoppingList } from './lib/exportPdf'
 
 const CATS = {
-  duradouro: { label: 'Duradouro', icon: '🥫', color: '#f5a623', desc: 'Compra com antecedência' },
-  congelado: { label: 'Congelado', icon: '🧊', color: '#3aa0ff', desc: 'Conserva no congelador' },
-  refrigerado: { label: 'Refrigerado', icon: '🧃', color: '#9b7bff', desc: '1–2 dias antes' },
-  fresco: { label: 'Fresco', icon: '🥦', color: '#34d399', desc: 'Comprar na hora' },
-  outro: { label: 'Outro', icon: '📦', color: '#6b8299', desc: '' },
+  dispensa:   { label: 'Dispensa',         icon: '🥫', color: '#f5a623', desc: 'Compra com antecedência' },
+  bebidas:    { label: 'Bebidas',           icon: '🍷', color: '#3aa0ff', desc: 'Compra com antecedência' },
+  talho:      { label: 'Talho & Peixaria', icon: '🥩', color: '#ff6b6b', desc: '1–2 dias antes' },
+  laticinios: { label: 'Laticínios',       icon: '🧀', color: '#9b7bff', desc: '1–2 dias antes' },
+  fresco:     { label: 'Frescos',          icon: '🥦', color: '#34d399', desc: 'Comprar no dia' },
+  outro:      { label: 'Outros',           icon: '📦', color: '#6b8299', desc: '' },
 }
-const CAT_ORDER = ['duradouro', 'congelado', 'refrigerado', 'fresco', 'outro']
+const CAT_ORDER = ['dispensa', 'bebidas', 'talho', 'laticinios', 'fresco', 'outro']
 
 function Toast({ toast }) {
   return (
@@ -55,6 +57,7 @@ export default function App() {
   const trip = useTrip()
   const trips = useTrips()
   const { isPremium, verifying } = usePremium()
+  const { isOwner, isGuest } = useRole(trip.tripId)
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
@@ -254,6 +257,26 @@ export default function App() {
         </div>
       </header>
 
+      {/* GUEST BANNER */}
+      {isGuest && (
+        <div className="max-w-[680px] mx-auto px-4 pt-3">
+          <div
+            className="flex items-start gap-3 px-4 py-3 rounded-xl border"
+            style={{ background: 'rgba(155,123,255,0.08)', borderColor: 'rgba(155,123,255,0.28)' }}
+          >
+            <ShieldAlert size={16} style={{ color: '#9b7bff', flexShrink: 0, marginTop: 2 }} />
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-[0.65rem] font-bold tracking-[0.12em] uppercase" style={{ color: '#9b7bff' }}>
+                {t('role.guestBanner')}
+              </div>
+              <div className="text-[0.75rem] text-muted mt-0.5 leading-relaxed">
+                {t('role.guestDesc')}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CONTENT */}
       <main className="flex-1 max-w-[680px] w-full mx-auto px-4 py-6 pb-40">
         <AnimatePresence mode="wait">
@@ -272,6 +295,7 @@ export default function App() {
                   meal={meal}
                   index={i}
                   isOpen={expanded === meal.id}
+                  isOwner={isOwner}
                   onClick={() => setExpanded(expanded === meal.id ? null : meal.id)}
                   onUpdate={(patch) => trip.updateMeal(meal.id, patch)}
                   onDelete={() => {
@@ -280,13 +304,15 @@ export default function App() {
                   }}
                 />
               ))}
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={() => setAddMeal(true)}
-                className="w-full mt-3.5 py-4 rounded-xl border border-dashed border-line text-brand font-semibold text-xs tracking-[0.12em] hover:bg-brand/5 transition-colors flex items-center justify-center gap-2"
-              >
-                <Plus size={16} /> {t('meals.add')}
-              </motion.button>
+              {isOwner && (
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setAddMeal(true)}
+                  className="w-full mt-3.5 py-4 rounded-xl border border-dashed border-line text-brand font-semibold text-xs tracking-[0.12em] hover:bg-brand/5 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus size={16} /> {t('meals.add')}
+                </motion.button>
+              )}
             </motion.div>
           )}
 
@@ -356,19 +382,21 @@ export default function App() {
 
               {/* Toolbar */}
               <div className="flex gap-2 mb-5">
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => trip.categorizarTudo()}
-                  className="flex-1 py-3 rounded-xl border text-xs font-semibold tracking-[0.1em] transition-all"
-                  style={{
-                    borderColor: 'rgba(255,90,38,0.55)',
-                    background: 'rgba(255,90,38,0.11)',
-                    color: '#ff5a26',
-                    boxShadow: '0 0 20px rgba(255,90,38,0.18)',
-                  }}
-                >
-                  <Sparkles size={13} className="inline mr-1.5" /> {t('shopping.recategorize')}
-                </motion.button>
+                {isOwner && (
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => trip.categorizarTudo()}
+                    className="flex-1 py-3 rounded-xl border text-xs font-semibold tracking-[0.1em] transition-all"
+                    style={{
+                      borderColor: 'rgba(255,90,38,0.55)',
+                      background: 'rgba(255,90,38,0.11)',
+                      color: '#ff5a26',
+                      boxShadow: '0 0 20px rgba(255,90,38,0.18)',
+                    }}
+                  >
+                    <Sparkles size={13} className="inline mr-1.5" /> {t('shopping.recategorize')}
+                  </motion.button>
+                )}
                 <motion.button
                   whileTap={{ scale: 0.93 }}
                   onClick={async () => {
@@ -438,6 +466,7 @@ export default function App() {
                             item={item}
                             cat={item.categoria || 'outro'}
                             pessoas={trip.pessoas}
+                            isOwner={isOwner}
                             onToggle={() => trip.toggleItem(item.id)}
                             onRemove={() => trip.removeItem(item.id)}
                             onUpdate={(patch) => trip.updateItem(item.id, patch)}
@@ -449,8 +478,15 @@ export default function App() {
                 )
               })}
 
-              {/* Add item */}
-              <motion.div
+              {/* Add item — owner only */}
+              {isGuest && (
+                <div className="mt-2 px-3.5 py-2.5 rounded-xl border border-line bg-white/[0.02] text-center">
+                  <span className="font-mono text-[0.65rem] text-faint tracking-[0.1em]">
+                    Só o organizador pode adicionar itens
+                  </span>
+                </div>
+              )}
+              {isOwner && <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -484,14 +520,14 @@ export default function App() {
                     </motion.button>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </motion.div>}
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
       <AddMealModal open={showAddMeal} onClose={() => setAddMeal(false)} onAdd={handleAddMealWithIngredientes} />
-      <ShareModal open={showShare} onClose={() => setShare(false)} shareUrl={trip.shareUrl} />
+      <ShareModal open={showShare} onClose={() => setShare(false)} shareUrl={trip.shareUrl} isOwner={isOwner} />
       <NewTripWizard
         open={showWizard}
         onClose={() => { setWizardDismissed(true); setShowWizard(false) }}

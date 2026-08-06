@@ -4,15 +4,16 @@ import { Check, Trash2, User, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const CATS = {
-  duradouro:  { label: 'Duradouro',  icon: '🥫', color: '#f5a623' },
-  congelado:  { label: 'Congelado',  icon: '🧊', color: '#3aa0ff' },
-  refrigerado:{ label: 'Refrigerado',icon: '🧃', color: '#9b7bff' },
-  fresco:     { label: 'Fresco',     icon: '🥦', color: '#34d399' },
-  outro:      { label: 'Outro',      icon: '📦', color: '#6b8299' },
+  dispensa:   { label: 'Dispensa',         icon: '🥫', color: '#f5a623' },
+  bebidas:    { label: 'Bebidas',           icon: '🍷', color: '#3aa0ff' },
+  talho:      { label: 'Talho & Peixaria', icon: '🥩', color: '#ff6b6b' },
+  laticinios: { label: 'Laticínios',       icon: '🧀', color: '#9b7bff' },
+  fresco:     { label: 'Frescos',          icon: '🥦', color: '#34d399' },
+  outro:      { label: 'Outros',           icon: '📦', color: '#6b8299' },
 }
-const CAT_ORDER = ['duradouro', 'fresco', 'refrigerado', 'congelado', 'outro']
+const CAT_ORDER = ['dispensa', 'bebidas', 'talho', 'laticinios', 'fresco', 'outro']
 
-export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pessoas }) {
+export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pessoas, isOwner = true }) {
   const { t } = useTranslation()
   const [editQtd, setEditQtd]           = useState(false)
   const [editAssignee, setEditAssignee] = useState(false)
@@ -24,9 +25,9 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
   const saveQtd      = () => { onUpdate({ qtd: qtdVal }); setEditQtd(false) }
   const saveAssignee = (val) => { onUpdate({ assignee: val }); setEditAssignee(false) }
 
-  const catKey   = cat || item.categoria || 'outro'
-  const catCfg   = CATS[catKey] || CATS.outro
-  const isUncat  = catKey === 'outro'
+  const catKey      = cat || item.categoria || 'outro'
+  const catCfg      = CATS[catKey] || CATS.outro
+  const isUncat     = catKey === 'outro'
   const borderColor = item.comprado ? '#34d399' : catCfg.color
 
   return (
@@ -79,6 +80,16 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
 
             {/* Badges inline */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
+              {/* Category mini-badge (non-outro) */}
+              {!isUncat && !item.comprado && (
+                <span
+                  className="font-mono text-[0.54rem] font-bold tracking-[0.04em] px-1.5 py-0.5 rounded flex items-center gap-0.5"
+                  style={{ background: `${catCfg.color}18`, color: catCfg.color, border: `1px solid ${catCfg.color}35` }}
+                >
+                  {catCfg.icon}
+                </span>
+              )}
+
               {item.assignee && item.assignee !== '—' && (
                 <span
                   className="font-mono text-[0.58rem] font-bold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded"
@@ -90,15 +101,15 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
 
               {item.antecipado && !item.comprado && (
                 <span
-                  className="font-mono text-[0.56rem] font-bold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded"
-                  style={{ background: 'rgba(245,166,35,0.12)', color: '#f5a623', border: '1px solid rgba(245,166,35,0.25)' }}
+                  className="font-mono text-[0.54rem] font-bold uppercase tracking-[0.04em] px-1.5 py-0.5 rounded"
+                  style={{ background: 'rgba(245,166,35,0.1)', color: '#f5a623', border: '1px solid rgba(245,166,35,0.22)' }}
                 >
                   ANT.
                 </span>
               )}
 
-              {/* QTD */}
-              {editQtd ? (
+              {/* QTD — owners can edit, guests see read-only */}
+              {isOwner && editQtd ? (
                 <input
                   autoFocus
                   value={qtdVal}
@@ -110,14 +121,14 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                 />
               ) : (
                 <span
-                  onClick={(e) => { e.stopPropagation(); setEditQtd(true) }}
-                  className="font-mono text-[0.68rem] text-muted border-b border-dashed border-line cursor-text pb-0.5 min-w-[18px] text-center"
+                  onClick={(e) => { if (!isOwner) return; e.stopPropagation(); setEditQtd(true) }}
+                  className={`font-mono text-[0.68rem] text-muted pb-0.5 min-w-[18px] text-center ${isOwner ? 'border-b border-dashed border-line cursor-text' : ''}`}
                 >
                   {item.qtd || t('shopping.qty')}
                 </span>
               )}
 
-              {/* Assign user */}
+              {/* Assign — all can assign themselves */}
               {pessoas && pessoas.length > 1 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setEditAssignee(v => !v); setShowCatPicker(false) }}
@@ -128,19 +139,21 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                 </button>
               )}
 
-              {/* Delete */}
-              <motion.button
-                whileTap={{ scale: 0.85 }}
-                onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
-                className="p-1 text-muted hover:text-brand transition-colors"
-              >
-                <Trash2 size={13} />
-              </motion.button>
+              {/* Delete — owner only */}
+              {isOwner && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
+                  className="p-1 text-muted hover:text-brand transition-colors"
+                >
+                  <Trash2 size={13} />
+                </motion.button>
+              )}
             </div>
           </div>
 
-          {/* Category selector trigger — full width, slides down inline */}
-          {isUncat && (
+          {/* Category selector trigger — owner only */}
+          {isUncat && isOwner && (
             <button
               type="button"
               onClick={() => { setShowCatPicker(v => !v); setEditAssignee(false) }}

@@ -18,7 +18,7 @@ function extractTripId(text) {
   return null
 }
 
-export default function ShareModal({ open, onClose, shareUrl }) {
+export default function ShareModal({ open, onClose, shareUrl, isOwner = false }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   const [copyHover, setCopyHover] = useState(false)
@@ -42,10 +42,30 @@ export default function ShareModal({ open, onClose, shareUrl }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const waUrl = `https://wa.me/?text=${encodeURIComponent('Junta-te ao GroupGrub! ' + shareUrl)}`
+  const waText = isOwner
+    ? `🍽️ Junta-te à nossa lista de viagem no GroupGrub!\n\nPodes ver o plano de refeições, a lista de compras e registar despesas.\n\n👉 ${shareUrl}`
+    : `🍽️ Lista de viagem no GroupGrub\n\n${shareUrl}`
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`
 
   return (
-    <Modal open={open} onClose={onClose} title={t('common.share')}>
+    <Modal open={open} onClose={onClose} title={isOwner ? 'CONVIDAR AMIGOS' : t('common.share')}>
+      {/* Role context */}
+      {isOwner && (
+        <div
+          className="flex items-start gap-2.5 p-3.5 rounded-xl mb-4 border"
+          style={{ background: 'rgba(52,211,153,0.07)', borderColor: 'rgba(52,211,153,0.25)' }}
+        >
+          <div className="text-lg flex-shrink-0">👑</div>
+          <div>
+            <div className="font-mono text-[0.65rem] font-bold tracking-[0.12em] uppercase mb-0.5" style={{ color: '#34d399' }}>
+              {t('role.ownerLabel')}
+            </div>
+            <div className="text-[0.75rem] text-muted leading-relaxed">
+              {t('role.shareInviteDesc')}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Sync status */}
       <div
         className="flex items-center gap-2.5 p-3 rounded-xl mb-5"

@@ -1,97 +1,116 @@
-// Utilitário de Categorização Inteligente Local (sem IA/API externa).
-// Dicionário de palavras-chave em Português — correspondência por substring
-// após normalização (minúsculas + remoção de acentos).
+// Categorização local de itens de compra — sem IA/API.
+// 6 categorias orientadas por missão de compra (ICP: organizador de viagem em grupo).
 
 const CATEGORIAS = {
-  duradouro: [
+  dispensa: [
     'arroz', 'massa', 'esparguete', 'macarrao', 'macarrão', 'açucar', 'açúcar', 'acucar',
-    'sal', 'azeite', 'óleo', 'oleo', 'ketchup', 'mostarda', 'maionese', 'molho',
-    'conserva', 'atum', 'sardinha', 'sardínhas', 'sardinhas', 'sardinha', 'feijão', 'feijao',
-    'grão', 'grao', 'grão-de-bico', 'grao-de-bico', 'grao de bico', 'lentilha', 'lentilhas',
-    'bolacha', 'bolachas', 'farínha', 'farinha', 'café', 'cafe', 'chá', 'cha',
-    'agua', 'água', 'sumo', 'sumos', 'refrigerante', 'refrigerantes', 'vinho', 'cerveja',
-    'cervejas', 'licor', 'whisky', 'gin', 'vodka', 'rum', 'espumante', 'sidra', 'carvão',
-    'carvao', 'grelhador', 'guardanapos', 'papel higiénico', 'papel higienico', 'papel',
-    'detergente', 'amaciante', 'esponja', 'sacos do lixo', 'sacos lixo', 'palitos', 'fosforos',
-    'fósforos', 'velas', 'mel', 'compota', 'doces', 'chocolate', 'nozes', 'amendoins',
-    'amêndoas', 'amendoas', 'frutos secos', 'enlatado', 'enchidos', 'batatas fritas',
-    'pipocas', 'acionar', 'tempero', 'especiarias', 'canela', 'pimenta', 'orégãos', 'oregaos',
-    'alecrim', 'curry', 'açafrão', 'baunilha', 'fermento', 'sopa', 'caldo',
+    'sal', 'azeite', 'óleo', 'oleo', 'ketchup', 'mostarda', 'maionese', 'molho ingles',
+    'molho', 'piri piri', 'tabasco', 'conserva', 'atum', 'sardinha', 'sardinhas',
+    'feijão', 'feijao', 'grão', 'grao', 'grão-de-bico', 'grao-de-bico', 'lentilha',
+    'bolacha', 'bolachas', 'farinha', 'farínha', 'café', 'cafe', 'chá', 'cha',
+    'caldo', 'caldo de galinha', 'tempero', 'especiarias', 'canela', 'pimenta', 'orégãos',
+    'oregaos', 'alecrim', 'curry', 'açafrão', 'baunilha', 'fermento', 'vinagre',
+    'chocolate', 'cacau', 'mel', 'compota', 'doce', 'marmelada', 'amendoim', 'amendoins',
+    'amêndoas', 'amendoas', 'nozes', 'frutos secos', 'passas', 'tâmaras',
+    'batatas fritas', 'pipocas', 'snacks', 'bolachas', 'crackers',
+    'azeite', 'óleo de girassol', 'oleo de girassol',
+    'detergente', 'sabão', 'esponja', 'guardanapos', 'papel', 'papel higiénico',
+    'papel higienico', 'sacos lixo', 'sacos do lixo', 'palitos', 'fósforos', 'fosforos',
+    'velas', 'carvão', 'carvao', 'grelhador', 'descartáveis', 'descartaveis',
+    'toalhas de mesa', 'copos de papel', 'pratos de papel',
+    'sopa', 'sopa de pacote', 'massa fresca', 'pizza', 'enlatado',
+    'enchidos', 'salpicão', 'presunto embalado',
+  ],
+  bebidas: [
+    'agua', 'água', 'água com gás', 'agua com gas',
+    'sumo', 'sumos', 'sumo de laranja', 'sumo de maçã',
+    'refrigerante', 'refrigerantes', 'coca', 'coca-cola', 'pepsi', 'sprite', 'fanta',
+    'ice tea', 'ice-tea', 'limonada', 'tónica', 'tonica',
+    'vinho', 'vinho tinto', 'vinho branco', 'vinho verde', 'vinho rosé', 'rose',
+    'espumante', 'champanhe', 'prosecco', 'cava',
+    'cerveja', 'cervejas', 'super bock', 'sagres', 'heineken',
+    'sidra', 'cidra', 'sangria',
+    'licor', 'whisky', 'whiskey', 'gin', 'vodka', 'rum', 'tequila', 'brandy',
+    'poncha', 'ginjinha', 'bagaço', 'medronho',
+    'café', 'cafe', 'chá', 'cha', 'nespresso', 'cápsulas', 'capsulas',
+    'leite condensado', 'achocolatado', 'cevada',
+    'kombucha', 'isotônico', 'isotonico', 'bebida energética', 'red bull',
+  ],
+  talho: [
+    'carne', 'carnes', 'frango', 'frango inteiro', 'peito de frango', 'coxa de frango',
+    'peru', 'pato', 'coelho', 'porco', 'entrecosto', 'costeleta', 'costelas',
+    'lombo', 'novilho', 'vitela', 'bife', 'bifes', 'picado', 'carne picada',
+    'borrego', 'cabrito', 'leitão', 'alheira', 'morcela', 'farinheira',
+    'salpicão', 'chouriço', 'chourico', 'linguiça', 'linguica',
+    'presunto', 'fiambre', 'bacon', 'panceta',
+    'salsicha', 'salsichas', 'hambúrguer', 'hamburguer', 'hamburger',
+    'peixe', 'peixe fresco', 'bacalhau', 'bacalhau fresco', 'bacalhau seco',
+    'salmão', 'salmao', 'truta', 'dourada', 'robalo', 'pargo', 'peixe espada',
+    'atum fresco', 'sardinha fresca', 'cavalinha', 'carapau',
+    'camarão', 'camarao', 'gamba', 'gambas', 'lagostim', 'lagosta',
+    'lula', 'lulas', 'choco', 'polvo', 'mexilhão', 'mexilhao', 'amêijoa', 'ameijoa',
+    'berbigão', 'berbigao', 'ostras', 'percebes', 'marisco',
+    'tofu', 'seitan', 'quorn',
+  ],
+  laticinios: [
+    'leite', 'leite magro', 'leite meio gordo', 'leite gordo',
+    'iogurte', 'iogurtes', 'yogurte', 'iogurte grego', 'skyr',
+    'queijo', 'queijos', 'queijo fresco', 'requeijão', 'requeijao',
+    'queijo flamengo', 'queijo da ilha', 'queijo cheddar', 'mozzarella',
+    'brie', 'camembert', 'emental', 'parmesão', 'parmesao', 'ricotta',
+    'manteiga', 'margarina', 'natas', 'creme', 'creme de leite',
+    'crème fraîche', 'creme fraiche',
+    'ovos', 'ovo', 'ovos L', 'ovos M',
   ],
   fresco: [
-    'fruta', 'maçã', 'maca', 'maçãs', 'macas', 'banana', 'bananas', 'laranja', 'laranjas',
-    'limão', 'limao', 'lima', 'limas', 'morango', 'morangos', 'uva', 'uvas',
-    'melancia', 'melancias', 'melão', 'melao', 'melaos', 'pera', 'peras', 'pêra', 'peras',
-    'pessego', 'pêssego', 'pessegos', 'abacaxi', 'kiwi', 'kiwis', 'nectarina',
-    'tomate', 'tomates', 'alface', 'cenoura', 'cenouras', 'cebola', 'cebolas', 'alho',
-    'batata', 'batatas', 'batata doce', 'legumes', 'legume', 'couve', 'brócolos', 'brocolos',
-    'broculos', 'espinafre', 'ervas aromáticas', 'ervas aromaticas', 'coentros', 'salsa',
-    'cogumelo', 'cogumelos', 'berinjela', 'beringela', 'pepino', 'pimento', 'pimentos',
-    'abóbora', 'abobora', 'rabanete', 'nabo', 'nabos', 'beterraba', 'alcachofra', 'aspargos',
-    'rucula', 'rúcula', 'agrião', 'agriao', 'milho', 'ervilha', 'ervilhas',
-    'feijão verde', 'feijao verde', 'pão', 'pao', 'broa', 'fruta seca', 'tâmara', 'tamara',
-    'figo', 'figos', 'uva passa', 'ginseng',
-  ],
-  refrigerado: [
-    'leite', 'leites', 'iogurte', 'iogurtes', 'yogurte', 'queijo', 'queijos', 'requeijão',
-    'requeijao', 'manteiga', 'natas', 'creme', 'creme culinário', 'fiambre', 'fiambres',
-    'presunto', 'enchido', 'chouriço', 'chourico', 'linguiça', 'linguica', 'salsicha',
-    'salsichas', 'bacon', 'carne', 'carnes', 'frango', 'peru', 'porco', 'novilho',
-    'vitela', 'alheira', 'morcela', 'farinheira', 'chamuça', 'cachorro', 'hamburger',
-    'hambúrguer', 'hamburguer', 'bacalhau fresco', 'bacalhau', 'salmão', 'salmao', 'truta',
-    'ovos', 'ovo', 'requesão', 'requesao', 'tofu', 'seitan',
-    'iogurte grego', 'queijo fresco', 'massa fresca', 'massa quebrada', 'pizza fresca',
-  ],
-  congelado: [
-    'gelo', 'gelado', 'gelados', 'sorvete', 'sorbete', 'pizza congelada', 'pizza', 'nuggets',
-    'hambúrguer congelado', 'hamburguer congelado', 'ervilhas congeladas',
-    'ervilha congelada', 'peixe congelado', 'peixe', 'camarão', 'camarao', 'gamba', 'lulas',
-    'polvo', 'lagosta', 'bacalhau congelado', 'batata palha', 'batata frita congelada', 'espinafre congelado',
+    'fruta', 'maçã', 'maca', 'maçãs', 'macas', 'banana', 'bananas',
+    'laranja', 'laranjas', 'limão', 'limao', 'lima', 'limas',
+    'morango', 'morangos', 'uva', 'uvas', 'melancia', 'melão', 'melao',
+    'pera', 'peras', 'pêssego', 'pessego', 'abacaxi', 'ananás', 'ananas',
+    'kiwi', 'manga', 'papaia', 'figo', 'cereja', 'cerejas', 'ameixa',
+    'tomate', 'tomates', 'alface', 'alfaces', 'cenoura', 'cenouras',
+    'cebola', 'cebolas', 'cebola roxa', 'alho', 'alhos', 'alho francês', 'alho frances',
+    'batata', 'batatas', 'batata doce', 'batatas doces',
+    'legumes', 'couve', 'couve-flor', 'couve flor', 'brócolos', 'brocolos',
+    'espinafre', 'espinafres', 'rúcula', 'rucula', 'agrião', 'agriao',
+    'cogumelo', 'cogumelos', 'beringela', 'pepino', 'pimento', 'pimentos',
+    'abóbora', 'abobora', 'courgette', 'curgete', 'milho', 'ervilha', 'ervilhas',
+    'feijão verde', 'feijao verde', 'aspargo', 'aspargos',
+    'salsa', 'coentros', 'hortelã', 'hortelã', 'manjericão', 'manjericao',
+    'tomilho', 'alecrim fresco', 'louro', 'ervas aromáticas', 'ervas aromaticas',
+    'pão', 'pao', 'broa', 'baguete', 'baguette', 'carcaça', 'carcaca',
+    'pão de forma', 'pao de forma', 'papo-seco', 'croissant', 'brioche',
   ],
 }
 
-// Palavras que forçam antecipado=true mesmo em categorias mistas
-const ANTECIPADO_EXTRA = ['congelado', 'congelada', 'duradouro', 'enlatado', 'conserva', 'carvão', 'carvao']
+// antecipado = comprar com antecedência (sem urgência de frescura)
+const ANTECIPADO_CATS = ['dispensa', 'bebidas']
 
 function normalizar(texto) {
   return (texto || '')
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .replace(/[̀-ͯ]/g, '')
     .trim()
 }
 
-// Devolve a categoria correspondente ou null
 function encontrarCategoria(nomeNorm) {
+  // Testa match exato primeiro, depois por substring (evita falsos positivos)
   for (const [cat, palavras] of Object.entries(CATEGORIAS)) {
     for (const palavra of palavras) {
-      if (nomeNorm.includes(palavra)) return cat
+      const palavraNorm = normalizar(palavra)
+      if (nomeNorm === palavraNorm || nomeNorm.includes(palavraNorm)) return cat
     }
   }
   return null
 }
 
-/**
- * Categoriza um item de compra com base no dicionário local.
- * @param {string} nome - nome do item (ex: "Atum em conserva")
- * @returns {{ categoria: string, antecipado: boolean }}
- *  - devolve uma categoria conhecida (duradouro/fresco/congelado/refrigerado) quando houver match;
- *  - caso contrário devolve categoria 'outro' (não categorizado → item de atenção manual).
- */
 export const CATEGORIA_PADRAO = 'outro'
-
-export const CATEGORIAS_DISPONIVEIS = Object.keys(CATEGORIAS)
+export const CATEGORIAS_DISPONIVEIS = [...Object.keys(CATEGORIAS), 'outro']
 
 export function categorizeItem(nome) {
   const nomeNorm = normalizar(nome)
   const cat = encontrarCategoria(nomeNorm)
-
-  if (!cat) {
-    return { categoria: CATEGORIA_PADRAO, antecipado: false }
-  }
-
-  // duradouro e congelado são, por defeito, comprados com antecedência
-  const antecipado = cat === 'duradouro' || cat === 'congelado' || ANTECIPADO_EXTRA.some(p => nomeNorm.includes(p))
-
-  return { categoria: cat, antecipado }
+  if (!cat) return { categoria: CATEGORIA_PADRAO, antecipado: false }
+  return { categoria: cat, antecipado: ANTECIPADO_CATS.includes(cat) }
 }
