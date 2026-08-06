@@ -7,6 +7,7 @@ import { useTrips } from './hooks/useTrips'
 import usePremium from './hooks/usePremium'
 import { useRole } from './hooks/useRole'
 import Pricing from './pages/Pricing'
+import Onboarding from './pages/Onboarding'
 import MealCard from './components/MealCard'
 import ShopItem from './components/ShopItem'
 import AddMealModal from './components/AddMealModal'
@@ -138,6 +139,9 @@ export default function App() {
     }
   }, [trip.loading, trip.needsSetup, wizardDismissed])
 
+  // Guests arriving via shared link bypass the paywall
+  const hasSharedTrip = !!new URLSearchParams(window.location.search).get('trip')
+
   if (trip.loading) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
@@ -168,6 +172,11 @@ export default function App() {
         </div>
       </div>
     )
+  }
+
+  // Non-premium users without a shared trip link see the onboarding paywall
+  if (!isPremium && !verifying && !hasSharedTrip) {
+    return <Onboarding tripId={trip.tripId} />
   }
 
   return (

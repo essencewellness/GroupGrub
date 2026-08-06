@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ArrowLeft, Check, Sparkles } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Check, Sparkles, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export default function NewTripWizard({ open, onClose, onCreate }) {
@@ -193,7 +193,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
             className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.04] text-muted hover:text-cream transition-colors"
             aria-label={t('common.close')}
           >
-            <Check size={16} />
+            <X size={16} />
           </button>
         </motion.div>
       </motion.div>
