@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { v4 as uuid } from 'uuid'
-import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip } from '../lib/db'
+import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip, fetchExpenses, upsertExpense, deleteExpense } from '../lib/db'
 import { hasSupabase } from '../lib/supabase'
 import { categorizeItem } from '../lib/categorizer'
 
@@ -106,8 +106,9 @@ export default function useTrip() {
   // Lazy init: getTripId() só corre UMA vez (antes corria em cada render,
   // escrevendo localStorage + history.replaceState repetidamente)
   const [tripId] = useState(getTripId)
-  const [items, setItems]     = useState([])
-  const [meals, setMeals]     = useState([])
+  const [items, setItems]         = useState([])
+  const [meals, setMeals]         = useState([])
+  const [expenses, setExpenses]   = useState([])
   const [plano, setPlano]     = useState(() => {
     try { return JSON.parse(localStorage.getItem('ferias_plano')) ?? {} } catch { return {} }
   })
@@ -143,9 +144,10 @@ export default function useTrip() {
   const loadData = useCallback(async (isFirst = false) => {
     try {
       // In a real SaaS, trips start completely empty. No auto-seed.
-      const [dbItems, dbMeals] = await Promise.all([fetchItems(tripId), fetchMeals(tripId)])
+      const [dbItems, dbMeals, dbExpenses] = await Promise.all([fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId)])
       setItems(dbItems)
       setMeals(dbMeals)
+      setExpenses(dbExpenses)
     } catch (e) {
       console.error('loadData error', e)
     } finally {
@@ -167,7 +169,7 @@ export default function useTrip() {
     return () => clearInterval(interval)
   }, [loadData])
 
-  /* ── realtime subscription (bónus — polling é o fallback) ── */
+  /* ── realtime subscription ── */
   useEffect(() => {
     const unsub = subscribeTrip(
       tripId,
@@ -176,10 +178,7 @@ export default function useTrip() {
           const delId = old?.id || row?.id
           if (delId) setItems(p => p.filter(i => i.id !== delId))
         } else if (row?.id) {
-          setItems(p => {
-            const idx = p.findIndex(i => i.id === row.id)
-            return idx >= 0 ? p.map(i => i.id === row.id ? row : i) : [...p, row]
-          })
+          setItems(p => { const idx = p.findIndex(i => i.id === row.id); return idx >= 0 ? p.map(i => i.id === row.id ? row : i) : [...p, row] })
         }
       },
       ({ eventType, new: row, old }) => {
@@ -187,10 +186,15 @@ export default function useTrip() {
           const delId = old?.id || row?.id
           if (delId) setMeals(p => p.filter(m => m.id !== delId))
         } else if (row?.id) {
-          setMeals(p => {
-            const idx = p.findIndex(m => m.id === row.id)
-            return idx >= 0 ? p.map(m => m.id === row.id ? row : m) : [...p, row]
-          })
+          setMeals(p => { const idx = p.findIndex(m => m.id === row.id); return idx >= 0 ? p.map(m => m.id === row.id ? row : m) : [...p, row] })
+        }
+      },
+      ({ eventType, new: row, old }) => {
+        if (eventType === 'DELETE') {
+          const delId = old?.id || row?.id
+          if (delId) setExpenses(p => p.filter(e => e.id !== delId))
+        } else if (row?.id) {
+          setExpenses(p => { const idx = p.findIndex(e => e.id === row.id); return idx >= 0 ? p.map(e => e.id === row.id ? row : e) : [...p, row] })
         }
       }
     )
@@ -316,6 +320,19 @@ export default function useTrip() {
     })
   }, [])
 
+  /* ══ EXPENSES ══ */
+  const addExpense = useCallback(async (exp) => {
+    const row = { ...exp, id: exp.id || uuid(), trip_id: tripId, created_at: exp.created_at || new Date().toISOString() }
+    setExpenses(p => [...p, row])
+    await upsertExpense(tripId, row)
+    return row
+  }, [tripId])
+
+  const removeExpense = useCallback(async (id) => {
+    setExpenses(p => p.filter(e => e.id !== id))
+    await deleteExpense(tripId, id)
+  }, [tripId])
+
   const refresh = useCallback(async () => {
     await loadData(false)
   }, [loadData])
@@ -325,6 +342,7 @@ export default function useTrip() {
     setTripId,
     items, toggleItem, updateItem, addItem, addIngredientes, removeItem, resetTicks, categorizarTudo,
     meals, addMeal, updateMeal, removeMeal,
+    expenses, addExpense, removeExpense,
     plano, updatePlano,
     meta, setTripMeta,
     needsSetup: !meta || !meta.startDate || !meta.endDate,

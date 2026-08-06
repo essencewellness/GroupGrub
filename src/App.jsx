@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-/* eslint-disable react-hooks/set-state-in-effect */
 import { motion, AnimatePresence } from 'framer-motion'
-import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Sparkles, RotateCcw, FileText } from 'lucide-react'
+import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Sparkles, RotateCcw, FileText, Receipt } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import useTrip from './hooks/useTrip'
 import { useTrips } from './hooks/useTrips'
 import usePremium from './hooks/usePremium'
+import Pricing from './pages/Pricing'
 import MealCard from './components/MealCard'
 import ShopItem from './components/ShopItem'
 import AddMealModal from './components/AddMealModal'
@@ -13,7 +13,7 @@ import ShareModal from './components/ShareModal'
 import Plano from './components/Plano'
 import TripsSelector from './components/TripsSelector'
 import NewTripWizard from './components/NewTripWizard'
-import Pricing from './pages/Pricing'
+import ExpensesTab from './components/ExpensesTab'
 import { exportShoppingList } from './lib/exportPdf'
 
 const CATS = {
@@ -54,13 +54,14 @@ export default function App() {
   const { t } = useTranslation()
   const trip = useTrip()
   const trips = useTrips()
-  const { isPremium } = usePremium()
+  const { isPremium, verifying } = usePremium()
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
   const [showShare, setShare] = useState(false)
   const [showPricing, setShowPricing] = useState(false)
   const [showWizard, setShowWizard] = useState(false)
+  const [wizardDismissed, setWizardDismissed] = useState(false)
   const [novoItem, setNovoItem] = useState('')
   const [toast, setToast] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -113,38 +114,53 @@ export default function App() {
     grupos[cat].push(item)
   }
 
-  /** Called by the New Trip Wizard & Nova viagem button. Creates the trip, sets
-   *  meta (generates Almoço/Jantar slots), makes it active, then jumps to Plano.
-   */
+  /** Called by the New Trip Wizard. Creates the trip, saves meta, navigates to the new trip URL. */
   const handleCreateTrip = async (meta) => {
-    await trips.createTrip(meta.title, null, meta.startDate, meta.endDate)
+    const newId = await trips.createTrip(meta.title, null, meta.startDate, meta.endDate)
+    // Save meta to localStorage before reload so useTrip picks it up
     trip.setTripMeta(meta)
     setShowWizard(false)
-    setTab('plano')
     showToast(`"${meta.title}" ${t('common.added')}`)
+    // Navigate to new trip URL — reload ensures useTrip reads the correct ID
+    const url = new URL(window.location)
+    url.searchParams.set('trip', newId)
+    window.location.href = url.toString()
   }
 
-  // Auto-abre o wizard quando a viagem atual não tem setup (sem datas)
+  // Auto-abre o wizard quando a trip não tem datas configuradas.
+  // wizardDismissed garante que fechar sem completar não re-abre imediatamente.
   useEffect(() => {
-    if (!trip.loading && trip.needsSetup) {
+    if (!trip.loading && trip.needsSetup && !wizardDismissed) {
       setShowWizard(true)
     }
-  }, [trip.loading, trip.needsSetup])
+  }, [trip.loading, trip.needsSetup, wizardDismissed])
 
   if (trip.loading) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center gap-7 bg-black relative overflow-hidden px-6">
-        <div className="text-6xl">🛰️</div>
-        <div className="font-display text-xl tracking-tight text-cream">GROUPGRUB</div>
-        <div className="font-mono text-[0.62rem] tracking-[0.22em] text-muted uppercase animate-pulse">
-          {t('app.initializing')}
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
+        {/* Atmospheric glow */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,90,38,0.08) 0%, transparent 70%)'
+        }} />
+        <motion.div
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          className="text-5xl"
+        >🛰️</motion.div>
+        <div>
+          <div className="font-display text-2xl font-bold tracking-[-0.01em] text-cream text-center">
+            GROUP<span className="text-brand">GRUB</span>
+          </div>
+          <div className="font-mono text-[0.6rem] tracking-[0.25em] text-faint uppercase text-center mt-1.5 animate-pulse">
+            {t('app.initializing')}
+          </div>
         </div>
-        <div className="w-[190px] h-[3px] bg-white/5 overflow-hidden rounded-full">
+        <div className="w-[140px] h-[2px] bg-white/[0.06] overflow-hidden rounded-full">
           <motion.div
-            animate={{ x: ['-100%', '260%'] }}
-            transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-[45%] h-full bg-brand rounded-full"
-            style={{ boxShadow: '0 0 12px #ff5a26' }}
+            animate={{ x: ['-100%', '280%'] }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-[40%] h-full rounded-full"
+            style={{ background: 'linear-gradient(90deg, transparent, #ff5a26, transparent)', boxShadow: '0 0 10px #ff5a26' }}
           />
         </div>
       </div>
@@ -154,67 +170,82 @@ export default function App() {
   return (
     <div className="min-h-dvh flex flex-col bg-black text-cream">
       {/* HEADER */}
-      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-line">
+      <header className="sticky top-0 z-50 border-b border-line" style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px) saturate(1.5)' }}>
         <div className="max-w-[680px] mx-auto px-5">
-          <div className="flex items-center justify-between py-4">
-            <div>
-              <h1 className="font-display text-xl tracking-tight text-cream">
-                GROUP<span className="text-brand">GRUB</span>
-              </h1>
-              <p className="text-[0.7rem] text-muted mt-1 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand" style={{ boxShadow: '0 0 8px #ff5a26' }} />
-                {trip.tripId && <span className="font-mono">#{trip.tripId}</span>}
-              </p>
-              <div className="mt-2.5 max-w-[420px]">
-                <TripsSelector currentTripId={trip.tripId} onSwitchTrip={trip.setTripId} onShowPricing={() => setShowPricing(true)} onShowWizard={() => setShowWizard(true)} userPlan={isPremium ? 'pro' : 'free'} />
+          <div className="flex items-center justify-between py-3.5">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex-shrink-0">
+                <h1 className="font-display text-[1.15rem] font-bold tracking-[-0.01em] text-cream leading-none">
+                  GROUP<span className="text-brand">GRUB</span>
+                </h1>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0 glow-brand" />
+                  <span className="font-mono text-[0.58rem] tracking-[0.14em] text-faint uppercase">
+                    {trip.tripId ? `#${trip.tripId}` : 'offline'}
+                  </span>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-line flex-shrink-0" />
+              <div className="min-w-0">
+                <TripsSelector
+                  currentTripId={trip.tripId}
+                  trips={trips.trips}
+                  tripsLoading={trips.loading}
+                  isPremium={isPremium}
+                  onSwitchTrip={trip.setTripId}
+                  onDeleteTrip={trips.deleteTrip}
+                  onShowWizard={() => setShowWizard(true)}
+                  onShowPricing={() => setShowPricing(true)}
+                />
               </div>
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-1.5 items-center flex-shrink-0 ml-2">
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
                 transition={refreshing ? { duration: 0.6, repeat: Infinity, ease: 'linear' } : {}}
                 onClick={handleRefresh}
                 title={t('common.sync')}
-                className="w-9 h-9 flex items-center justify-center rounded-xl border border-line bg-white/[0.04] text-muted hover:text-cream transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-line bg-white/[0.03] text-faint hover:text-cream hover:border-lineStrong transition-all"
               >
-                <RefreshCw size={15} />
+                <RefreshCw size={13} />
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={() => setShare(true)}
                 title={t('common.share')}
-                className="w-9 h-9 flex items-center justify-center rounded-xl border border-line bg-white/[0.04] text-muted hover:text-cream transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-line bg-white/[0.03] text-faint hover:text-cream hover:border-lineStrong transition-all"
               >
-                <Share2 size={16} />
+                <Share2 size={14} />
               </motion.button>
-              <div className="text-2xl">🛰️</div>
+              <div className="text-xl ml-1">🛰️</div>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 pb-0">
+          <div className="flex gap-0.5 pb-0 relative">
             {[
               { key: 'refeicoes', label: t('nav.meals'), Icon: UtensilsCrossed },
               { key: 'plano', label: t('nav.plan'), Icon: CalendarDays },
               { key: 'compras', label: t('nav.shopping'), Icon: ShoppingCart },
+              { key: 'contas', label: t('expenses.tab'), Icon: Receipt },
             ].map(({ key, label, Icon }) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className={`flex-1 py-3 text-[0.7rem] font-semibold tracking-[0.1em] transition-colors relative ${
-                  tab === key ? 'text-brand' : 'text-muted hover:text-cream'
+                className={`flex-1 py-3 text-[0.65rem] font-bold tracking-[0.1em] transition-all duration-200 relative ${
+                  tab === key ? 'text-brand' : 'text-faint hover:text-muted'
                 }`}
               >
-                <span className="flex items-center justify-center gap-1.5">
-                  <Icon size={14} /> {label}
+                <span className="relative z-10 flex items-center justify-center gap-1.5">
+                  <Icon size={13} strokeWidth={tab === key ? 2.5 : 1.8} /> {label}
                 </span>
                 {tab === key && (
                   <motion.div
                     layoutId="tab-line"
-                    className="absolute bottom-0 left-4 right-4 h-0.5 bg-brand rounded-full"
-                    style={{ boxShadow: '0 0 12px #ff5a26' }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                    className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
+                    style={{ background: 'linear-gradient(90deg, #c8431a, #ff5a26, #ff7a50)', boxShadow: '0 0 10px rgba(255,90,38,0.6)' }}
+                    transition={{ type: 'spring', stiffness: 480, damping: 38 }}
                   />
                 )}
               </button>
@@ -263,6 +294,23 @@ export default function App() {
             <Plano key="plano" meals={trip.meals} plano={trip.plano} onUpdate={trip.updatePlano} structure={trip.structure} />
           )}
 
+          {tab === 'contas' && (
+            <motion.div
+              key="contas"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.24 }}
+            >
+              <ExpensesTab
+                expenses={trip.expenses}
+                pessoas={trip.pessoas.filter(p => p !== '—')}
+                onAddExpense={trip.addExpense}
+                onRemoveExpense={trip.removeExpense}
+              />
+            </motion.div>
+          )}
+
           {tab === 'compras' && (
             <motion.div
               key="comp"
@@ -272,32 +320,35 @@ export default function App() {
               transition={{ duration: 0.24 }}
             >
               {/* Progress panel */}
-              <div className="surface p-5 mb-4">
-                <div className="flex justify-between items-end mb-3.5">
+              <div className="surface p-5 mb-4" style={{ background: 'linear-gradient(135deg, #111113 0%, #0e0e10 100%)' }}>
+                <div className="flex justify-between items-center mb-4">
                   <div>
-                    <div className="font-mono text-[0.62rem] tracking-[0.18em] text-muted uppercase">
+                    <div className="font-mono text-[0.58rem] tracking-[0.2em] text-faint uppercase mb-1">
                       {t('shopping.progress')}
                     </div>
-                    <div className="font-mono mt-1 text-cream">
-                      <span className="text-2xl font-bold">{String(comprados).padStart(2, '0')}</span>
-                      <span className="text-muted font-normal text-base"> / {String(total).padStart(2, '0')}</span>
+                    <div className="font-mono text-cream flex items-baseline gap-1">
+                      <span className="text-3xl font-bold" style={{ fontVariantNumeric: 'tabular-nums' }}>{String(comprados).padStart(2, '0')}</span>
+                      <span className="text-faint font-normal text-base">/ {String(total).padStart(2, '0')}</span>
                     </div>
                   </div>
-                  <div
-                    className="font-display text-4xl leading-none"
-                    style={{ color: pct === 100 ? '#34d399' : '#ff5a26' }}
+                  <motion.div
+                    key={pct}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="font-display text-5xl font-bold leading-none tabular-nums"
+                    style={{ color: pct === 100 ? '#34d399' : '#ff5a26', textShadow: pct === 100 ? '0 0 30px rgba(52,211,153,0.3)' : '0 0 30px rgba(255,90,38,0.3)' }}
                   >
-                    {pct}<span className="text-lg opacity-60">%</span>
-                  </div>
+                    {pct}<span className="text-xl opacity-50">%</span>
+                  </motion.div>
                 </div>
-                <div className="h-3 bg-white/[0.06] rounded-full overflow-hidden">
+                <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
                   <motion.div
                     animate={{ width: pct + '%' }}
-                    transition={{ duration: 0.55, ease: 'easeOut' }}
+                    transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                     className="h-full rounded-full"
                     style={{
-                      background: pct === 100 ? 'linear-gradient(90deg,#1f8a3a,#34d399)' : 'linear-gradient(90deg,#c8431a,#ff5a26)',
-                      boxShadow: '0 0 16px rgba(255,90,38,0.4)',
+                      background: pct === 100 ? 'linear-gradient(90deg,#1a7a35,#34d399)' : 'linear-gradient(90deg,#c8431a,#ff5a26,#ff7a50)',
+                      boxShadow: pct === 100 ? '0 0 12px rgba(52,211,153,0.5)' : '0 0 12px rgba(255,90,38,0.5)',
                     }}
                   />
                 </div>
@@ -441,8 +492,25 @@ export default function App() {
 
       <AddMealModal open={showAddMeal} onClose={() => setAddMeal(false)} onAdd={handleAddMealWithIngredientes} />
       <ShareModal open={showShare} onClose={() => setShare(false)} shareUrl={trip.shareUrl} />
-      {showPricing && <Pricing onClose={() => setShowPricing(false)} tripId={trip.tripId} />}
-      <NewTripWizard open={showWizard} onClose={() => setShowWizard(false)} onCreate={handleCreateTrip} />
+      <NewTripWizard
+        open={showWizard}
+        onClose={() => { setWizardDismissed(true); setShowWizard(false) }}
+        onCreate={handleCreateTrip}
+      />
+      {showPricing && (
+        <Pricing
+          onClose={() => setShowPricing(false)}
+          tripId={trip.tripId}
+        />
+      )}
+      {verifying && (
+        <div className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center gap-4">
+          <div className="text-4xl">✨</div>
+          <div className="font-mono text-[0.75rem] tracking-[0.2em] text-brand uppercase animate-pulse">
+            A verificar pagamento…
+          </div>
+        </div>
+      )}
       <Toast toast={toast} />
     </div>
   )

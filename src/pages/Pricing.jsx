@@ -1,140 +1,146 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, ShieldCheck, Sparkles, X, ArrowRight, Lock } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import usePremium from '../hooks/usePremium'
+import { Check, X, Sparkles, Lock } from 'lucide-react'
 
-export default function Pricing({ onClose, tripId }) {
-  const { t } = useTranslation()
-  const { isPremium } = usePremium()
-  const [loading, setLoading] = useState(false)
+const FEATURES_FREE = [
+  '1 viagem activa',
+  'Lista de compras ilimitada',
+  'Plano de refeições',
+  'Partilha por link',
+  'Sync em tempo real',
+]
+
+const FEATURES_PRO = [
+  'Viagens ilimitadas',
+  'Histórico de viagens',
+  'Duplicar viagens',
+  'Exportar lista em PDF',
+  'Tudo do plano Free',
+]
+
+export default function Pricing({ onClose, tripId, onSuccess }) {
   const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const handleCheckout = async () => {
     setLoading(true)
+    setError(null)
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tripId,
-          customerEmail: email || undefined,
-          email: email || undefined,
-        }),
+        body: JSON.stringify({ tripId, customerEmail: email || undefined }),
       })
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
       } else {
-        throw new Error(data.error || 'Erro ao iniciar checkout')
+        setError(data.error || 'Erro ao iniciar pagamento.')
       }
-    } catch (err) {
-      console.error(err)
-      alert('Não foi possível abrir o checkout. Tenta novamente.')
+    } catch {
+      setError('Sem ligação. Tenta novamente.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+    >
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative w-full max-w-lg bg-[#080a0a] border border-white/10 rounded-2xl p-6 text-cream shadow-2xl overflow-hidden"
+        initial={{ scale: 0.94, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.96, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+        onClick={e => e.stopPropagation()}
+        className="w-full max-w-[440px] bg-[#080A0A] border border-white/10 rounded-[28px] p-7 relative"
+        style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,90,38,0.08)' }}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-muted hover:text-white rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 text-muted hover:text-cream transition-colors"
         >
-          <X className="w-5 h-5" />
+          <X size={14} />
         </button>
 
-        {isPremium ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShieldCheck className="w-8 h-8" />
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-white mb-2">
-              {t('pricing.proActive')}
-            </h2>
-            <p className="text-sm text-muted mb-6">
-              {t('pricing.proActiveBody')}
-            </p>
-            <button
-              onClick={onClose}
-              className="w-full py-3 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl transition-colors"
-            >
-              {t('pricing.continue')}
-            </button>
+        <div className="flex items-center gap-2.5 mb-6">
+          <Sparkles size={20} style={{ color: '#ff5a26' }} />
+          <span className="font-display text-xl font-bold text-cream tracking-tight">
+            GROUP<span style={{ color: '#ff5a26' }}>GRUB</span> Pro
+          </span>
+        </div>
+
+        <div className="text-center mb-7">
+          <div className="font-display text-5xl font-bold text-cream mb-1">
+            10<span className="text-2xl text-muted">€</span>
           </div>
-        ) : (
-          <div>
-            <div className="text-center mb-6">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FF5A26]/10 text-[#FF5A26] border border-[#FF5A26]/20 mb-3">
-                <Sparkles className="w-3.5 h-3.5" />
-                {t('pricing.recommended')}
-              </span>
-              <h2 className="text-2xl font-bold tracking-tight text-white">
-                {t('pricing.header')}
-              </h2>
-              <p className="text-xs text-muted mt-1">{t('pricing.sub')}</p>
-            </div>
-
-            <div className="bg-[#121212] border border-white/10 rounded-xl p-5 mb-6">
-              <div className="flex items-baseline justify-between mb-4">
-                <div>
-                  <span className="text-3xl font-extrabold text-white">10€</span>
-                  <span className="text-xs text-muted ml-2">{t('pricing.perYear')}</span>
-                </div>
-              </div>
-
-              <ul className="space-y-2.5 mb-6">
-                {t('pricing.benefits', { returnObjects: true }).map((benefit, i) => (
-                  <li key={i} className="flex items-center gap-2.5 text-xs text-cream/90">
-                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="space-y-3">
-                <input
-                  type="email"
-                  placeholder={t('pricing.emailLabel')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-black/50 border border-white/10 rounded-lg text-sm text-white placeholder:text-muted outline-none focus:border-[#FF5A26] transition-colors"
-                />
-                <button
-                  onClick={handleCheckout}
-                  disabled={loading}
-                  className="w-full py-3.5 bg-[#FF5A26] hover:bg-[#FF5A26]/90 active:scale-[0.99] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#FF5A26]/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                >
-                  {loading ? (
-                    <span>{t('pricing.processing')}</span>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      <span>{t('pricing.ctaPro')}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <button
-                onClick={onClose}
-                className="text-xs text-muted hover:text-cream transition-colors"
-              >
-                {t('pricing.ctaFree')}
-              </button>
-            </div>
+          <div className="text-[0.78rem] text-muted font-mono uppercase tracking-[0.12em]">
+            Pagamento único · Acesso vitalício
           </div>
+        </div>
+
+        {/* Plans side by side */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="border border-line rounded-2xl p-4">
+            <div className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-muted mb-3">Free</div>
+            {FEATURES_FREE.map((f) => (
+              <div key={f} className="flex items-start gap-2 mb-2">
+                <Check size={12} className="mt-0.5 flex-shrink-0" style={{ color: '#34d399' }} />
+                <span className="text-[0.72rem] text-muted leading-snug">{f}</span>
+              </div>
+            ))}
+          </div>
+          <div className="border rounded-2xl p-4" style={{ borderColor: 'rgba(255,90,38,0.4)', background: 'rgba(255,90,38,0.04)' }}>
+            <div className="text-[0.7rem] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: '#ff5a26' }}>Pro</div>
+            {FEATURES_PRO.map((f) => (
+              <div key={f} className="flex items-start gap-2 mb-2">
+                <Sparkles size={12} className="mt-0.5 flex-shrink-0" style={{ color: '#ff5a26' }} />
+                <span className="text-[0.72rem] text-cream leading-snug">{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="O teu email (opcional)"
+          className="w-full bg-black/50 border border-line rounded-xl px-4 py-3 text-[0.88rem] text-cream outline-none mb-3 focus:border-brand/60 transition-colors"
+        />
+
+        {error && (
+          <div className="text-[0.75rem] text-brand mb-3 text-center">{error}</div>
         )}
+
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleCheckout}
+          disabled={loading}
+          className="w-full py-4 rounded-2xl font-bold text-[1rem] transition-all flex items-center justify-center gap-2"
+          style={{
+            background: loading ? 'rgba(255,90,38,0.4)' : 'linear-gradient(135deg, #c8431a, #ff5a26)',
+            color: '#fff',
+            boxShadow: loading ? 'none' : '0 0 40px rgba(255,90,38,0.5)',
+          }}
+        >
+          {loading ? (
+            <span className="animate-pulse">A redirecionar…</span>
+          ) : (
+            <><Lock size={16} /> Desbloquear Pro · 10€</>
+          )}
+        </motion.button>
+
+        <div className="text-center text-[0.68rem] text-faint mt-4">
+          Pagamento seguro via Stripe · Sem subscrição
+        </div>
       </motion.div>
-    </div>
+    </motion.div>
   )
 }

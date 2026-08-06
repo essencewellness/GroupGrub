@@ -22,6 +22,7 @@
     background: #000000;
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
@@ -34,26 +35,47 @@
   /* Premium fintech surfaces */
   .surface {
     @apply bg-panel border border-line rounded-2xl;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 50px rgba(0, 0, 0, 0.6);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 0 0 1px rgba(255,255,255,0.03) inset,
+      0 20px 50px rgba(0, 0, 0, 0.65);
+  }
+
+  .surface-hover {
+    @apply surface transition-all duration-200;
+  }
+  .surface-hover:hover {
+    border-color: rgba(255,255,255,0.13);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 28px 60px rgba(0, 0, 0, 0.7);
   }
 
   .btn-brand {
     @apply bg-brand text-black font-semibold tracking-tight rounded-xl transition-all duration-200;
-    box-shadow: 0 8px 30px rgba(255, 90, 38, 0.25);
+    box-shadow: 0 4px 20px rgba(255, 90, 38, 0.35), 0 1px 0 rgba(255,180,120,0.3) inset;
   }
   .btn-brand:hover {
-    box-shadow: 0 10px 38px rgba(255, 90, 38, 0.4);
+    box-shadow: 0 8px 32px rgba(255, 90, 38, 0.5), 0 1px 0 rgba(255,180,120,0.3) inset;
+    transform: translateY(-1px);
+  }
+  .btn-brand:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 12px rgba(255, 90, 38, 0.3);
   }
   .btn-brand:disabled {
     @apply opacity-50 cursor-wait;
     box-shadow: none;
+    transform: none;
   }
 
   .btn-ghost {
     @apply bg-white/[0.03] text-muted font-medium rounded-xl border border-line transition-colors duration-200;
   }
   .btn-ghost:hover {
-    @apply text-cream border-lineStrong;
+    @apply text-cream;
+    border-color: rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05);
   }
 
   .chip {
@@ -66,6 +88,17 @@
     background-size: 200% 100%;
     @apply animate-shimmer rounded-lg;
   }
+
+  /* Glow pulse for brand accents */
+  .glow-brand {
+    box-shadow: 0 0 0 0 rgba(255,90,38,0.4);
+    animation: glow-pulse 2.5s ease-in-out infinite;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255,90,38,0.3); }
+  50% { box-shadow: 0 0 18px rgba(255,90,38,0.6); }
 }
 
 /* hide scrollbar but keep scroll */

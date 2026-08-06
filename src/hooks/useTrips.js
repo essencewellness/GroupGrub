@@ -85,13 +85,13 @@ export function useTrips() {
   }, [])
 
   useEffect(() => {
-    // Async init pattern — avoids setState-in-effect warning
     let cancelled = false
+    let channelCleanup = () => {}
+
     ;(async () => {
       await loadTrips()
       if (cancelled) return
 
-      // Subscribe to real-time changes
       if (hasSupabase && supabase) {
         const channel = supabase
           .channel("trips-changes")
@@ -103,9 +103,7 @@ export function useTrips() {
                 setTrips((prev) => [payload.new, ...prev])
               } else if (payload.eventType === "UPDATE") {
                 setTrips((prev) =>
-                  prev.map((t) =>
-                    t.id === payload.new.id ? payload.new : t
-                  )
+                  prev.map((t) => (t.id === payload.new.id ? payload.new : t))
                 )
               } else if (payload.eventType === "DELETE") {
                 setTrips((prev) => prev.filter((t) => t.id !== payload.old.id))
@@ -113,13 +111,14 @@ export function useTrips() {
             }
           )
           .subscribe()
-
-        // Cleanup
-        return () => supabase.removeChannel(channel)
+        channelCleanup = () => { try { supabase.removeChannel(channel) } catch { /* já removido */ } }
       }
     })()
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      channelCleanup()
+    }
   }, [loadTrips])
 
   // Create a new trip (optionally with a date range for slot generation)
@@ -165,7 +164,7 @@ export function useTrips() {
     []
   )
 
-  // Switch active trip — unificado com useTrip.setTripId
+  // Switch active trip — navega para o URL com o novo trip ID e recarrega
   const switchTrip = useCallback((tripId) => {
     if (!tripId || tripId.length < 6) return
     localStorage.setItem(LS_TRIP_ID, tripId)
@@ -173,9 +172,7 @@ export function useTrips() {
     const url = new URL(window.location)
     url.searchParams.set('trip', tripId)
     url.hash = ''
-    window.history.replaceState({}, '', url)
-    // Apenas evento — o App recarrega via useTrip (evita reload duplo)
-    window.dispatchEvent(new Event('trip-change', { detail: tripId }))
+    window.location.href = url.toString()
   }, [])
 
   // Duplicate an existing trip
@@ -218,6 +215,17 @@ export function useTrips() {
     []
   )
 
+  const deleteTrip = useCallback(async (tripId) => {
+    setTrips((prev) => prev.filter((t) => t.id !== tripId))
+    if (hasSupabase && supabase) {
+      try { await supabase.from('trips').delete().eq('id', tripId) } catch { /* fallback */ }
+    }
+    try {
+      const all = JSON.parse(localStorage.getItem(LS_TRIPS) || '[]').filter((t) => t.id !== tripId)
+      localStorage.setItem(LS_TRIPS, JSON.stringify(all))
+    } catch { /* quota */ }
+  }, [])
+
   return {
     trips,
     loading,
@@ -225,6 +233,7 @@ export function useTrips() {
     createTrip,
     switchTrip,
     duplicateTrip,
+    deleteTrip,
     refresh: loadTrips,
   }
 }

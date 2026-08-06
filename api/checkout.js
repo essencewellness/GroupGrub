@@ -1,9 +1,7 @@
 /* global process */
 import Stripe from 'stripe'
 
-export const config = {
-  runtime: 'edge',
-}
+export const config = { runtime: 'edge' }
 
 export default async function handler(req) {
   if (req.method !== 'POST') {
@@ -11,25 +9,18 @@ export default async function handler(req) {
   }
 
   try {
-    const { priceId, tripId, customerEmail, email } = await req.json()
+    const { tripId, customerEmail } = await req.json()
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+    const origin = req.headers.get('origin') || 'https://ferias-app-pi.vercel.app'
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      mode: 'payment', // 👈 Alinhado para Pagamento Único (Lifetime)
-      customer_email: customerEmail || email || undefined,
-      line_items: [
-        {
-          price: priceId || process.env.VITE_STRIPE_PRICE_ID,
-          quantity: 1,
-        },
-      ],
-      success_url: `${req.headers.get('origin') || 'https://groupgrub.app'}?session_id={CHECKOUT_SESSION_SECRET}&tripId=${tripId}&status=success`,
-      cancel_url: `${req.headers.get('origin') || 'https://groupgrub.app'}?status=cancelled`,
-      metadata: {
-        tripId,
-        type: 'lifetime_access',
-      },
+      mode: 'payment',
+      customer_email: customerEmail || undefined,
+      line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
+      success_url: `${origin}?trip=${tripId}&paid=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}?trip=${tripId}`,
+      metadata: { tripId, type: 'lifetime_access' },
     })
 
     return new Response(JSON.stringify({ url: session.url }), {

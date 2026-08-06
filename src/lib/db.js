@@ -6,9 +6,10 @@
  */
 import { supabase, hasSupabase } from './supabase'
 
-const LS_ITEMS  = 'ferias_items'
-const LS_MEALS  = 'ferias_meals'
-const LS_TRIPS  = 'ferias_trips'
+const LS_ITEMS    = 'ferias_items'
+const LS_MEALS    = 'ferias_meals'
+const LS_TRIPS    = 'ferias_trips'
+const LS_EXPENSES = 'ferias_expenses'
 
 /* ── helpers ── */
 const lsGet  = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def } catch { return def } }
@@ -168,9 +169,48 @@ export async function deleteMeal(tripId, id) {
 }
 
 /* ══════════════════════════════
+   EXPENSES
+══════════════════════════════ */
+export async function fetchExpenses(tripId) {
+  if (hasSupabase) {
+    try {
+      const { data } = await withTimeout(
+        supabase.from('expenses').select('*').eq('trip_id', tripId).order('created_at')
+      )
+      const remote = data ?? []
+      const local = lsGet(LS_EXPENSES, []).filter(e => e.trip_id === tripId)
+      if (remote.length === 0 && local.length > 0) return local
+      if (remote.length) lsSet(LS_EXPENSES, mergeById(lsGet(LS_EXPENSES, []), remote, tripId))
+      return remote
+    } catch {
+      return lsGet(LS_EXPENSES, []).filter(e => e.trip_id === tripId)
+    }
+  }
+  return lsGet(LS_EXPENSES, []).filter(e => e.trip_id === tripId)
+}
+
+export async function upsertExpense(tripId, expense) {
+  const row = { ...expense, trip_id: tripId }
+  if (hasSupabase) {
+    try { await withTimeout(supabase.from('expenses').upsert(row, { onConflict: 'id' })) } catch { /* fallback */ }
+  }
+  const all = lsGet(LS_EXPENSES, [])
+  const idx = all.findIndex(e => e.id === expense.id)
+  if (idx >= 0) all.splice(idx, 1, row); else all.push(row)
+  lsSet(LS_EXPENSES, all)
+}
+
+export async function deleteExpense(tripId, id) {
+  if (hasSupabase) {
+    try { await withTimeout(supabase.from('expenses').delete().eq('id', id).eq('trip_id', tripId)) } catch { /* fallback */ }
+  }
+  lsSet(LS_EXPENSES, lsGet(LS_EXPENSES, []).filter(e => e.id !== id))
+}
+
+/* ══════════════════════════════
    REALTIME subscription
 ══════════════════════════════ */
-export function subscribeTrip(tripId, onItemChange, onMealChange) {
+export function subscribeTrip(tripId, onItemChange, onMealChange, onExpenseChange) {
   if (!hasSupabase) return () => {}
 
   // NOTA: `supabase.channel(name)` devolve o canal EXISTENTE se já houver um com
@@ -186,6 +226,7 @@ export function subscribeTrip(tripId, onItemChange, onMealChange) {
   const channel = supabase.channel(`trip-${tripId}:${Math.random().toString(36).slice(2, 9)}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `trip_id=eq.${tripId}` }, onItemChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'meals', filter: `trip_id=eq.${tripId}` }, onMealChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `trip_id=eq.${tripId}` }, onExpenseChange ?? (() => {}))
     .subscribe()
 
   return () => { try { supabase.removeChannel(channel) } catch { /* já removido */ } }

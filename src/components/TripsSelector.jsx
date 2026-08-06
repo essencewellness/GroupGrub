@@ -1,110 +1,164 @@
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, Plus, Copy } from "lucide-react"
-import { useTranslation } from "react-i18next"
-import { useTrips } from "../hooks/useTrips"
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ChevronDown, Plus, Trash2, Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
-export default function TripsSelector({ currentTripId, onShowPricing, onShowWizard, userPlan }) {
+export default function TripsSelector({
+  currentTripId,
+  trips = [],
+  tripsLoading,
+  onSwitchTrip,
+  onDeleteTrip,
+  onShowWizard,
+  onShowPricing,
+  isPremium,
+}) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
-  const { trips, duplicateTrip, switchTrip, loading } = useTrips()
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
-  const currentTrip = trips.find((trip) => trip.id === currentTripId) || {
-    title: loading ? t("app.initializing") : "Minha Viagem",
+  const currentTrip = trips.find((t) => t.id === currentTripId) || {
+    title: tripsLoading ? '…' : 'Minha Viagem',
   }
 
-  const handleDuplicate = async (tripId, title) => {
-    const newId = await duplicateTrip(tripId, title + " (cópia)")
-    switchTrip(newId)
+  const canCreateMore = isPremium || trips.length === 0
+
+  const handleNewTrip = () => {
+    setIsOpen(false)
+    if (!canCreateMore) { onShowPricing?.(); return }
+    onShowWizard()
   }
 
-  if (loading) return null
+  const handleSwitch = (id) => {
+    if (id === currentTripId) { setIsOpen(false); return }
+    onSwitchTrip?.(id)
+    setIsOpen(false)
+  }
+
+  const handleDelete = async (e, id) => {
+    e.stopPropagation()
+    if (confirmDelete === id) {
+      await onDeleteTrip?.(id)
+      setConfirmDelete(null)
+      if (id === currentTripId) {
+        const next = trips.find((t) => t.id !== id)
+        if (next) onSwitchTrip?.(next.id)
+      }
+    } else {
+      setConfirmDelete(id)
+      setTimeout(() => setConfirmDelete(null), 2500)
+    }
+  }
+
+  if (tripsLoading) return null
 
   return (
     <div className="relative inline-block">
       <motion.button
-        whileTap={{ scale: 0.98 }}
+        whileTap={{ scale: 0.97 }}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-line bg-white/[0.04] text-cream/80 text-sm font-medium hover:border-brand/40 transition-colors"
       >
-        <span className="text-sm">{currentTrip.title}</span>
-        <ChevronDown size={12} className="transition-transform duration-200" style={{ transform: isOpen ? "rotate(-180deg)" : "none" }} />
+        <span className="max-w-[160px] truncate">{currentTrip.title}</span>
+        <ChevronDown
+          size={12}
+          className="flex-shrink-0 transition-transform duration-200"
+          style={{ transform: isOpen ? 'rotate(-180deg)' : 'none' }}
+        />
       </motion.button>
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 right-0 mt-2 w-60 z-[100] surface p-3 max-h-[70vh] overflow-y-auto"
-          >
-            <button
-              onClick={() => {
-                setIsOpen(false)
-                onShowWizard()
-              }}
-              className="w-full py-2.5 px-3 rounded-xl border border-dashed border-brand/40 bg-brand/5 text-brand font-semibold text-sm hover:bg-brand/10 transition-colors mb-2 flex items-center justify-center gap-1.5"
+          <>
+            {/* backdrop */}
+            <div className="fixed inset-0 z-[99]" onClick={() => setIsOpen(false)} />
+
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              transition={{ duration: 0.18 }}
+              className="absolute top-full left-0 mt-2 w-64 z-[100] rounded-2xl border border-white/10 bg-[#0a0c0c] p-2.5 max-h-[70vh] overflow-y-auto"
+              style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}
             >
-              <Plus size={14} /> {t("trips.new")}
-            </button>
-
-            {trips.length > 0 && (
-              <>
-                <div className="h-px bg-line my-2" />
-                {trips.map((trip) => (
-                  <div key={trip.id} className="mb-1">
-                    <button
-                      onClick={() => {
-                        switchTrip(trip.id)
-                        setIsOpen(false)
-                      }}
-                      className={`w-full py-2.5 px-3 rounded-xl border text-left text-sm transition-colors ${
+              {/* Lista de trips */}
+              {trips.length > 0 && (
+                <div className="mb-2">
+                  {trips.map((trip) => (
+                    <div
+                      key={trip.id}
+                      className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 mb-1 cursor-pointer transition-colors ${
                         trip.id === currentTripId
-                          ? "border-brand/55 bg-brand/[0.09] text-brand"
-                          : "border-line bg-white/[0.02] text-cream/80 hover:border-brand/30"
+                          ? 'border border-brand/40 bg-brand/[0.08]'
+                          : 'border border-transparent hover:border-white/8 hover:bg-white/[0.03]'
                       }`}
+                      onClick={() => handleSwitch(trip.id)}
                     >
-                      <span className="flex items-center justify-between">
-                        <span className="truncate">{trip.title}</span>
-                        <div className="flex items-center gap-1">
-                          <span className="text-[0.65rem] text-faint">
-                            {new Date(trip.created_at).toLocaleDateString("pt-PT")}
-                          </span>
-                          {userPlan !== "free" && (
-                            <Copy
-                              size={11}
-                              className="text-faint hover:text-brand cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDuplicate(trip.id, trip.title)
-                              }}
-                            />
-                          )}
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="text-[0.85rem] font-semibold truncate"
+                          style={{ color: trip.id === currentTripId ? '#ff5a26' : 'rgba(245,245,244,0.85)' }}
+                        >
+                          {trip.title}
                         </div>
-                      </span>
-                    </button>
-                  </div>
-                ))}
-              </>
-            )}
+                        {trip.created_at && (
+                          <div className="text-[0.62rem] text-faint font-mono mt-0.5">
+                            {new Date(trip.created_at).toLocaleDateString('pt-PT')}
+                          </div>
+                        )}
+                      </div>
 
-            {userPlan === "free" && trips.length >= 1 && (
-              <div className="p-3 text-center">
-                <span className="text-[0.72rem] text-faint block mb-2">{t("common.freeLimit")}</span>
+                      {onDeleteTrip && trips.length > 1 && (
+                        <motion.button
+                          whileTap={{ scale: 0.88 }}
+                          onClick={(e) => handleDelete(e, trip.id)}
+                          className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          style={{
+                            background: confirmDelete === trip.id ? 'rgba(255,59,48,0.2)' : 'rgba(255,255,255,0.05)',
+                            color: confirmDelete === trip.id ? '#ff3b30' : 'rgba(255,255,255,0.35)',
+                            border: confirmDelete === trip.id ? '1px solid rgba(255,59,48,0.4)' : '1px solid transparent',
+                          }}
+                          title={confirmDelete === trip.id ? 'Clica de novo para confirmar' : 'Eliminar viagem'}
+                        >
+                          <Trash2 size={12} />
+                        </motion.button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="h-px bg-white/[0.06] mb-2" />
+
+              {/* Nova viagem */}
+              {canCreateMore ? (
                 <button
-                  onClick={() => {
-                    setIsOpen(false)
-                    onShowPricing()
-                  }}
-                  className="block w-full mt-2 py-2 rounded-xl border border-brand/40 bg-brand/[0.06] text-brand text-[0.75rem] font-semibold"
+                  onClick={handleNewTrip}
+                  className="w-full py-2.5 px-3 rounded-xl border border-dashed border-brand/35 bg-brand/[0.04] text-brand font-semibold text-[0.82rem] hover:bg-brand/[0.09] transition-colors flex items-center justify-center gap-1.5"
                 >
-                  {t("common.unlockPro")}
+                  <Plus size={14} /> Nova viagem
                 </button>
-              </div>
-            )}
-          </motion.div>
+              ) : (
+                <div className="px-2 pb-1">
+                  <div className="text-[0.7rem] text-faint text-center mb-2">
+                    Plano Free: 1 viagem activa
+                  </div>
+                  <button
+                    onClick={() => { setIsOpen(false); onShowPricing?.() }}
+                    className="w-full py-2.5 px-3 rounded-xl font-bold text-[0.82rem] flex items-center justify-center gap-1.5 transition-all"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(200,67,26,0.25), rgba(255,90,38,0.18))',
+                      border: '1px solid rgba(255,90,38,0.45)',
+                      color: '#ff5a26',
+                      boxShadow: '0 0 20px rgba(255,90,38,0.2)',
+                    }}
+                  >
+                    <Sparkles size={13} /> Unlock Pro · 10€
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
