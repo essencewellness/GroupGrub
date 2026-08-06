@@ -101,12 +101,15 @@ export default function App() {
   const comprados = trip.items.filter((i) => i.comprado).length
   const pct = total ? Math.round((comprados / total) * 100) : 0
 
+  // Agrupa itens por categoria. Itens "desconhecido" (não categorizados
+  // pelo dicionário local) mostram-se na secção "Outros" para o utilizador
+  // recolher manualmente — e marcam distinto no ShopItem.
   const grupos = {}
-  trip.items.forEach((item) => {
-    const cat = item.categoria || 'outro'
+  for (const item of trip.items) {
+    const cat = item.categoria && item.categoria !== 'desconhecido' ? item.categoria : 'outro'
     if (!grupos[cat]) grupos[cat] = []
     grupos[cat].push(item)
-  })
+  }
 
   /** Called by the New Trip Wizard & Nova viagem button. Creates the trip, sets
    *  meta (generates Almoço/Jantar slots), makes it active, then jumps to Plano.
