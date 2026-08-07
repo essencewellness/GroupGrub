@@ -56,7 +56,14 @@ create table if not exists customers (
   paid_at           timestamptz default now()
 );
 
--- Public read/write (no auth for MVP)
+-- ─────────────────────────────────────────────────────────────────────
+-- RLS: anonymous-first tradeoff
+-- The app uses Supabase anon key (no auth.users). Without auth.uid()
+-- we cannot write meaningful row-level policies — any restriction would
+-- require either Supabase Auth (breaks zero-friction model) or custom
+-- JWT claims (requires server middleware). Policy: trips are access-by-ID,
+-- ID is shared only via invite link. This is the documented tradeoff.
+-- ─────────────────────────────────────────────────────────────────────
 alter table trips     enable row level security;
 alter table meals     enable row level security;
 alter table items     enable row level security;
@@ -68,6 +75,7 @@ create policy "public meals"    on meals     for all using (true) with check (tr
 create policy "public items"    on items     for all using (true) with check (true);
 create policy "public expenses" on expenses  for all using (true) with check (true);
 
--- customers: write via service role only (API), read by email match
-create policy "insert customers" on customers for insert with check (true);
-create policy "select customers" on customers for select using (true);
+-- customers: write via service role only (API), anon browser cannot DML
+create policy "service_role only insert customers" on customers for insert to service_role with check (true);
+create policy "service_role only update customers" on customers for update to service_role using (true);
+create policy "select customers via service_role"  on customers for select to service_role using (true);
