@@ -66,6 +66,7 @@ export default function App() {
   const { isOwner, isGuest } = useRole(trip.tripId)
   const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
   const [guestNameInput, setGuestNameInput] = useState('')
+  const currentUserName = localStorage.getItem('groupgrub_guest_name') || localStorage.getItem('groupgrub_user_name') || ''
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
@@ -493,7 +494,7 @@ export default function App() {
                             cat={item.categoria || 'outro'}
                             pessoas={trip.pessoas}
                             isOwner={isOwner}
-                            onToggle={() => trip.toggleItem(item.id)}
+                            onToggle={() => trip.toggleItem(item.id, currentUserName)}
                             onRemove={() => trip.removeItem(item.id)}
                             onUpdate={(patch) => trip.updateItem(item.id, patch)}
                           />

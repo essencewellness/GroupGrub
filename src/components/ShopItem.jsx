@@ -93,9 +93,12 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
               {item.assignee && item.assignee !== '—' && (
                 <span
                   className="font-mono text-[0.58rem] font-bold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded"
-                  style={{ background: 'rgba(255,90,38,0.15)', color: '#ff5a26', border: '1px solid rgba(255,90,38,0.35)' }}
+                  style={item.comprado
+                    ? { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }
+                    : { background: 'rgba(255,90,38,0.15)', color: '#ff5a26', border: '1px solid rgba(255,90,38,0.35)' }
+                  }
                 >
-                  {item.assignee}
+                  {item.comprado ? `por ${item.assignee}` : item.assignee}
                 </span>
               )}
 

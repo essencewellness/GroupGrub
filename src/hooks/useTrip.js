@@ -229,10 +229,15 @@ export default function useTrip() {
   // setState — em StrictMode o updater corre DUAS vezes e o upsert gravava o
   // valor invertido duas vezes, anulando o toggle. Calculamos a partir do ref e
   // só depois gravamos, uma única vez.
-  const toggleItem = useCallback(async (id) => {
+  const toggleItem = useCallback(async (id, buyerName) => {
     const item = itemsRef.current.find(i => i.id === id)
     if (!item) return
-    const updated = cleanItem({ ...item, comprado: !item.comprado }, tripId)
+    const nowBought = !item.comprado
+    const updated = cleanItem({
+      ...item,
+      comprado: nowBought,
+      assignee: nowBought ? (buyerName || item.assignee || '') : '',
+    }, tripId)
     setItems(prev => prev.map(i => i.id === id ? updated : i))
     await upsertItem(tripId, updated)
   }, [tripId])
@@ -303,39 +308,12 @@ export default function useTrip() {
   const categorizarTudo = useCallback(async (sourceItems) => {
     const lista = sourceItems ?? itemsRef.current
     if (!lista.length) return
-
-    // First apply local dictionary for speed
-    const localPatched = lista.map(item => {
+    const patched = lista.map(item => {
       const { categoria, antecipado } = categorizeItem(item.nome)
       return cleanItem({ ...item, categoria, antecipado }, tripId)
     })
-    setItems(localPatched)
-
-    // Then refine with Groq for items still in 'outro'
-    const outroItems = localPatched.filter(i => i.categoria === 'outro').map(i => ({ id: i.id, nome: i.nome }))
-    if (outroItems.length > 0) {
-      try {
-        const res = await fetch('/api/categorize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: outroItems }),
-        })
-        if (res.ok) {
-          const { results } = await res.json()
-          if (results?.length) {
-            const map = Object.fromEntries(results.map(r => [r.id, r.categoria]))
-            const aiPatched = localPatched.map(item =>
-              map[item.id] ? cleanItem({ ...item, categoria: map[item.id] }, tripId) : item
-            )
-            setItems(aiPatched)
-            await bulkUpsertItems(tripId, aiPatched)
-            return
-          }
-        }
-      } catch { /* fallback to local */ }
-    }
-
-    await bulkUpsertItems(tripId, localPatched)
+    setItems(patched)
+    await bulkUpsertItems(tripId, patched)
   }, [tripId])
 
   // ── Wizard: configurar meta da viagem e gerar slots automaticamente ──
