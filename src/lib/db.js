@@ -70,7 +70,7 @@ export async function fetchTripPessoas(tripId) {
   if (!hasSupabase) return null
   try {
     const { data } = await withTimeout(
-      supabase.from('trips').select('pessoas').eq('id', tripId).single()
+      supabase.from('trips').select('*').eq('id', tripId).single()
     )
     return Array.isArray(data?.pessoas) ? data.pessoas : null
   } catch { return null }
