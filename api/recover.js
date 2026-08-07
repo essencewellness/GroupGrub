@@ -8,7 +8,11 @@ export default async function handler(req) {
 
   try {
     const { email } = await req.json()
-    if (!email || !email.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !emailRegex.test(email.trim())) {
+      return new Response(JSON.stringify({ ok: false, error: 'Email inválido' }), { status: 400 })
+    }
+    if (email.length > 254) {
       return new Response(JSON.stringify({ ok: false, error: 'Email inválido' }), { status: 400 })
     }
 

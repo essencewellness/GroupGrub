@@ -3,15 +3,28 @@ import Stripe from 'stripe'
 
 export const config = { runtime: 'edge' }
 
+const ALLOWED_ORIGINS = [
+  'https://ferias-app-pi.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:4173',
+]
+
+function corsHeaders(req) {
+  const origin = req.headers.get('origin') || ''
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+  return { 'Access-Control-Allow-Origin': allowed, 'Content-Type': 'application/json' }
+}
+
 export default async function handler(req) {
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) })
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders(req) })
   }
 
   try {
     const { tripId, customerEmail } = await req.json()
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-    const origin = req.headers.get('origin') || 'https://ferias-app-pi.vercel.app'
+    const origin = ALLOWED_ORIGINS[0]
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -23,12 +36,9 @@ export default async function handler(req) {
       metadata: { tripId, type: 'lifetime_access' },
     })
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders(req) })
   } catch (err) {
     console.error('Stripe Checkout Error:', err)
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 })
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders(req) })
   }
 }

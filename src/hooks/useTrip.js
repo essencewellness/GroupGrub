@@ -124,7 +124,13 @@ export default function useTrip() {
   const [items, setItems]         = useState([])
   const [meals, setMeals]         = useState([])
   const [expenses, setExpenses]   = useState([])
-  const [pessoas, setPessoas]     = useState(() => loadPessoas(getTripId()))
+  const [pessoas, setPessoas]     = useState(() => {
+    // Read tripId from storage directly — cannot reference the state above yet
+    const id = new URLSearchParams(window.location.search).get('trip')
+         || localStorage.getItem('ferias_trip_id')
+         || ''
+    return loadPessoas(id)
+  })
   const [plano, setPlano]     = useState(() => {
     try { return JSON.parse(localStorage.getItem('ferias_plano')) ?? {} } catch { return {} }
   })

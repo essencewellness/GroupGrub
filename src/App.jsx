@@ -147,6 +147,14 @@ export default function App() {
     }
   }, [trip.loading, trip.needsSetup, wizardDismissed])
 
+  // Garante que o nome do owner está sempre na lista de pessoas
+  useEffect(() => {
+    const ownerName = localStorage.getItem('groupgrub_user_name')
+    if (ownerName && !trip.pessoas.includes(ownerName)) {
+      trip.addPessoa(ownerName)
+    }
+  }, [trip.pessoas.length])
+
   if (trip.loading) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
