@@ -154,12 +154,12 @@ export default function App() {
     }
   }, [trip.loading, trip.needsSetup, wizardDismissed])
 
-  // Mostra o popup de upsell para visitantes (uma vez por sessão)
+  // Mostra o popup de upsell apenas para visitantes não-premium (uma vez por sessão)
   useEffect(() => {
-    if (isGuest && !upsellDismissed && !trip.loading) {
+    if (isGuest && !isPremium && !verifying && !upsellDismissed && !trip.loading) {
       setShowUpsell(true)
     }
-  }, [isGuest, upsellDismissed, trip.loading])
+  }, [isGuest, isPremium, verifying, upsellDismissed, trip.loading])
 
   // Garante que o nome do owner está sempre na lista de pessoas
   useEffect(() => {
