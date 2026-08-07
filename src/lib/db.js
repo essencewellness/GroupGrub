@@ -44,7 +44,7 @@ export async function fetchTrips(userId) {
   if (hasSupabase && userId) {
     try {
       const { data } = await withTimeout(
-        supabase.from('trips').select('*').eq('owner_id', userId).order('updated_at', { ascending: false })
+        supabase.from('trips').select('*').eq('owner_id', userId).order('created_at', { ascending: false })
       )
       return data ?? []
     } catch { return lsGet(LS_TRIPS, []) }
