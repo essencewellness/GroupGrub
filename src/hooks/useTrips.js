@@ -53,7 +53,7 @@ export function useTrips() {
         const { data, error: fetchError } = await supabase
           .from("trips")
           .select("*")
-          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false })
 
         if (fetchError) throw fetchError
         const remote = data || []
