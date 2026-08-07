@@ -65,6 +65,27 @@ export async function upsertTrip(trip) {
   lsSet(LS_TRIPS, all)
 }
 
+/** Fetch the pessoas array for a trip from Supabase (for cross-device sync). */
+export async function fetchTripPessoas(tripId) {
+  if (!hasSupabase) return null
+  try {
+    const { data } = await withTimeout(
+      supabase.from('trips').select('pessoas').eq('id', tripId).single()
+    )
+    return Array.isArray(data?.pessoas) ? data.pessoas : null
+  } catch { return null }
+}
+
+/** Persist the pessoas array for a trip to Supabase. */
+export async function upsertTripPessoas(tripId, pessoas) {
+  if (!hasSupabase) return
+  try {
+    await withTimeout(
+      supabase.from('trips').update({ pessoas }).eq('id', tripId)
+    )
+  } catch { /* fallback: localStorage only */ }
+}
+
 export async function deleteTrip(tripId) {
   if (hasSupabase) {
     try {

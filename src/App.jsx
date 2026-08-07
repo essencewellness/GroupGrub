@@ -16,6 +16,7 @@ import Plano from './components/Plano'
 import TripsSelector from './components/TripsSelector'
 import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
+import GuestUpsellModal from './components/GuestUpsellModal'
 import { exportShoppingList } from './lib/exportPdf'
 
 // Captured at module load time, before the app modifies the URL.
@@ -74,6 +75,10 @@ export default function App() {
   const [showPricing, setShowPricing] = useState(false)
   const [showWizard, setShowWizard] = useState(false)
   const [wizardDismissed, setWizardDismissed] = useState(false)
+  const [showUpsell, setShowUpsell] = useState(false)
+  const [upsellDismissed, setUpsellDismissed] = useState(
+    () => !!sessionStorage.getItem('groupgrub_upsell_dismissed')
+  )
   const [novoItem, setNovoItem] = useState('')
   const [toast, setToast] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -148,6 +153,13 @@ export default function App() {
       setShowWizard(true)
     }
   }, [trip.loading, trip.needsSetup, wizardDismissed])
+
+  // Mostra o popup de upsell para visitantes (uma vez por sessão)
+  useEffect(() => {
+    if (isGuest && !upsellDismissed && !trip.loading) {
+      setShowUpsell(true)
+    }
+  }, [isGuest, upsellDismissed, trip.loading])
 
   // Garante que o nome do owner está sempre na lista de pessoas
   useEffect(() => {
@@ -284,20 +296,35 @@ export default function App() {
       {/* GUEST BANNER */}
       {isGuest && (
         <div className="max-w-[680px] mx-auto px-4 pt-3">
-          <div
-            className="flex items-start gap-3 px-4 py-3 rounded-xl border"
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl border"
             style={{ background: 'rgba(155,123,255,0.08)', borderColor: 'rgba(155,123,255,0.28)' }}
           >
-            <ShieldAlert size={16} style={{ color: '#9b7bff', flexShrink: 0, marginTop: 2 }} />
+            <ShieldAlert size={16} style={{ color: '#9b7bff', flexShrink: 0 }} />
             <div className="flex-1 min-w-0">
               <div className="font-mono text-[0.65rem] font-bold tracking-[0.12em] uppercase" style={{ color: '#9b7bff' }}>
                 {t('role.guestBanner')}
               </div>
-              <div className="text-[0.75rem] text-muted mt-0.5 leading-relaxed">
+              <div className="text-[0.72rem] text-muted mt-0.5">
                 {t('role.guestDesc')}
               </div>
             </div>
-          </div>
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              onClick={() => setShowUpsell(true)}
+              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[0.62rem] font-bold cursor-pointer transition-all"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,90,38,0.25), rgba(255,90,38,0.15))',
+                border: '1px solid rgba(255,90,38,0.45)',
+                color: '#ff5a26',
+              }}
+            >
+              <Sparkles size={11} />
+              10€ vitalício
+            </motion.button>
+          </motion.div>
         </div>
       )}
 
@@ -567,6 +594,16 @@ export default function App() {
 
       <AddMealModal open={showAddMeal} onClose={() => setAddMeal(false)} onAdd={handleAddMealWithIngredientes} />
       <ShareModal open={showShare} onClose={() => setShare(false)} shareUrl={trip.shareUrl} tripId={trip.tripId} isOwner={isOwner} />
+      {showUpsell && (
+        <GuestUpsellModal
+          tripId={trip.tripId}
+          onClose={() => {
+            setShowUpsell(false)
+            setUpsellDismissed(true)
+            sessionStorage.setItem('groupgrub_upsell_dismissed', '1')
+          }}
+        />
+      )}
       <NewTripWizard
         open={showWizard}
         onClose={() => { setWizardDismissed(true); setShowWizard(false) }}

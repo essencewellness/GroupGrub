@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { v4 as uuid } from 'uuid'
-import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip, fetchExpenses, upsertExpense, deleteExpense } from '../lib/db'
+import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip, fetchExpenses, upsertExpense, deleteExpense, fetchTripPessoas, upsertTripPessoas } from '../lib/db'
 import { hasSupabase } from '../lib/supabase'
 import { categorizeItem } from '../lib/categorizer'
 
@@ -165,11 +165,20 @@ export default function useTrip() {
   /* ── load data ── */
   const loadData = useCallback(async (isFirst = false) => {
     try {
-      // In a real SaaS, trips start completely empty. No auto-seed.
-      const [dbItems, dbMeals, dbExpenses] = await Promise.all([fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId)])
+      const [dbItems, dbMeals, dbExpenses, remotePessoas] = await Promise.all([
+        fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId), fetchTripPessoas(tripId)
+      ])
       setItems(dbItems)
       setMeals(dbMeals)
       setExpenses(dbExpenses)
+      // Merge remote pessoas with local — remote is source of truth when available
+      if (remotePessoas && remotePessoas.length > 0) {
+        setPessoas(prev => {
+          const merged = [...new Set([...remotePessoas, ...prev])]
+          savePessoas(tripId, merged)
+          return merged
+        })
+      }
     } catch (e) {
       console.error('loadData error', e)
     } finally {
@@ -366,6 +375,7 @@ export default function useTrip() {
       if (prev.includes(nome.trim())) return prev
       const next = [...prev, nome.trim()]
       savePessoas(tripId, next)
+      upsertTripPessoas(tripId, next)
       return next
     })
   }, [tripId])
@@ -374,6 +384,7 @@ export default function useTrip() {
     setPessoas(prev => {
       const next = prev.filter(p => p !== nome)
       savePessoas(tripId, next)
+      upsertTripPessoas(tripId, next)
       return next
     })
   }, [tripId])
