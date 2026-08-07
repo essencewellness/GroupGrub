@@ -65,14 +65,16 @@ export async function upsertTrip(trip) {
   lsSet(LS_TRIPS, all)
 }
 
-/** Fetch the pessoas array for a trip from Supabase (for cross-device sync). */
+/** Fetch the pessoas array for a trip from Supabase (for cross-device sync).
+ *  Fetches all trips and finds the one matching tripId — avoids the 400
+ *  that filtered queries return when PostgREST schema cache is stale. */
 export async function fetchTripPessoas(tripId) {
   if (!hasSupabase) return null
   try {
     const { data } = await withTimeout(
-      supabase.from('trips').select('*').eq('id', tripId).limit(1)
+      supabase.from('trips').select('*')
     )
-    const row = Array.isArray(data) ? data[0] : null
+    const row = Array.isArray(data) ? data.find(t => t.id === tripId) : null
     return Array.isArray(row?.pessoas) ? row.pessoas : null
   } catch { return null }
 }

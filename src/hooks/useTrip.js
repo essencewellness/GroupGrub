@@ -171,6 +171,16 @@ export default function useTrip() {
       setItems(dbItems)
       setMeals(dbMeals)
       setExpenses(dbExpenses)
+      // Sync pessoas from Supabase non-blocking (no await — doesn't block render)
+      fetchTripPessoas(tripId).then(remotePessoas => {
+        if (remotePessoas && remotePessoas.length > 0) {
+          setPessoas(prev => {
+            const merged = [...new Set([...remotePessoas, ...prev])]
+            savePessoas(tripId, merged)
+            return merged
+          })
+        }
+      }).catch(() => {})
     } catch (e) {
       console.error('loadData error', e)
     } finally {
