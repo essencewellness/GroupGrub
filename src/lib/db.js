@@ -84,7 +84,7 @@ export async function upsertTripPessoas(tripId, pessoas) {
   if (!hasSupabase) return
   try {
     await withTimeout(
-      supabase.from('trips').update({ pessoas }).eq('id', tripId)
+      supabase.from('trips').upsert({ id: tripId, pessoas }, { onConflict: 'id' })
     )
   } catch { /* fallback: localStorage only */ }
 }

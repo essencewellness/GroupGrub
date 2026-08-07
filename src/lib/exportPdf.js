@@ -52,22 +52,24 @@ export async function exportShoppingList({ tripId, items, tripName }) {
   doc.line(margin, y, 190, y)
   y += 10
 
-  // Items (sorted by category)
-  const cats = ["duradouro", "congelado", "refrigerado", "fresco", "outro"]
+  // Items (sorted by category — matches App.jsx CATS)
+  const cats = ["dispensa", "bebidas", "talho", "laticinios", "fresco", "outro"]
   const catLabels = {
-    duradouro: "Duradouro (comprar com antecedência)",
-    congelado: "Congelado",
-    refrigerado: "Refrigerado (1-2 dias antes)",
-    fresco: "Fresco (comprar na hora)",
-    outro: "Outro",
+    dispensa:   "Dispensa (comprar com antecedência)",
+    bebidas:    "Bebidas (comprar com antecedência)",
+    talho:      "Talho & Peixaria (1–2 dias antes)",
+    laticinios: "Laticínios (1–2 dias antes)",
+    fresco:     "Frescos (comprar no dia)",
+    outro:      "Outros",
   }
 
   const catColors = {
-    duradouro: [201, 168, 76],
-    congelado: [91, 168, 201],
-    refrigerado: [155, 127, 212],
-    fresco: [90, 158, 111],
-    outro: [158, 145, 126],
+    dispensa:   [245, 166, 35],
+    bebidas:    [58, 160, 255],
+    talho:      [255, 107, 107],
+    laticinios: [155, 123, 255],
+    fresco:     [52, 211, 153],
+    outro:      [107, 130, 153],
   }
 
   let firstCategory = true
@@ -113,7 +115,6 @@ export async function exportShoppingList({ tripId, items, tripName }) {
   }
 
   // Footer
-  doc.setPageSize("a4")
   doc.setFontSize(8)
   doc.setTextColor(130, 130, 130)
   doc.text(

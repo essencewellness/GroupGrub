@@ -37,14 +37,23 @@ export function buildTripStructure(startDate, endDate) {
   if (isNaN(start) || isNaN(end) || end < start) return []
   const days = []
   const cursor = new Date(start)
+  const endStr = end.toISOString().slice(0, 10)
   while (cursor <= end) {
     const dow = cursor.getDay()
+    const dateStr = cursor.toISOString().slice(0, 10)
+    const isFirst = dateStr === start.toISOString().slice(0, 10)
+    const isLast  = dateStr === endStr
+    // Arrival day: no lunch (still travelling); Departure day: no dinner (already leaving)
+    const slots = isFirst && isLast ? ['almoco', 'jantar']
+                : isFirst           ? ['jantar']
+                : isLast            ? ['almoco']
+                :                    ['almoco', 'jantar']
     days.push({
-      id: 'd' + cursor.toISOString().slice(0, 10),
+      id: 'd' + dateStr,
       label: WEEKDAY_PT[dow],
-      date: cursor.toISOString().slice(0, 10),
+      date: dateStr,
       emoji: WEEKDAY_EMOJI[dow],
-      slots: ['almoco', 'jantar'],
+      slots,
     })
     cursor.setDate(cursor.getDate() + 1)
   }
