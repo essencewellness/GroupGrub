@@ -14,6 +14,12 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
   const totalGasto = expenses.reduce((sum, e) => sum + (parseFloat(e.valor) || 0), 0)
   const quotaIndividual = pessoas.length > 0 ? totalGasto / pessoas.length : 0
   const { settlements, saldos } = calculateSettlement(expenses, pessoas)
+  // All participants = pessoas + anyone who appears in expenses but isn't in pessoas yet
+  const allParticipants = [...new Set([
+    ...pessoas,
+    ...expenses.map(e => e.pago_por).filter(Boolean),
+    ...expenses.flatMap(e => e.dividir_por || []),
+  ])]
 
   const handleShare = () => {
     const text = formatSettlementWA(settlements)
@@ -93,7 +99,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
             📊 BALANÇO POR MEMBRO
           </div>
           <div className="space-y-2.5">
-            {pessoas.map((p) => {
+            {allParticipants.map((p) => {
               const bal = saldos[p] ?? 0
               const isPos = bal > 0.005
               const isNeg = bal < -0.005

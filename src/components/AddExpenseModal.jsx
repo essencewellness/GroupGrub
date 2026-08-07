@@ -4,12 +4,18 @@ import { Receipt, Plus, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal'
 
-const defaultForm = (pessoas, currentUser) => ({
-  descricao: '',
-  valor: '',
-  pago_por: currentUser || pessoas[0] || '',
-  dividir_por: [...pessoas],
-})
+const defaultForm = (pessoas, currentUser) => {
+  // Always include the current user in the split, even if they're not in pessoas yet
+  const all = currentUser && !pessoas.includes(currentUser)
+    ? [currentUser, ...pessoas]
+    : [...pessoas]
+  return {
+    descricao: '',
+    valor: '',
+    pago_por: currentUser || pessoas[0] || '',
+    dividir_por: all.length > 0 ? all : currentUser ? [currentUser] : [],
+  }
+}
 
 export default function AddExpenseModal({ open, onClose, onAdd, pessoas, currentUser }) {
   const { t } = useTranslation()

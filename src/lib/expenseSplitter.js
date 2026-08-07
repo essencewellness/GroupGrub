@@ -14,9 +14,13 @@ export function calculateSettlement(expenses, pessoas) {
     const divisores = exp.dividir_por?.length ? exp.dividir_por : pessoas
     const quota = valor / divisores.length
 
-    if (saldos[exp.pago_por] !== undefined) saldos[exp.pago_por] += valor
+    // Include payer even if not in the pessoas list (e.g. owner on a guest's view)
+    if (saldos[exp.pago_por] === undefined) saldos[exp.pago_por] = 0
+    saldos[exp.pago_por] += valor
+
     for (const p of divisores) {
-      if (saldos[p] !== undefined) saldos[p] -= quota
+      if (saldos[p] === undefined) saldos[p] = 0
+      saldos[p] -= quota
     }
   }
 
