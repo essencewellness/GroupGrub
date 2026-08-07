@@ -145,10 +145,14 @@ export default function useTrip() {
     return loadPessoas(id)
   })
   const [plano, setPlano]     = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ferias_plano')) ?? {} } catch { return {} }
+    const id = new URLSearchParams(window.location.search).get('trip')
+         || localStorage.getItem('ferias_trip_id') || ''
+    try { return JSON.parse(localStorage.getItem(`ferias_plano_${id}`)) ?? {} } catch { return {} }
   })
   const [meta, setMeta]       = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ferias_meta')) ?? null } catch { return null }
+    const id = new URLSearchParams(window.location.search).get('trip')
+         || localStorage.getItem('ferias_trip_id') || ''
+    try { return JSON.parse(localStorage.getItem(`ferias_meta_${id}`)) ?? null } catch { return null }
   })
   const [loading, setLoading] = useState(true)
 
@@ -365,17 +369,17 @@ export default function useTrip() {
     const nextMeta = { ...newMeta, structure }
     setMeta(nextMeta)
     setPlano((prev) => ({ ...generated, ...prev }))
-    localStorage.setItem('ferias_meta', JSON.stringify(nextMeta))
-    localStorage.setItem('ferias_plano', JSON.stringify({ ...generated, ...JSON.parse(localStorage.getItem('ferias_plano') || '{}') }))
-  }, [])
+    localStorage.setItem(`ferias_meta_${tripId}`, JSON.stringify(nextMeta))
+    localStorage.setItem(`ferias_plano_${tripId}`, JSON.stringify({ ...generated, ...JSON.parse(localStorage.getItem(`ferias_plano_${tripId}`) || '{}') }))
+  }, [tripId])
 
   const updatePlano = useCallback((slotKey, selection) => {
     setPlano(prev => {
       const next = { ...prev, [slotKey]: selection }
-      localStorage.setItem('ferias_plano', JSON.stringify(next))
+      localStorage.setItem(`ferias_plano_${tripId}`, JSON.stringify(next))
       return next
     })
-  }, [])
+  }, [tripId])
 
   /* ══ EXPENSES ══ */
   const addExpense = useCallback(async (exp) => {

@@ -197,7 +197,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                         key={k}
                         type="button"
                         onClick={() => {
-                          onUpdate({ categoria: k, antecipado: ['duradouro', 'congelado'].includes(k) })
+                          onUpdate({ categoria: k, antecipado: ['dispensa', 'bebidas'].includes(k) })
                           setShowCatPicker(false)
                         }}
                         className="flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all hover:bg-white/[0.06] active:scale-95"

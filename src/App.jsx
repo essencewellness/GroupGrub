@@ -46,9 +46,9 @@ function Toast({ toast }) {
           className="fixed bottom-7 left-1/2 -translate-x-1/2 z-[200] px-6 py-2.5 rounded-xl font-mono text-sm font-semibold tracking-wide"
           style={{
             background: 'rgba(10,10,11,0.94)',
-            color: toast.type === 'err' ? '#ff5a26' : '#ff5a26',
-            border: '1px solid rgba(255,90,38,0.45)',
-            boxShadow: '0 0 26px rgba(255,90,38,0.28), 0 12px 40px rgba(0,0,0,.7)',
+            color: toast.type === 'err' ? '#ff5a26' : '#34d399',
+            border: `1px solid ${toast.type === 'err' ? 'rgba(255,90,38,0.45)' : 'rgba(52,211,153,0.45)'}`,
+            boxShadow: `0 0 26px ${toast.type === 'err' ? 'rgba(255,90,38,0.28)' : 'rgba(52,211,153,0.18)'}, 0 12px 40px rgba(0,0,0,.7)`,
             backdropFilter: 'blur(12px)',
           }}
         >
@@ -101,10 +101,10 @@ export default function App() {
     if (meal.ingredientes?.length) {
       const count = await trip.addIngredientes(meal.ingredientes, trip.items)
       if (count > 0) {
-        showToast(`${t('shopping.categories.outro')} ${count} → ${t('nav.shopping')}!`)
+        showToast(`${count} ingrediente${count !== 1 ? 's' : ''} adicionado${count !== 1 ? 's' : ''} às ${t('nav.shopping')}!`)
         setTimeout(() => setTab('compras'), 400)
       } else {
-        showToast(t('shopping.alreadyThere'))
+        showToast(t('common.alreadyThere'))
       }
     }
   }
@@ -482,7 +482,7 @@ export default function App() {
                       pessoas: trip.pessoas,
                       tripName: 'GroupGrub',
                     })
-                    showToast(t('shopping.pdfExported'))
+                    showToast(t('common.pdfExported'))
                   }}
                   className="py-3 px-3.5 rounded-xl border text-xs font-semibold tracking-[0.08em] transition-colors"
                   style={{ borderColor: 'rgba(52,211,153,0.32)', background: 'rgba(52,211,153,0.05)', color: '#34d399' }}

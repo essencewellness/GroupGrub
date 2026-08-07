@@ -62,6 +62,8 @@ const pt = {
     sunday: 'Domingo',
     lunch: 'Almoço',
     dinner: 'Jantar',
+    almoco: 'Almoço',
+    jantar: 'Jantar',
     tea: 'Lanche Ajantarado',
     mealsDefined: 'REFEIÇÕES DEFINIDAS',
   },

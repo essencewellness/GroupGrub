@@ -28,12 +28,21 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
   const [joinError, setJoinError] = useState(false)
 
   const doJoin = () => {
-    const id = extractTripId(joinLink)
+    const trimmed = joinLink.trim()
+    const id = extractTripId(trimmed)
     if (!id) { setJoinError(true); return }
+    // Also extract and forward ?key= so the guest bypasses the paywall check
+    let key = ''
+    try {
+      const u = new URL(trimmed)
+      key = u.searchParams.get('key') || ''
+    } catch { /* plain id, no key */ }
     localStorage.setItem('ferias_trip_id', id)
     sessionStorage.setItem('ferias_trip_id', id)
     const url = new URL(window.location)
     url.searchParams.set('trip', id)
+    if (key) url.searchParams.set('key', key)
+    else url.searchParams.delete('key')
     url.hash = ''
     window.location.href = url.toString()
   }
