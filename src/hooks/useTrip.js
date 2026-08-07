@@ -190,11 +190,16 @@ export default function useTrip() {
 
 
   useEffect(() => {
-    // Wrapped em microtask para não fazer setState síncrono dentro do effect
     let cancelled = false
     Promise.resolve().then(() => { if (!cancelled) loadData(true) })
     return () => { cancelled = true }
   }, [loadData])
+
+  // On load, push local pessoas to Supabase so guests can sync them
+  useEffect(() => {
+    const local = loadPessoas(tripId)
+    if (local.length > 0) upsertTripPessoas(tripId, local).catch(() => {})
+  }, [tripId])
 
   /* ── polling: refresca a cada 5 segundos SÓ quando Supabase Realtime não está ativo (fallback offline) ── */
   useEffect(() => {
