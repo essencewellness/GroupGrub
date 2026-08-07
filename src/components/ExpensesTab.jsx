@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { calculateSettlement, formatSettlementWA } from '../lib/expenseSplitter'
 import AddExpenseModal from './AddExpenseModal'
 
-export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense, onRemoveExpense, onAddPessoa, onRemovePessoa, isOwner = false }) {
+export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense, onRemoveExpense, onAddPessoa, onRemovePessoa, isOwner = false, currentUser = '' }) {
   const { t } = useTranslation()
   const [modalOpen, setModalOpen] = useState(false)
   const [shared, setShared] = useState(false)
@@ -328,6 +328,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
           setModalOpen(false)
         }}
         pessoas={pessoas}
+        currentUser={currentUser}
       />
     </div>
   )

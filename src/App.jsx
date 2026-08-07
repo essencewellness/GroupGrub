@@ -397,6 +397,7 @@ export default function App() {
                 onAddPessoa={trip.addPessoa}
                 onRemovePessoa={trip.removePessoa}
                 isOwner={isOwner}
+                currentUser={currentUserName}
               />
             </motion.div>
           )}

@@ -1,19 +1,19 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Receipt, Plus, User, Users } from 'lucide-react'
+import { Receipt, Plus, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal'
 
-const defaultForm = (pessoas) => ({
+const defaultForm = (pessoas, currentUser) => ({
   descricao: '',
   valor: '',
-  pago_por: pessoas[0] ?? '',
+  pago_por: currentUser || pessoas[0] || '',
   dividir_por: [...pessoas],
 })
 
-export default function AddExpenseModal({ open, onClose, onAdd, pessoas }) {
+export default function AddExpenseModal({ open, onClose, onAdd, pessoas, currentUser }) {
   const { t } = useTranslation()
-  const [form, setForm] = useState(() => defaultForm(pessoas))
+  const [form, setForm] = useState(() => defaultForm(pessoas, currentUser))
   const [focusedInput, setFocusedInput] = useState(null)
 
   const inputCls = (name) =>
@@ -39,7 +39,7 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas }) {
   const submit = () => {
     if (!form.descricao.trim() || !form.valor || !form.pago_por) return
     onAdd({ ...form, valor: parseFloat(form.valor) })
-    setForm(defaultForm(pessoas))
+    setForm(defaultForm(pessoas, currentUser))
     onClose()
   }
 
@@ -77,25 +77,6 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas }) {
         placeholder="0.00"
         className={inputCls('valor')}
       />
-
-      {/* Quem pagou */}
-      <div className="font-mono text-[0.66rem] font-bold tracking-[0.12em] text-muted uppercase mb-1.5 flex items-center gap-1.5">
-        <User size={11} />
-        {t('expenses.paidBy', 'QUEM PAGOU?')}
-      </div>
-      <select
-        value={form.pago_por}
-        onChange={(e) => setForm((f) => ({ ...f, pago_por: e.target.value }))}
-        onFocus={() => setFocusedInput('pago_por')}
-        onBlur={() => setFocusedInput(null)}
-        className={inputCls('pago_por') + ' appearance-none cursor-pointer'}
-      >
-        {pessoas.map((p) => (
-          <option key={p} value={p} className="bg-[#080A0A]">
-            {p}
-          </option>
-        ))}
-      </select>
 
       {/* Dividir por */}
       <div className="font-mono text-[0.66rem] font-bold tracking-[0.12em] text-muted uppercase mb-2 flex items-center gap-1.5">
