@@ -140,9 +140,11 @@ export default function App() {
   }
 
   // Auto-abre o wizard quando a trip não tem datas configuradas.
+  // Não abre para convidados (INITIAL_INVITE_VALID) — eles estão a juntar-se
+  // a uma trip existente, não a criar uma nova.
   // wizardDismissed garante que fechar sem completar não re-abre imediatamente.
   useEffect(() => {
-    if (!trip.loading && trip.needsSetup && !wizardDismissed) {
+    if (!trip.loading && trip.needsSetup && !wizardDismissed && !INITIAL_INVITE_VALID) {
       setShowWizard(true)
     }
   }, [trip.loading, trip.needsSetup, wizardDismissed])
