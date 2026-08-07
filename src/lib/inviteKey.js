@@ -18,9 +18,11 @@ export function getInviteKey(tripId) {
   return localStorage.getItem(LS_KEY(tripId)) || ''
 }
 
-/** Builds the full shareable URL including key. */
+const PROD_ORIGIN = 'https://ferias-app-pi.vercel.app'
+
+/** Builds the full shareable URL including key. Always uses production domain. */
 export function buildInviteUrl(tripId) {
   const key = getOrCreateInviteKey(tripId)
-  const base = window.location.origin + window.location.pathname
-  return `${base}?trip=${tripId}&key=${key}`
+  const origin = window.location.hostname === 'localhost' ? window.location.origin : PROD_ORIGIN
+  return `${origin}/?trip=${tripId}&key=${key}`
 }
