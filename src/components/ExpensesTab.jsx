@@ -54,12 +54,12 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
             <span className="text-brand text-[1.4rem] ml-1">€</span>
           </div>
           <div className="font-mono text-[0.62rem] text-muted mt-1">
-            {expenses.length} {t('expenses.entries', 'despesas')} · {pessoas.length} {t('expenses.people', 'pessoas')}
+            {expenses.length} {t('expenses.entries', 'despesas')} · {allParticipants.length} {t('expenses.people', 'pessoas')}
           </div>
         </div>
 
         {/* Quota individual */}
-        {pessoas.length > 0 && (
+        {allParticipants.length > 0 && (
           <div className="col-span-3 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-line bg-black/30 px-4 py-3.5">
               <div className="font-mono text-[0.56rem] font-bold tracking-[0.12em] text-muted uppercase mb-1">
@@ -69,7 +69,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                 className="text-[1.45rem] font-bold leading-none tabular-nums"
                 style={{ fontFamily: '"JetBrains Mono", monospace', color: '#00C853' }}
               >
-                {quotaIndividual.toFixed(2)}<span className="text-[0.9rem] ml-0.5 opacity-70">€</span>
+                {(totalGasto / allParticipants.length).toFixed(2)}<span className="text-[0.9rem] ml-0.5 opacity-70">€</span>
               </div>
             </div>
             <div className="rounded-xl border border-line bg-black/30 px-4 py-3.5">
@@ -80,7 +80,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                 className="text-[1.45rem] font-bold text-cream leading-none tabular-nums"
                 style={{ fontFamily: '"JetBrains Mono", monospace' }}
               >
-                {pessoas.length}
+                {allParticipants.length}
               </div>
             </div>
           </div>
