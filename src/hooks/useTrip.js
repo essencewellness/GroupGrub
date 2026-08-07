@@ -165,26 +165,19 @@ export default function useTrip() {
   /* ── load data ── */
   const loadData = useCallback(async (isFirst = false) => {
     try {
-      const [dbItems, dbMeals, dbExpenses, remotePessoas] = await Promise.all([
-        fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId), fetchTripPessoas(tripId)
+      const [dbItems, dbMeals, dbExpenses] = await Promise.all([
+        fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId)
       ])
       setItems(dbItems)
       setMeals(dbMeals)
       setExpenses(dbExpenses)
-      // Merge remote pessoas with local — remote is source of truth when available
-      if (remotePessoas && remotePessoas.length > 0) {
-        setPessoas(prev => {
-          const merged = [...new Set([...remotePessoas, ...prev])]
-          savePessoas(tripId, merged)
-          return merged
-        })
-      }
     } catch (e) {
       console.error('loadData error', e)
     } finally {
       if (isFirst) setLoading(false)
     }
   }, [tripId])
+
 
   useEffect(() => {
     // Wrapped em microtask para não fazer setState síncrono dentro do effect
