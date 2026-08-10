@@ -63,7 +63,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
           <div className="col-span-3 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-line bg-black/30 px-4 py-3.5">
               <div className="font-mono text-[0.56rem] font-bold tracking-[0.12em] text-muted uppercase mb-1">
-                QUOTA/PESSOA
+                {t('expenses.quotaPerPerson', 'QUOTA/PESSOA')}
               </div>
               <div
                 className="text-[1.45rem] font-bold leading-none tabular-nums"
@@ -74,7 +74,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
             </div>
             <div className="rounded-xl border border-line bg-black/30 px-4 py-3.5">
               <div className="font-mono text-[0.56rem] font-bold tracking-[0.12em] text-muted uppercase mb-1">
-                PARTICIPANTES
+                {t('expenses.participants', 'PARTICIPANTES')}
               </div>
               <div
                 className="text-[1.45rem] font-bold text-cream leading-none tabular-nums"

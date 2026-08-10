@@ -17,8 +17,8 @@ export default function GuestUpsellModal({ tripId, onClose }) {
   const [email, setEmail] = useState('')
 
   useEffect(() => {
-    // Delay ligeiro para não sobrepor a entrada na app
-    const t = setTimeout(() => setVisible(true), 900)
+    // Espera 3s para o utilizador ter tempo de explorar a app antes de ver o modal
+    const t = setTimeout(() => setVisible(true), 3000)
     return () => clearTimeout(t)
   }, [])
 
@@ -61,7 +61,7 @@ export default function GuestUpsellModal({ tripId, onClose }) {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 60, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 340, damping: 32 }}
-            className="w-full sm:max-w-[420px] rounded-t-[28px] sm:rounded-[28px] relative overflow-hidden"
+            className="w-full sm:max-w-[420px] rounded-t-[28px] sm:rounded-[28px] relative overflow-hidden max-h-[90dvh] overflow-y-auto"
             style={{
               background: 'linear-gradient(160deg, #0d0d0e 0%, #0a0a0b 100%)',
               border: '1px solid rgba(255,90,38,0.18)',

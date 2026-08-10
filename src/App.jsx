@@ -18,21 +18,12 @@ import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
 import GuestUpsellModal from './components/GuestUpsellModal'
 import { exportShoppingList } from './lib/exportPdf'
+import { CATS, CAT_ORDER } from './lib/constants'
 
 // Captured at module load time, before the app modifies the URL.
 // A valid guest invite requires BOTH ?trip=X and ?key=Y — just guessing a trip ID is not enough.
 const _ip = new URLSearchParams(window.location.search)
 const INITIAL_INVITE_VALID = !!(_ip.get('trip') && _ip.get('key'))
-
-const CATS = {
-  dispensa:   { label: 'Dispensa',         icon: '🥫', color: '#f5a623', desc: 'Compra com antecedência' },
-  bebidas:    { label: 'Bebidas',           icon: '🍷', color: '#3aa0ff', desc: 'Compra com antecedência' },
-  talho:      { label: 'Talho & Peixaria', icon: '🥩', color: '#ff6b6b', desc: '1–2 dias antes' },
-  laticinios: { label: 'Laticínios',       icon: '🧀', color: '#9b7bff', desc: '1–2 dias antes' },
-  fresco:     { label: 'Frescos',          icon: '🥦', color: '#34d399', desc: 'Comprar no dia' },
-  outro:      { label: 'Outros',           icon: '📦', color: '#6b8299', desc: '' },
-}
-const CAT_ORDER = ['dispensa', 'bebidas', 'talho', 'laticinios', 'fresco', 'outro']
 
 function Toast({ toast }) {
   return (
@@ -69,6 +60,7 @@ export default function App() {
   const [guestNameInput, setGuestNameInput] = useState('')
   const currentUserName = localStorage.getItem('groupgrub_guest_name') || localStorage.getItem('groupgrub_user_name') || ''
   const [tab, setTab] = useState('refeicoes')
+  const [categorizing, setCategorizing] = useState(false)
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
   const [showShare, setShare] = useState(false)
@@ -167,7 +159,7 @@ export default function App() {
     if (ownerName && !trip.pessoas.includes(ownerName)) {
       trip.addPessoa(ownerName)
     }
-  }, [trip.pessoas.length])
+  }, [JSON.stringify(trip.pessoas)])
 
   if (trip.loading) {
     return (
@@ -244,25 +236,25 @@ export default function App() {
                 animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
                 transition={refreshing ? { duration: 0.6, repeat: Infinity, ease: 'linear' } : {}}
                 onClick={handleRefresh}
-                title={t('common.sync')}
+                aria-label={t('common.sync')}
                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-line bg-white/[0.03] text-faint hover:text-cream hover:border-lineStrong transition-all"
               >
-                <RefreshCw size={13} />
+                <RefreshCw size={13} aria-hidden="true" />
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={() => setShare(true)}
-                title={t('common.share')}
+                aria-label={t('common.share')}
                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-line bg-white/[0.03] text-faint hover:text-cream hover:border-lineStrong transition-all"
               >
-                <Share2 size={14} />
+                <Share2 size={14} aria-hidden="true" />
               </motion.button>
-              <div className="text-xl ml-1">🛰️</div>
+              <div className="text-xl ml-1" aria-hidden="true">🛰️</div>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-0.5 pb-0 relative">
+          <div role="tablist" aria-label="Secções da aplicação" className="flex gap-0.5 pb-0 relative">
             {[
               { key: 'refeicoes', label: t('nav.meals'), Icon: UtensilsCrossed },
               { key: 'plano', label: t('nav.plan'), Icon: CalendarDays },
@@ -271,13 +263,17 @@ export default function App() {
             ].map(({ key, label, Icon }) => (
               <button
                 key={key}
+                role="tab"
+                aria-selected={tab === key}
+                aria-controls={`tabpanel-${key}`}
+                id={`tab-${key}`}
                 onClick={() => setTab(key)}
                 className={`flex-1 py-3 text-[0.65rem] font-bold tracking-[0.1em] transition-all duration-200 relative ${
                   tab === key ? 'text-brand' : 'text-faint hover:text-muted'
                 }`}
               >
                 <span className="relative z-10 flex items-center justify-center gap-1.5">
-                  <Icon size={13} strokeWidth={tab === key ? 2.5 : 1.8} /> {label}
+                  <Icon size={13} strokeWidth={tab === key ? 2.5 : 1.8} aria-hidden="true" /> {label}
                 </span>
                 {tab === key && (
                   <motion.div
@@ -334,6 +330,9 @@ export default function App() {
           {tab === 'refeicoes' && (
             <motion.div
               key="ref"
+              id="tabpanel-refeicoes"
+              role="tabpanel"
+              aria-labelledby="tab-refeicoes"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
@@ -378,12 +377,17 @@ export default function App() {
           )}
 
           {tab === 'plano' && (
+            <div id="tabpanel-plano" role="tabpanel" aria-labelledby="tab-plano">
             <Plano key="plano" meals={trip.meals} plano={trip.plano} onUpdate={trip.updatePlano} structure={trip.structure} />
+            </div>
           )}
 
           {tab === 'contas' && (
             <motion.div
               key="contas"
+              id="tabpanel-contas"
+              role="tabpanel"
+              aria-labelledby="tab-contas"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
@@ -405,6 +409,9 @@ export default function App() {
           {tab === 'compras' && (
             <motion.div
               key="comp"
+              id="tabpanel-compras"
+              role="tabpanel"
+              aria-labelledby="tab-compras"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
@@ -450,16 +457,24 @@ export default function App() {
                 {isOwner && (
                   <motion.button
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => trip.categorizarTudo()}
+                    disabled={categorizing}
+                    onClick={async () => {
+                      setCategorizing(true)
+                      try { await trip.categorizarTudo() } finally { setCategorizing(false) }
+                    }}
                     className="flex-1 py-3 rounded-xl border text-xs font-semibold tracking-[0.1em] transition-all"
                     style={{
                       borderColor: 'rgba(255,90,38,0.55)',
                       background: 'rgba(255,90,38,0.11)',
                       color: '#ff5a26',
                       boxShadow: '0 0 20px rgba(255,90,38,0.18)',
+                      opacity: categorizing ? 0.6 : 1,
                     }}
                   >
-                    <Sparkles size={13} className="inline mr-1.5" /> {t('shopping.recategorize')}
+                    {categorizing
+                      ? <><span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full motion-safe:animate-spin mr-1.5" aria-hidden="true" />{t('shopping.analyzing')}</>
+                      : <><Sparkles size={13} className="inline mr-1.5" aria-hidden="true" />{t('shopping.recategorize')}</>
+                    }
                   </motion.button>
                 )}
                 <motion.button

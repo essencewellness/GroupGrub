@@ -4,17 +4,7 @@ import { Plus, X, Check, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal'
 import { suggestEmoji } from '../lib/mealEmoji'
-
-const EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🍖', '🥪', '🍕', '🌮', '🍲', '🫙', '🍰', '🤌', '🦐', '🥩', '🍝', '🍔', '🥞', '🌯', '🍱']
-
-const TIPOS = [
-  { key: 'prato_principal', label: '🍽️ Prato Principal' },
-  { key: 'petisco',         label: '🫙 Petisco' },
-  { key: 'pequeno_almoco',  label: '🌅 Pequeno-almoço' },
-  { key: 'sobremesa',       label: '🍰 Sobremesa' },
-  { key: 'brunch',          label: '☕ Brunch' },
-  { key: 'bebidas',         label: '🥤 Bebidas' },
-]
+import { TIPOS, MEAL_EMOJIS as EMOJIS } from '../lib/constants'
 
 export default function AddMealModal({ open, onClose, onAdd }) {
   const { t } = useTranslation()

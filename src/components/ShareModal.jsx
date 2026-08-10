@@ -152,7 +152,7 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
       </motion.a>
 
       {/* Join another trip */}
-      <div className="border-t border-line pt-4.5 mb-2">
+      <div className="border-t border-line pt-4 mb-2">
         <div className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-muted mb-2.5">ENTRAR NOUTRA LISTA</div>
         <div className="flex gap-2">
           <input

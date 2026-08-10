@@ -90,7 +90,7 @@ export default function TripsSelector({
                       className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 mb-1 cursor-pointer transition-colors ${
                         trip.id === currentTripId
                           ? 'border border-brand/40 bg-brand/[0.08]'
-                          : 'border border-transparent hover:border-white/8 hover:bg-white/[0.03]'
+                          : 'border border-transparent hover:border-white/[0.08] hover:bg-white/[0.03]'
                       }`}
                       onClick={() => handleSwitch(trip.id)}
                     >

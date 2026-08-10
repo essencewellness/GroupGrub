@@ -1,18 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Pencil, Trash2, Check, X, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-
-const EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🍖', '🥪', '🍕', '🌮', '🍲', '🫙', '🍰', '🦐', '🍝', '🍔', '🥞', '🌯']
-
-const TIPOS = [
-  { key: 'prato_principal', label: '🍽️ Prato Principal' },
-  { key: 'petisco',         label: '🫙 Petisco' },
-  { key: 'pequeno_almoco',  label: '🌅 Pequeno-almoço' },
-  { key: 'sobremesa',       label: '🍰 Sobremesa' },
-  { key: 'brunch',          label: '☕ Brunch' },
-  { key: 'bebidas',         label: '🥤 Bebidas' },
-]
+import { TIPOS, MEAL_EMOJIS } from '../lib/constants'
 
 function tipoLabel(tipo) {
   const found = TIPOS.find(t => t.key === tipo)
@@ -26,6 +16,11 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
   const [newIng, setNewIng] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [focusedInput, setFocusedInput] = useState(null)
+
+  // Reset confirmDelete when card closes to avoid stale state on reopen
+  useEffect(() => {
+    if (!isOpen) setConfirmDelete(false)
+  }, [isOpen])
 
   const saveEdit = () => { onUpdate(draft); setEditing(false) }
   const cancelEdit = () => { setDraft({ nome: meal.nome, emoji: meal.emoji, tipo: meal.tipo, ingredientes: meal.ingredientes }); setEditing(false) }
@@ -47,7 +42,14 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
       style={isOpen ? { boxShadow: '0 8px 40px rgba(255,90,38,0.12)' } : {}}
     >
       {/* Header row */}
-      <div className="flex items-center gap-4 p-5 cursor-pointer" onClick={onClick}>
+      <div
+        className="flex items-center gap-4 p-5 cursor-pointer"
+        onClick={onClick}
+        role="button"
+        aria-expanded={isOpen}
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
+      >
         <div className="relative flex-shrink-0 flex items-center justify-center w-12 h-12">
           <AnimatePresence>
             {isOpen && (
@@ -65,6 +67,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
             animate={isOpen ? { scale: 1.15 } : { scale: 1 }}
             className="relative z-10 text-2xl"
             style={{ filter: isOpen ? 'drop-shadow(0 0 10px rgba(255,90,38,0.4))' : 'none' }}
+            aria-hidden="true"
           >
             {meal.emoji}
           </motion.span>
@@ -89,9 +92,10 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={(e) => { e.stopPropagation(); setEditing(true) }}
+              aria-label={`Editar ${meal.nome}`}
               className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
             >
-              <Pencil size={13} />
+              <Pencil size={13} aria-hidden="true" />
             </motion.button>
           )}
           {isOwner && (
@@ -99,9 +103,10 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
               <motion.button
                 whileTap={{ scale: 0.85 }}
                 onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
+                aria-label={`Eliminar ${meal.nome}`}
                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
               >
-                <Trash2 size={13} />
+                <Trash2 size={13} aria-hidden="true" />
               </motion.button>
             ) : (
               <motion.div
@@ -118,6 +123,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
+                  aria-label="Cancelar"
                   className="px-2.5 py-1 rounded-lg border border-line bg-white/[0.03] text-muted font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em]"
                 >
                   {t('pricing.cancel')}
@@ -129,6 +135,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             className="text-muted flex items-center"
+            aria-hidden="true"
           >
             <ChevronDown size={18} />
           </motion.div>
@@ -156,19 +163,21 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                       transition={{ delay: ii * 0.04 }}
                       className="bg-white/[0.04] border border-line rounded-xl px-3.5 py-1.5 text-[0.82rem] text-cream/90 flex items-center gap-1.5"
                     >
-                      <span className="text-brand text-[0.7rem]">•</span>
+                      <span className="text-brand text-[0.7rem]" aria-hidden="true">•</span>
                       {ing}
                     </motion.span>
                   ))}
                 </div>
               ) : (
                 <div>
-                  <div className="flex flex-wrap gap-2 mb-3.5">
-                    {EMOJIS.map((e) => (
+                  <div className="flex flex-wrap gap-2 mb-3.5" role="group" aria-label={t('meals.chooseEmoji')}>
+                    {MEAL_EMOJIS.map((e) => (
                       <button
                         key={e}
                         onClick={() => setDraft((d) => ({ ...d, emoji: e }))}
-                        className={`w-9 h-9 rounded-lg text-lg cursor-pointer transition-all ${
+                        aria-label={e}
+                        aria-pressed={draft.emoji === e}
+                        className={`w-10 h-10 rounded-lg text-lg cursor-pointer transition-all ${
                           draft.emoji === e ? 'bg-brand/20 border border-brand/60' : 'bg-white/[0.03] border border-transparent'
                         }`}
                       >
@@ -180,18 +189,19 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                     value={draft.nome}
                     onChange={(e) => setDraft((d) => ({ ...d, nome: e.target.value }))}
                     placeholder={t('meals.name')}
+                    aria-label={t('meals.name')}
                     onFocus={() => setFocusedInput('nome')}
                     onBlur={() => setFocusedInput(null)}
                     className={inputCls('nome')}
                   />
-                  {/* Tipo chips */}
-                  <div className="flex flex-wrap gap-1.5 mb-3.5">
+                  <div className="flex flex-wrap gap-1.5 mb-3.5" role="group" aria-label={t('meals.type')}>
                     {TIPOS.map(({ key, label }) => {
                       const active = draft.tipo === key
                       return (
                         <button
                           key={key}
                           type="button"
+                          aria-pressed={active}
                           onClick={() => setDraft(d => ({ ...d, tipo: active ? '' : key }))}
                           className="px-3 py-1.5 rounded-xl text-[0.75rem] font-medium transition-all border"
                           style={active
@@ -211,8 +221,8 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                         className="bg-white/[0.04] border border-line rounded-xl px-3 py-1 text-[0.8rem] text-cream/90 flex items-center gap-1.5"
                       >
                         {ing}
-                        <button onClick={() => removeIng(ii)} className="bg-none border-0 text-muted hover:text-brand cursor-pointer p-0 flex">
-                          <X size={11} />
+                        <button onClick={() => removeIng(ii)} aria-label={`Remover ${ing}`} className="bg-none border-0 text-muted hover:text-brand cursor-pointer p-0 flex">
+                          <X size={11} aria-hidden="true" />
                         </button>
                       </span>
                     ))}
@@ -223,15 +233,17 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                       onChange={(e) => setNewIng(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && addIng()}
                       placeholder={t('meals.addIngredient')}
+                      aria-label={t('meals.addIngredient')}
                       onFocus={() => setFocusedInput('newIng')}
                       onBlur={() => setFocusedInput(null)}
                       className={inputCls('newIng')}
                     />
                     <button
                       onClick={addIng}
+                      aria-label="Adicionar ingrediente"
                       className="px-3 flex items-center justify-center rounded-xl bg-brand/20 border border-brand/60 text-brand"
                     >
-                      <Plus size={16} />
+                      <Plus size={16} aria-hidden="true" />
                     </button>
                   </div>
                   <div className="flex gap-2">
@@ -240,7 +252,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                       onClick={saveEdit}
                       className="flex-1 py-2.5 rounded-xl bg-brand text-black font-mono text-[0.8rem] font-bold uppercase tracking-[0.08em] flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(255,90,38,0.3)]"
                     >
-                      <Check size={15} /> {t('common.continue')}
+                      <Check size={15} aria-hidden="true" /> {t('common.continue')}
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
