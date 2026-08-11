@@ -212,10 +212,24 @@ export function useTrips() {
     if (hasSupabase && supabase) {
       try { await supabase.from('trips').delete().eq('id', tripId) } catch { /* fallback */ }
     }
+    // Clean up all localStorage keys for this trip
+    const keysToRemove = [
+      `ferias_meta_${tripId}`,
+      `ferias_plano_${tripId}`,
+      `ferias_pessoas_${tripId}`,
+      `ferias_invite_${tripId}`,
+      `gg_owner_${tripId}`,
+    ]
+    keysToRemove.forEach(k => localStorage.removeItem(k))
     try {
       const all = JSON.parse(localStorage.getItem(LS_TRIPS) || '[]').filter((t) => t.id !== tripId)
       localStorage.setItem(LS_TRIPS, JSON.stringify(all))
     } catch { /* quota */ }
+    // If deleted the active trip, clear the active pointer
+    if (localStorage.getItem(LS_TRIP_ID) === tripId) {
+      localStorage.removeItem(LS_TRIP_ID)
+      sessionStorage.removeItem(LS_TRIP_ID)
+    }
   }, [])
 
   return {

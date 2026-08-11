@@ -125,9 +125,14 @@ export default function App() {
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await trip.refresh()
-    setRefreshing(false)
-    showToast(t('common.updated'))
+    try {
+      await trip.refresh()
+      showToast(t('common.updated'))
+    } catch {
+      showToast('Erro ao sincronizar', 'err')
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   const handleAddMealWithIngredientes = async (meal) => {
@@ -167,7 +172,7 @@ export default function App() {
     if (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid) {
       setShowWizard(true)
     }
-  }, [trip.loading, trip.needsSetup, wizardDismissed])
+  }, [trip.loading, trip.needsSetup, wizardDismissed, inviteValid])
 
   // Mostra o popup de upsell apenas para visitantes não-premium (uma vez por sessão)
   useEffect(() => {
@@ -457,6 +462,7 @@ export default function App() {
                 pessoas={trip.pessoas}
                 isOwner={isOwner}
                 isGuest={isGuest}
+                isPremium={isPremium}
                 currentUserName={currentUserName}
                 tripId={trip.tripId}
                 onToggle={(id) => trip.toggleItem(id, currentUserName)}
@@ -465,6 +471,7 @@ export default function App() {
                 onAddItem={trip.addItem}
                 onResetTicks={trip.resetTicks}
                 onCategorizarTudo={trip.categorizarTudo}
+                onShowPricing={() => setShowPricing(true)}
                 showToast={showToast}
               />
             </motion.div>

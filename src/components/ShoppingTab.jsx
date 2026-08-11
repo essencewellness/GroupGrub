@@ -11,6 +11,7 @@ export default function ShoppingTab({
   pessoas = [],
   isOwner,
   isGuest,
+  isPremium,
   currentUserName,
   tripId,
   onToggle,
@@ -19,6 +20,7 @@ export default function ShoppingTab({
   onAddItem,
   onResetTicks,
   onCategorizarTudo,
+  onShowPricing,
   showToast,
 }) {
   const { t } = useTranslation()
@@ -124,6 +126,7 @@ export default function ShoppingTab({
         <motion.button
           whileTap={{ scale: 0.93 }}
           onClick={async () => {
+            if (!isPremium) { onShowPricing?.(); return }
             await exportShoppingList({ tripId, items, pessoas, tripName: 'GroupGrub' })
             showToast(t('common.pdfExported'))
           }}

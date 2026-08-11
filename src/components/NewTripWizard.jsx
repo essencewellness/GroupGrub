@@ -24,6 +24,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
   }
 
   const close = () => {
+    reset()
     onClose()
   }
 
