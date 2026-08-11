@@ -5,6 +5,25 @@
  * Uses promise timeout wrapper for robustness against hanging Supabase requests.
  */
 import { supabase, hasSupabase } from './supabase'
+import { getEffectiveToken } from './inviteKey'
+
+async function apiWrite(path, body) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`API ${path} ${res.status}`)
+}
+
+async function apiDelete(path, body) {
+  const res = await fetch(path, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`API ${path} DELETE ${res.status}`)
+}
 
 const LS_ITEMS    = 'ferias_items'
 const LS_MEALS    = 'ferias_meals'
@@ -54,10 +73,12 @@ export async function fetchTrips(userId) {
 
 export async function upsertTrip(trip) {
   const row = { ...trip }
-  if (hasSupabase && row.owner_id) {
-    try { await withTimeout(supabase.from('trips').upsert(row, { onConflict: 'id' })) } catch { /* fallback to localStorage */ }
+  if (hasSupabase) {
+    const token = getEffectiveToken(trip.id)
+    if (token) {
+      try { await withTimeout(apiWrite('/api/trip', { tripId: trip.id, token, trip: row })) } catch { /* fallback */ }
+    }
   }
-  // Always sync localStorage as fallback
   const all = lsGet(LS_TRIPS, [])
   const idx = all.findIndex(t => t.id === trip.id)
   if (idx >= 0) all.splice(idx, 1, row)
@@ -85,10 +106,10 @@ export async function fetchTripPessoas(tripId) {
 /** Upsert any subset of fields into the trips row (pessoas, plano, meta, etc.). */
 export async function upsertTripRow(tripId, patch) {
   if (!hasSupabase) return
+  const token = getEffectiveToken(tripId)
+  if (!token) return
   try {
-    await withTimeout(
-      supabase.from('trips').upsert({ id: tripId, ...patch }, { onConflict: 'id' })
-    )
+    await withTimeout(apiWrite('/api/trip', { tripId, token, patch }))
   } catch { /* fallback: localStorage only */ }
 }
 
@@ -99,9 +120,10 @@ export async function upsertTripPessoas(tripId, pessoas) {
 
 export async function deleteTrip(tripId) {
   if (hasSupabase) {
-    try {
-      await withTimeout(supabase.from('trips').delete().eq('id', tripId))
-    } catch { /* supabase not available — localStorage fallback */ }
+    const token = getEffectiveToken(tripId)
+    if (token) {
+      try { await withTimeout(apiDelete('/api/trip', { tripId, token })) } catch { /* fallback */ }
+    }
   }
   const trips = lsGet(LS_TRIPS, []).filter(t => t.id !== tripId)
   lsSet(LS_TRIPS, trips)
@@ -135,11 +157,11 @@ export async function fetchItems(tripId) {
 export async function upsertItem(tripId, item) {
   const row = { ...item, trip_id: tripId }
   if (hasSupabase) {
-    try { await withTimeout(supabase.from('items').upsert(row, { onConflict: 'id' })) } catch { /* fallback to localStorage */ }
+    const token = getEffectiveToken(tripId)
+    if (token) {
+      try { await withTimeout(apiWrite('/api/items', { tripId, token, item: row })) } catch { /* fallback */ }
+    }
   }
-  // Espelha SEMPRE em localStorage — com ou sem Supabase. Antes só escrevia no
-  // ramo else, por isso quando o Supabase estava configurado mas inacessível os
-  // items eram perdidos silenciosamente no refresh seguinte.
   const all = lsGet(LS_ITEMS, [])
   const idx = all.findIndex(i => i.id === item.id)
   if (idx >= 0) all.splice(idx, 1, row); else all.push(row)
@@ -148,7 +170,10 @@ export async function upsertItem(tripId, item) {
 
 export async function deleteItem(tripId, id) {
   if (hasSupabase) {
-    try { await withTimeout(supabase.from('items').delete().eq('id', id).eq('trip_id', tripId)) } catch { /* fallback to localStorage */ }
+    const token = getEffectiveToken(tripId)
+    if (token) {
+      try { await withTimeout(apiDelete('/api/items', { tripId, token, id })) } catch { /* fallback */ }
+    }
   }
   lsSet(LS_ITEMS, lsGet(LS_ITEMS, []).filter(i => i.id !== id))
 }
@@ -156,7 +181,10 @@ export async function deleteItem(tripId, id) {
 export async function bulkUpsertItems(tripId, items) {
   const rows = items.map(i => ({ ...i, trip_id: tripId }))
   if (hasSupabase) {
-    try { await withTimeout(supabase.from('items').upsert(rows, { onConflict: 'id' })) } catch { /* fallback to localStorage */ }
+    const token = getEffectiveToken(tripId)
+    if (token) {
+      try { await withTimeout(apiWrite('/api/items', { tripId, token, items: rows })) } catch { /* fallback */ }
+    }
   }
   lsSet(LS_ITEMS, mergeById(lsGet(LS_ITEMS, []), rows, tripId))
 }
@@ -185,7 +213,10 @@ export async function fetchMeals(tripId) {
 export async function upsertMeal(tripId, meal) {
   const row = { ...meal, trip_id: tripId }
   if (hasSupabase) {
-    try { await withTimeout(supabase.from('meals').upsert(row, { onConflict: 'id' })) } catch { /* fallback to localStorage */ }
+    const token = getEffectiveToken(tripId)
+    if (token) {
+      try { await withTimeout(apiWrite('/api/meals', { tripId, token, meal: row })) } catch { /* fallback */ }
+    }
   }
   const all = lsGet(LS_MEALS, [])
   const idx = all.findIndex(m => m.id === meal.id)
@@ -195,7 +226,10 @@ export async function upsertMeal(tripId, meal) {
 
 export async function deleteMeal(tripId, id) {
   if (hasSupabase) {
-    try { await withTimeout(supabase.from('meals').delete().eq('id', id).eq('trip_id', tripId)) } catch { /* fallback to localStorage */ }
+    const token = getEffectiveToken(tripId)
+    if (token) {
+      try { await withTimeout(apiDelete('/api/meals', { tripId, token, id })) } catch { /* fallback */ }
+    }
   }
   lsSet(LS_MEALS, lsGet(LS_MEALS, []).filter(m => m.id !== id))
 }
@@ -224,7 +258,10 @@ export async function fetchExpenses(tripId) {
 export async function upsertExpense(tripId, expense) {
   const row = { ...expense, trip_id: tripId }
   if (hasSupabase) {
-    try { await withTimeout(supabase.from('expenses').upsert(row, { onConflict: 'id' })) } catch { /* fallback */ }
+    const token = getEffectiveToken(tripId)
+    if (token) {
+      try { await withTimeout(apiWrite('/api/expenses', { tripId, token, expense: row })) } catch { /* fallback */ }
+    }
   }
   const all = lsGet(LS_EXPENSES, [])
   const idx = all.findIndex(e => e.id === expense.id)
@@ -234,7 +271,10 @@ export async function upsertExpense(tripId, expense) {
 
 export async function deleteExpense(tripId, id) {
   if (hasSupabase) {
-    try { await withTimeout(supabase.from('expenses').delete().eq('id', id).eq('trip_id', tripId)) } catch { /* fallback */ }
+    const token = getEffectiveToken(tripId)
+    if (token) {
+      try { await withTimeout(apiDelete('/api/expenses', { tripId, token, id })) } catch { /* fallback */ }
+    }
   }
   lsSet(LS_EXPENSES, lsGet(LS_EXPENSES, []).filter(e => e.id !== id))
 }
