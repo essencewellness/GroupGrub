@@ -48,7 +48,19 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
   }
 
   const copy = async () => {
-    await navigator.clipboard.writeText(shareUrl)
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+    } catch {
+      // Fallback for browsers without clipboard API or denied permissions
+      const ta = document.createElement('textarea')
+      ta.value = shareUrl
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

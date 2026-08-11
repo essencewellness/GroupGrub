@@ -25,7 +25,7 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
   // Reset form with fresh pessoas list every time the modal opens
   useEffect(() => {
     if (open) setForm(defaultForm(pessoas, currentUser))
-  }, [open])
+  }, [open, pessoas, currentUser])
 
   const inputCls = (name) =>
     `w-full bg-black/50 border px-4 py-3 rounded-xl text-cream font-mono text-[1rem] outline-none transition-all mb-2.5 ${
@@ -78,11 +78,10 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
         {t('expenses.amount', 'VALOR')}
       </div>
       <input
-        type="number"
-        min="0"
-        step="0.01"
+        type="text"
+        inputMode="decimal"
         value={form.valor}
-        onChange={(e) => setForm((f) => ({ ...f, valor: e.target.value }))}
+        onChange={(e) => setForm((f) => ({ ...f, valor: e.target.value.replace(/[^0-9.,]/g, '') }))}
         onFocus={() => setFocusedInput('valor')}
         onBlur={() => setFocusedInput(null)}
         placeholder="0.00"
@@ -119,9 +118,9 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
         whileTap={{ scale: 0.97 }}
         onClick={submit}
         disabled={!isReady}
-        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-mono text-[0.8rem] font-bold tracking-[0.1em] transition-all cursor-pointer ${
+        className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-mono text-[0.8rem] font-bold tracking-[0.1em] transition-all ${
           isReady
-            ? 'bg-brand text-white shadow-[0_4px_24px_rgba(255,90,38,0.35)]'
+            ? 'bg-brand text-white shadow-[0_4px_24px_rgba(255,90,38,0.35)] cursor-pointer'
             : 'bg-white/[0.06] text-muted cursor-not-allowed'
         }`}
       >

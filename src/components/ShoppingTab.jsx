@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, RotateCcw, FileText, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -32,12 +32,15 @@ export default function ShoppingTab({
   const comprados  = items.filter((i) => i.comprado).length
   const pct        = total ? Math.round((comprados / total) * 100) : 0
 
-  const grupos = {}
-  for (const item of items) {
-    const cat = item.categoria && item.categoria !== 'desconhecido' ? item.categoria : 'outro'
-    if (!grupos[cat]) grupos[cat] = []
-    grupos[cat].push(item)
-  }
+  const grupos = useMemo(() => {
+    const g = {}
+    for (const item of items) {
+      const cat = item.categoria && item.categoria !== 'desconhecido' ? item.categoria : 'outro'
+      if (!g[cat]) g[cat] = []
+      g[cat].push(item)
+    }
+    return g
+  }, [items])
 
   const handleAddItem = async () => {
     const nome = novoItem.trim()
