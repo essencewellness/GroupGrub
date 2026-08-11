@@ -76,7 +76,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
               {!isUncat && !item.comprado && (
                 <span
                   aria-hidden="true"
-                  className="font-mono text-[0.54rem] font-bold tracking-[0.04em] px-1.5 py-0.5 rounded flex items-center gap-0.5"
+                  className="font-mono text-[0.65rem] font-bold tracking-[0.04em] px-1.5 py-0.5 rounded flex items-center gap-0.5"
                   style={{ background: `${catCfg.color}18`, color: catCfg.color, border: `1px solid ${catCfg.color}35` }}
                 >
                   {catCfg.icon}
@@ -85,7 +85,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
 
               {item.assignee && item.assignee !== '—' && (
                 <span
-                  className="font-mono text-[0.58rem] font-bold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded"
+                  className="font-mono text-[0.65rem] font-bold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded"
                   style={item.comprado
                     ? { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }
                     : { background: 'rgba(255,90,38,0.15)', color: '#ff5a26', border: '1px solid rgba(255,90,38,0.35)' }
@@ -97,7 +97,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
 
               {item.antecipado && !item.comprado && (
                 <span
-                  className="font-mono text-[0.54rem] font-bold uppercase tracking-[0.04em] px-1.5 py-0.5 rounded"
+                  className="font-mono text-[0.65rem] font-bold uppercase tracking-[0.04em] px-1.5 py-0.5 rounded"
                   style={{ background: 'rgba(245,166,35,0.1)', color: '#f5a623', border: '1px solid rgba(245,166,35,0.22)' }}
                 >
                   {t('shopping.antecipado')}
@@ -113,7 +113,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                   onKeyDown={(e) => e.key === 'Enter' && saveQtd()}
                   onClick={(e) => e.stopPropagation()}
                   aria-label={t('shopping.qty')}
-                  className="w-16 bg-black/50 border border-brand/60 rounded-lg px-2 py-1 text-cream font-mono text-[0.75rem] outline-none text-center"
+                  className="w-16 bg-black/50 border border-brand/60 rounded-lg px-2 py-1 text-cream font-mono text-base outline-none text-center"
                 />
               ) : (
                 <span
@@ -155,7 +155,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
               aria-expanded={showCatPicker}
             >
               <span
-                className="flex items-center gap-1.5 font-mono text-[0.6rem] font-bold uppercase tracking-[0.1em] transition-colors"
+                className="flex items-center gap-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.1em] transition-colors"
                 style={{ color: showCatPicker ? '#ff5a26' : 'rgba(255,90,38,0.7)' }}
               >
                 <span className="inline-block w-3 h-3 rounded-full border-2 border-current motion-safe:animate-pulse" aria-hidden="true" />
@@ -196,7 +196,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                         style={{ border: `1px solid ${c.color}30` }}
                       >
                         <span className="text-base" aria-hidden="true">{c.icon}</span>
-                        <span className="font-mono text-[0.54rem] font-bold uppercase tracking-[0.04em]" style={{ color: c.color }}>
+                        <span className="font-mono text-[0.65rem] font-bold uppercase tracking-[0.04em]" style={{ color: c.color }}>
                           {c.label}
                         </span>
                       </button>

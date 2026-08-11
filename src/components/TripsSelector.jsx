@@ -97,7 +97,7 @@ export default function TripsSelector({
                       <div className="flex-1 min-w-0">
                         <div
                           className="text-[0.85rem] font-semibold truncate"
-                          style={{ color: trip.id === currentTripId ? '#ff5a26' : 'rgba(245,245,244,0.85)' }}
+                          className={trip.id === currentTripId ? 'text-brand' : 'text-cream/85'}
                         >
                           {trip.title}
                         </div>

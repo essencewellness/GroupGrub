@@ -8,6 +8,8 @@ export default function Modal({ open, onClose, title, children }) {
   const panelRef = useRef(null)
   const titleId  = useRef(`modal-title-${Math.random().toString(36).slice(2)}`)
   const previousFocus = useRef(null)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose })
 
   useEffect(() => {
     if (!open) return
@@ -30,7 +32,7 @@ export default function Modal({ open, onClose, title, children }) {
           if (document.activeElement === last) { e.preventDefault(); first.focus() }
         }
       }
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onCloseRef.current()
     }
 
     document.addEventListener('keydown', trapFocus)
@@ -38,7 +40,7 @@ export default function Modal({ open, onClose, title, children }) {
       document.removeEventListener('keydown', trapFocus)
       previousFocus.current?.focus()
     }
-  }, [open, onClose])
+  }, [open])
 
   return (
     <AnimatePresence>
@@ -62,7 +64,7 @@ export default function Modal({ open, onClose, title, children }) {
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
             className="fixed bottom-0 left-0 right-0 z-[401] bg-panel border-t border-line rounded-t-[28px] max-h-[92dvh] overflow-y-auto"
-            style={{ boxShadow: '0 -8px 60px rgba(0,0,0,0.85), 0 -1px 24px rgba(255,90,38,0.12)', paddingBottom: 'calc(env(safe-area-inset-bottom,0px) + 24px)' }}
+            style={{ boxShadow: '0 -8px 60px rgba(0,0,0,0.85), 0 -1px 24px rgb(var(--brand-rgb) / 0.12)', paddingBottom: 'calc(env(safe-area-inset-bottom,0px) + 24px)' }}
           >
             <div className="flex justify-center pt-3.5" aria-hidden="true">
               <div className="w-11 h-1 bg-brand/55 rounded-full" />

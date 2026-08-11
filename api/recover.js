@@ -1,9 +1,24 @@
 /* global process */
 export const config = { runtime: 'edge' }
 
+const _hits = new Map()
+function isRateLimited(ip, max = 5, windowMs = 60_000) {
+  const now = Date.now()
+  const recent = (_hits.get(ip) || []).filter(t => now - t < windowMs)
+  if (recent.length >= max) return true
+  recent.push(now)
+  _hits.set(ip, recent)
+  return false
+}
+
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
+  }
+
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'
+  if (isRateLimited(ip)) {
+    return new Response(JSON.stringify({ ok: false, error: 'Too many requests' }), { status: 429 })
   }
 
   try {

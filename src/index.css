@@ -5,6 +5,12 @@
 @layer base {
   :root {
     color-scheme: dark;
+    /* Design tokens — single source of truth for inline styles */
+    --brand-rgb: 255 90 38;       /* #FF5A26 — same as tailwind `brand` */
+    --success-rgb: 52 211 153;    /* #34d399 — used for positive states */
+    --danger-rgb: 235 87 87;      /* #EB5757 — debt/negative */
+    --brand: rgb(var(--brand-rgb));
+    --success: rgb(var(--success-rgb));
   }
 
   * {

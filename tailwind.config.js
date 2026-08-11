@@ -17,7 +17,9 @@ export default {
         },
         cream: '#f5f5f4',
         muted: 'rgba(245,245,244,0.55)',
-        faint: 'rgba(245,245,244,0.32)',
+        faint: 'rgba(245,245,244,0.50)',
+        success: '#34d399',
+        danger:  '#EB5757',
         // category accents
         dispensa:  '#f5a623',
         bebidas:   '#3aa0ff',

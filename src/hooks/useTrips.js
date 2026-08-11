@@ -50,10 +50,10 @@ export function useTrips() {
         }
       } else {
         // Supabase configurado — leitura pública (políticas públicas, sem auth)
-        const { data, error: fetchError } = await supabase
-          .from("trips")
-          .select("*")
-          .order("created_at", { ascending: false })
+        const { data, error: fetchError } = await Promise.race([
+          supabase.from("trips").select("*").order("created_at", { ascending: false }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("loadTrips timeout")), 5000)),
+        ])
 
         if (fetchError) throw fetchError
         const remote = data || []
@@ -75,7 +75,7 @@ export function useTrips() {
       // Supabase inacessível (offline / sem rede) é um cenário normal — a app
       // funciona com localStorage. Não poluir a consola com error().
       console.warn("Trips: Supabase indisponível, a usar cache local.", err?.message || err)
-      setError(err.message)
+      setError(err?.message ?? String(err))
       // Fallback to localStorage (com guarda contra JSON corrompido)
       try {
         const local = localStorage.getItem(LS_TRIPS)
@@ -141,14 +141,14 @@ export function useTrips() {
 
       if (hasSupabase && supabase) {
         try {
-          const { data } = await supabase.auth.getUser()
-          if (data?.user) {
-            const row = { ...newTrip, owner_id: data.user.id }
-            const { error: insertError } = await supabase.from("trips").insert(row)
-            if (insertError) console.error("Failed to create trip:", insertError)
-          }
-        } catch {
-          // User not authed — continue with localStorage only
+          // Anonymous app — upsert without owner_id so the trip row exists in Supabase
+          // even without Supabase Auth. Items/meals/expenses reference this row via FK.
+          const { error: insertError } = await supabase
+            .from("trips")
+            .upsert(newTrip, { onConflict: "id" })
+          if (insertError) console.warn("Failed to create trip in Supabase:", insertError)
+        } catch (e) {
+          console.warn("Supabase unavailable, trip saved to localStorage only:", e?.message)
         }
       }
 
@@ -196,13 +196,9 @@ export function useTrips() {
 
       if (hasSupabase && supabase) {
         try {
-          const { data } = await supabase.auth.getUser()
-          if (data?.user) {
-            const row = { ...newTrip, owner_id: data.user.id }
-            await supabase.from("trips").insert(row)
-          }
-        } catch {
-          // Silently fail
+          await supabase.from("trips").upsert(newTrip, { onConflict: "id" })
+        } catch (e) {
+          console.warn("Supabase unavailable, duplicated trip saved locally only:", e?.message)
         }
       }
 

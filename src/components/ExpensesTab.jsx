@@ -24,7 +24,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
   const handleShare = () => {
     const text = formatSettlementWA(settlements)
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`
-    window.open(url, '_blank')
+    window.open(url, '_blank', 'noopener,noreferrer')
     setShared(true)
     setTimeout(() => setShared(false), 2500)
   }
@@ -43,7 +43,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
           className="col-span-3 rounded-2xl border border-line bg-black/40 p-5"
           style={{ boxShadow: '0 4px 32px rgba(0,0,0,0.4)' }}
         >
-          <div className="font-mono text-[0.58rem] font-bold tracking-[0.14em] text-muted uppercase mb-1">
+          <div className="font-mono text-[0.65rem] font-bold tracking-[0.14em] text-muted uppercase mb-1">
             {t('expenses.totalSpent', 'TOTAL GASTO')}
           </div>
           <div
@@ -62,18 +62,18 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
         {allParticipants.length > 0 && (
           <div className="col-span-3 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-line bg-black/30 px-4 py-3.5">
-              <div className="font-mono text-[0.56rem] font-bold tracking-[0.12em] text-muted uppercase mb-1">
+              <div className="font-sans text-[0.65rem] font-bold tracking-[0.1em] text-muted uppercase mb-1">
                 {t('expenses.quotaPerPerson', 'QUOTA/PESSOA')}
               </div>
               <div
                 className="text-[1.45rem] font-bold leading-none tabular-nums"
-                style={{ fontFamily: '"JetBrains Mono", monospace', color: '#00C853' }}
+                style={{ fontFamily: '"JetBrains Mono", monospace', color: '#34d399' }}
               >
                 {(totalGasto / allParticipants.length).toFixed(2)}<span className="text-[0.9rem] ml-0.5 opacity-70">€</span>
               </div>
             </div>
             <div className="rounded-xl border border-line bg-black/30 px-4 py-3.5">
-              <div className="font-mono text-[0.56rem] font-bold tracking-[0.12em] text-muted uppercase mb-1">
+              <div className="font-sans text-[0.65rem] font-bold tracking-[0.1em] text-muted uppercase mb-1">
                 {t('expenses.participants', 'PARTICIPANTES')}
               </div>
               <div
@@ -95,7 +95,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
           transition={{ delay: 0.06 }}
           className="rounded-2xl border border-line bg-black/40 p-5"
         >
-          <div className="font-mono text-[0.58rem] font-bold tracking-[0.14em] text-muted uppercase mb-3.5">
+          <div className="font-mono text-[0.65rem] font-bold tracking-[0.14em] text-muted uppercase mb-3.5">
             📊 BALANÇO POR MEMBRO
           </div>
           <div className="space-y-2.5">
@@ -104,9 +104,9 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
               const isPos = bal > 0.005
               const isNeg = bal < -0.005
               const Icon = isPos ? TrendingUp : isNeg ? TrendingDown : Minus
-              const color = isPos ? '#00C853' : isNeg ? '#EB5757' : '#6b8299'
-              const bgColor = isPos ? 'rgba(0,200,83,0.07)' : isNeg ? 'rgba(235,87,87,0.07)' : 'rgba(255,255,255,0.03)'
-              const borderColor = isPos ? 'rgba(0,200,83,0.2)' : isNeg ? 'rgba(235,87,87,0.2)' : 'rgba(255,255,255,0.06)'
+              const color = isPos ? '#34d399' : isNeg ? '#EB5757' : '#6b8299'
+              const bgColor = isPos ? 'rgba(52,211,153,0.07)' : isNeg ? 'rgba(235,87,87,0.07)' : 'rgba(255,255,255,0.03)'
+              const borderColor = isPos ? 'rgba(52,211,153,0.2)' : isNeg ? 'rgba(235,87,87,0.2)' : 'rgba(255,255,255,0.06)'
               return (
                 <div
                   key={p}
@@ -125,7 +125,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                       {isPos ? '+' : ''}{bal.toFixed(2)}€
                     </span>
                     <span
-                      className="font-mono text-[0.56rem] font-bold uppercase px-1.5 py-0.5 rounded"
+                      className="font-mono text-[0.65rem] font-bold uppercase px-1.5 py-0.5 rounded"
                       style={{ background: `${color}18`, color, border: `1px solid ${color}35` }}
                     >
                       {isPos ? 'a receber' : isNeg ? 'a pagar' : 'acertado'}
@@ -146,7 +146,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
         className="rounded-2xl border border-line bg-black/40 p-5"
       >
         <div className="flex items-center justify-between mb-3">
-          <div className="font-mono text-[0.58rem] font-bold tracking-[0.14em] text-muted uppercase">
+          <div className="font-mono text-[0.65rem] font-bold tracking-[0.14em] text-muted uppercase">
             {t('expenses.settlements', 'TRANSFERÊNCIAS')}
           </div>
           {settlements.length > 0 && (
@@ -164,8 +164,8 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
 
         {settlements.length === 0 ? (
           <div className="flex items-center gap-2 py-2">
-            <Check size={15} className="text-[#00C853]" />
-            <span className="font-mono text-[0.78rem] text-[#00C853]">
+            <Check size={15} className="text-success" />
+            <span className="font-mono text-[0.78rem] text-success">
               {t('expenses.allSettled', 'Tudo acertado! 🎉')}
             </span>
           </div>
@@ -181,10 +181,10 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                   className="rounded-xl border border-line bg-white/[0.025] px-4 py-3"
                 >
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="font-mono text-[0.54rem] font-bold uppercase tracking-[0.12em] text-muted">
+                    <span className="font-mono text-[0.65rem] font-bold uppercase tracking-[0.12em] text-muted">
                       AÇÃO RECOMENDADA
                     </span>
-                    <span className="font-mono text-[0.54rem] font-bold uppercase tracking-[0.1em] text-brand">
+                    <span className="font-mono text-[0.65rem] font-bold uppercase tracking-[0.1em] text-brand">
                       PASSO {i + 1}
                     </span>
                   </div>
@@ -210,7 +210,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
 
       {/* ── Pessoas na viagem ── */}
       <div className="rounded-2xl border border-line bg-black/40 p-5">
-        <div className="font-mono text-[0.58rem] font-bold tracking-[0.14em] text-muted uppercase mb-3">
+        <div className="font-mono text-[0.65rem] font-bold tracking-[0.14em] text-muted uppercase mb-3">
           👥 PESSOAS NA VIAGEM
         </div>
         <div className="flex flex-wrap gap-2 mb-3">
@@ -221,7 +221,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
             <div key={p} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-line text-[0.8rem] text-cream font-mono">
               {p}
               {isOwner && (
-                <button onClick={() => onRemovePessoa?.(p)} className="text-muted hover:text-brand transition-colors ml-0.5">
+                <button onClick={() => onRemovePessoa?.(p)} aria-label={`Remover ${p}`} className="w-5 h-5 flex items-center justify-center text-muted hover:text-brand transition-colors ml-0.5 -mr-1">
                   <X size={11} />
                 </button>
               )}
@@ -240,7 +240,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                 }
               }}
               placeholder="Adicionar pessoa…"
-              className="flex-1 bg-black/50 border border-line rounded-xl px-3.5 py-2 text-[0.85rem] text-cream outline-none focus:border-brand/50 transition-colors"
+              className="flex-1 bg-black/50 border border-line rounded-xl px-3.5 py-2 text-base text-cream outline-none focus:border-brand/50 transition-colors"
             />
             <motion.button
               whileTap={{ scale: 0.92 }}
@@ -272,7 +272,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
       {/* ── Histórico ── */}
       {expenses.length > 0 && (
         <div>
-          <div className="font-mono text-[0.58rem] font-bold tracking-[0.14em] text-muted uppercase mb-2.5 flex items-center gap-1.5">
+          <div className="font-mono text-[0.65rem] font-bold tracking-[0.14em] text-muted uppercase mb-2.5 flex items-center gap-1.5">
             <Receipt size={11} />
             {t('expenses.history', 'HISTÓRICO')}
           </div>
@@ -313,7 +313,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                       <motion.button
                         whileTap={{ scale: 0.85 }}
                         onClick={() => onRemoveExpense?.(exp.id ?? i)}
-                        className="p-1.5 rounded-lg text-muted hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+                        className="p-2.5 rounded-lg text-muted hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
                       >
                         <Trash2 size={14} />
                       </motion.button>

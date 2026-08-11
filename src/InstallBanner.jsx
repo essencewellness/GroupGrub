@@ -66,7 +66,7 @@ export default function InstallBanner() {
           <div className="flex gap-3.5 items-center">
             <div className="text-2xl">🛰️</div>
             <div className="flex-1">
-              <div className="font-bold text-[0.95rem] text-cream mb-1">{t('common.share')}</div>
+              <div className="font-bold text-[0.95rem] text-cream mb-1">Instalar GroupGrub</div>
               {isIos ? (
                 <div className="text-[0.78rem] text-muted leading-snug">
                   Toca em <Share size={12} className="inline align-middle" /> <strong className="text-brand">Partilhar</strong> e depois <strong className="text-brand">"Adicionar ao ecrã de Início"</strong>

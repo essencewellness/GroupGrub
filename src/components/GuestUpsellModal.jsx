@@ -97,11 +97,11 @@ export default function GuestUpsellModal({ tripId, onClose }) {
                 >
                   🍽️
                 </motion.div>
-                <div className="font-mono text-[0.6rem] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: '#ff5a26' }}>
+                <div className="font-mono text-[0.6rem] font-bold tracking-[0.18em] uppercase mb-2 text-brand">
                   Estás a gostar?
                 </div>
                 <h2 className="font-display text-[1.45rem] font-bold text-cream leading-tight tracking-tight">
-                  Organiza a <span style={{ color: '#ff5a26' }}>tua próxima</span> viagem
+                  Organiza a <span className="text-brand">tua próxima</span> viagem
                 </h2>
                 <p className="text-muted text-[0.8rem] mt-2 leading-relaxed">
                   O teu amigo usa o GroupGrub para planear tudo. Por <strong className="text-cream">10€ vitalícios</strong> tens acesso completo para sempre.
@@ -131,14 +131,14 @@ export default function GuestUpsellModal({ tripId, onClose }) {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="O teu nome"
-                  className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.88rem] outline-none focus:border-[rgba(255,90,38,0.5)] transition-all"
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.88rem] outline-none focus:border-brand/50 transition-all"
                 />
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="Email (para recuperar o acesso)"
-                  className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.88rem] outline-none focus:border-[rgba(255,90,38,0.5)] transition-all"
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.88rem] outline-none focus:border-brand/50 transition-all"
                 />
               </div>
 

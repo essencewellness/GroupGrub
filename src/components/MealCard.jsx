@@ -22,6 +22,13 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
     if (!isOpen) setConfirmDelete(false)
   }, [isOpen])
 
+  // Sync draft with external prop changes (e.g. Realtime updates while card is open)
+  useEffect(() => {
+    if (!editing) {
+      setDraft({ nome: meal.nome, emoji: meal.emoji, tipo: meal.tipo, ingredientes: meal.ingredientes || [] })
+    }
+  }, [meal, editing])
+
   const saveEdit = () => { onUpdate(draft); setEditing(false) }
   const cancelEdit = () => { setDraft({ nome: meal.nome, emoji: meal.emoji, tipo: meal.tipo, ingredientes: meal.ingredientes }); setEditing(false) }
   const addIng = () => { if (newIng.trim()) { setDraft(d => ({ ...d, ingredientes: [...d.ingredientes, newIng.trim()] })); setNewIng('') } }
@@ -93,7 +100,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
               whileTap={{ scale: 0.85 }}
               onClick={(e) => { e.stopPropagation(); setEditing(true) }}
               aria-label={`Editar ${meal.nome}`}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
             >
               <Pencil size={13} aria-hidden="true" />
             </motion.button>
@@ -104,7 +111,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                 whileTap={{ scale: 0.85 }}
                 onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
                 aria-label={`Eliminar ${meal.nome}`}
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.03] text-muted hover:text-brand transition-colors"
               >
                 <Trash2 size={13} aria-hidden="true" />
               </motion.button>
@@ -157,7 +164,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                 <div className="flex flex-wrap gap-2">
                   {(meal.ingredientes || []).map((ing, ii) => (
                     <motion.span
-                      key={ii}
+                      key={`${ing}-${ii}`}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: ii * 0.04 }}
@@ -217,7 +224,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                   <div className="flex flex-wrap gap-1.5 mb-2.5">
                     {draft.ingredientes.map((ing, ii) => (
                       <span
-                        key={ii}
+                        key={`${ing}-${ii}`}
                         className="bg-white/[0.04] border border-line rounded-xl px-3 py-1 text-[0.8rem] text-cream/90 flex items-center gap-1.5"
                       >
                         {ing}

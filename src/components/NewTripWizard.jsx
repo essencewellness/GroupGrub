@@ -24,7 +24,6 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
   }
 
   const close = () => {
-    reset()
     onClose()
   }
 
@@ -52,7 +51,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
           exit={{ scale: 0.96, opacity: 0, y: 10 }}
           transition={{ type: 'spring', stiffness: 320, damping: 30 }}
           className="w-full max-w-[440px] bg-[#080A0A] border border-white/10 rounded-[28px] p-7 relative"
-          style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,90,38,0.06)' }}
+          style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgb(var(--brand-rgb) / 0.06)' }}
         >
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-2 mb-6">
@@ -95,7 +94,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                   onChange={(e) => setTitle(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && validTitle && setStep(2)}
                   placeholder={t('wizard.step1Placeholder')}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-cream text-[0.95rem] outline-none transition-all focus:border-[#FF5A26] focus:shadow-[0_0_20px_rgba(255,90,38,0.25)]"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-cream text-[0.95rem] outline-none transition-all focus:border-brand focus:shadow-glow"
                 />
 
                 <motion.button
@@ -139,7 +138,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                       value={startDate}
                       min={today}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.9rem] outline-none transition-all focus:border-[#FF5A26] [color-scheme:dark]"
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.9rem] outline-none transition-all focus:border-brand [color-scheme:dark]"
                     />
                   </div>
                   <div>
@@ -149,7 +148,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                       value={endDate}
                       min={startDate || today}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.9rem] outline-none transition-all focus:border-[#FF5A26] [color-scheme:dark]"
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.9rem] outline-none transition-all focus:border-brand [color-scheme:dark]"
                     />
                   </div>
                   {startDate && endDate && !dateValid && (

@@ -44,7 +44,7 @@ create table if not exists expenses (
   descricao    text not null,
   valor        numeric(10,2) not null,
   pago_por     text not null,
-  participantes jsonb default '[]',
+  dividir_por   jsonb default '[]',
   created_at   timestamptz default now()
 );
 

@@ -33,7 +33,8 @@ export default function Onboarding({ tripId }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: recoveryEmail.trim() }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`)
       if (data.ok) {
         setRecoveryOk(true)
         localStorage.setItem(PREMIUM_KEY, 'true')
@@ -60,7 +61,8 @@ export default function Onboarding({ tripId }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tripId, customerEmail: email.trim() || undefined }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`)
       if (data.url) {
         window.location.href = data.url
       } else {
@@ -74,8 +76,8 @@ export default function Onboarding({ tripId }) {
   }
 
   const inputStyle = (field) => ({
-    borderColor: focusedField === field ? 'rgba(255,90,38,0.65)' : 'rgba(255,255,255,0.1)',
-    boxShadow: focusedField === field ? '0 0 0 3px rgba(255,90,38,0.12)' : 'none',
+    borderColor: focusedField === field ? 'rgb(var(--brand-rgb) / 0.65)' : 'rgba(255,255,255,0.1)',
+    boxShadow: focusedField === field ? '0 0 0 3px rgb(var(--brand-rgb) / 0.12)' : 'none',
   })
 
   return (
@@ -145,7 +147,7 @@ export default function Onboarding({ tripId }) {
           transition={{ delay: 0.5 }}
         >
           <div className="mb-7 p-6 rounded-[20px]" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.09)' }}>
-            <div className="font-mono text-[0.6rem] font-bold tracking-[0.16em] text-muted uppercase mb-4 text-center">
+            <div className="font-mono text-[0.65rem] font-bold tracking-[0.16em] text-muted uppercase mb-4 text-center">
               Cria a tua conta de organizador
             </div>
 
@@ -237,15 +239,14 @@ export default function Onboarding({ tripId }) {
                 className="overflow-hidden"
               >
                 <div className="p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div className="font-mono text-[0.6rem] font-bold tracking-[0.14em] text-muted uppercase mb-3 text-center">
+                  <div className="font-mono text-[0.65rem] font-bold tracking-[0.14em] text-muted uppercase mb-3 text-center">
                     Recuperar acesso anterior
                   </div>
                   {recoveryOk ? (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center justify-center gap-2 py-3"
-                      style={{ color: '#34d399' }}
+                      className="flex items-center justify-center gap-2 py-3 text-success"
                     >
                       <Check size={18} strokeWidth={3} />
                       <span className="font-bold text-[0.9rem]">Acesso recuperado! A recarregar…</span>

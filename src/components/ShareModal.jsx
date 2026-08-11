@@ -68,7 +68,7 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
         >
           <div className="text-lg flex-shrink-0">👑</div>
           <div>
-            <div className="font-mono text-[0.65rem] font-bold tracking-[0.12em] uppercase mb-0.5" style={{ color: '#34d399' }}>
+            <div className="font-mono text-[0.65rem] font-bold tracking-[0.12em] uppercase mb-0.5 text-success">
               {t('role.ownerLabel')}
             </div>
             <div className="text-[0.75rem] text-muted leading-relaxed">
@@ -86,9 +86,9 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
         }}
       >
         {hasSupabase ? (
-          <Wifi size={18} style={{ color: '#34d399', flexShrink: 0 }} />
+          <Wifi size={18} className="text-success flex-shrink-0" />
         ) : (
-          <WifiOff size={18} style={{ color: '#f5a623', flexShrink: 0 }} />
+          <WifiOff size={18} className="flex-shrink-0" style={{ color: '#f5a623' }} />
         )}
         <div>
           <div className="text-[0.82rem] font-bold" style={{ color: hasSupabase ? '#34d399' : '#f5a623' }}>

@@ -65,28 +65,36 @@ export async function upsertTrip(trip) {
   lsSet(LS_TRIPS, all)
 }
 
-/** Fetch the pessoas array for a trip from Supabase (for cross-device sync).
- *  Fetches all trips and finds the one matching tripId — avoids the 400
- *  that filtered queries return when PostgREST schema cache is stale. */
-export async function fetchTripPessoas(tripId) {
+/** Fetch the full trips row for a given tripId. */
+export async function fetchTripRow(tripId) {
   if (!hasSupabase) return null
   try {
     const { data } = await withTimeout(
-      supabase.from('trips').select('*')
+      supabase.from('trips').select('*').eq('id', tripId).maybeSingle()
     )
-    const row = Array.isArray(data) ? data.find(t => t.id === tripId) : null
-    return Array.isArray(row?.pessoas) ? row.pessoas : null
+    return data ?? null
   } catch { return null }
+}
+
+/** Backward-compat alias used by existing code. */
+export async function fetchTripPessoas(tripId) {
+  const row = await fetchTripRow(tripId)
+  return Array.isArray(row?.pessoas) ? row.pessoas : null
+}
+
+/** Upsert any subset of fields into the trips row (pessoas, plano, meta, etc.). */
+export async function upsertTripRow(tripId, patch) {
+  if (!hasSupabase) return
+  try {
+    await withTimeout(
+      supabase.from('trips').upsert({ id: tripId, ...patch }, { onConflict: 'id' })
+    )
+  } catch { /* fallback: localStorage only */ }
 }
 
 /** Persist the pessoas array for a trip to Supabase. */
 export async function upsertTripPessoas(tripId, pessoas) {
-  if (!hasSupabase) return
-  try {
-    await withTimeout(
-      supabase.from('trips').upsert({ id: tripId, pessoas }, { onConflict: 'id' })
-    )
-  } catch { /* fallback: localStorage only */ }
+  await upsertTripRow(tripId, { pessoas })
 }
 
 export async function deleteTrip(tripId) {

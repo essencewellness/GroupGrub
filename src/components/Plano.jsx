@@ -30,9 +30,12 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
         <span className="font-mono text-[0.66rem] font-bold uppercase tracking-[0.12em] text-muted">{curso.label}</span>
       </div>
 
-      <motion.button
+      <motion.div
         whileTap={{ scale: 0.97 }}
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((v) => !v) } }}
         className={`w-full text-left cursor-pointer rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition-all ${
           selected ? 'border-brand/55 bg-brand/[0.08]' : 'border-line bg-panel'
         }`}
@@ -48,6 +51,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
               onMouseLeave={(e) => (e.currentTarget.style.color = '')}
               onClick={(e) => { e.stopPropagation(); onSelect(null); setOpen(false) }}
               className="text-faint hover:text-brand transition-colors"
+              aria-label="Remover seleção"
             >
               <X size={11} />
             </motion.button>
@@ -58,7 +62,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
             <ChevronDown size={14} className="text-muted" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </>
         )}
-      </motion.button>
+      </motion.div>
 
       <AnimatePresence>
         {open && (
@@ -90,7 +94,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
                       <div className="text-[0.85rem] font-semibold text-cream">{meal.nome}</div>
                       <div className="text-[0.7rem] text-muted font-mono uppercase tracking-[0.03em]">{meal.tipo}</div>
                     </div>
-                    {isSelected && <Check size={14} color="#ff5a26" strokeWidth={3} className="flex-shrink-0" />}
+                    {isSelected && <Check size={14} strokeWidth={3} className="flex-shrink-0 text-brand" />}
                     {isUsed && <span className="text-[0.62rem] font-mono text-muted flex-shrink-0">Já no plano</span>}
                   </motion.button>
                 )
@@ -117,7 +121,7 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
     <motion.div
       layout
       whileHover={{ scale: 1.005 }}
-      className="surface overflow-hidden transition-all"
+      className="surface overflow-hidden transition-all relative"
       style={{ borderColor: allFilled ? 'rgba(52,211,153,0.35)' : open ? 'rgba(255,90,38,0.4)' : undefined, boxShadow: open ? '0 6px 30px rgba(255,90,38,0.12)' : '0 2px 12px rgba(0,0,0,0.4)' }}
     >
       {allFilled && (
@@ -125,7 +129,7 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
           className="absolute top-2.5 right-11 px-2 py-0.5 flex items-center gap-1 font-mono text-[0.62rem] font-bold uppercase tracking-[0.08em] rounded"
           style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.4)', color: '#34d399' }}
         >
-          <Check size={9} strokeWidth={3} /> COMPLETO
+          <Check size={11} strokeWidth={3} /> COMPLETO
         </div>
       )}
 
@@ -137,7 +141,7 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
         <span className="text-xl flex-shrink-0" style={{ filter: open ? 'drop-shadow(0 0 8px rgba(255,90,38,0.4))' : 'none' }}>{slotEmoji}</span>
         <div className="flex-1">
           <div className="text-base font-bold text-cream uppercase tracking-[0.02em]">{t(`plan.${slot}`)}</div>
-          <div className="text-[0.72rem] mt-0.5 font-mono uppercase tracking-[0.03em]" style={{ color: filled === 0 ? 'rgba(245,245,244,0.32)' : '#ff5a26' }}>
+          <div className="text-[0.72rem] mt-0.5 font-mono uppercase tracking-[0.03em]" style={{ color: filled === 0 ? 'rgba(245,245,244,0.50)' : '#ff5a26' }}>
             {filled === 0 ? t('meals.noneSelected') : filled === 3 ? t('meals.allCourses') : `${filled} DE 3 ${t('meals.courses').toUpperCase()}`}
           </div>
         </div>

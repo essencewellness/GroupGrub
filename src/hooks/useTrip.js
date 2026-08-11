@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { v4 as uuid } from 'uuid'
-import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip, fetchExpenses, upsertExpense, deleteExpense, fetchTripPessoas, upsertTripPessoas } from '../lib/db'
+import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip, fetchExpenses, upsertExpense, deleteExpense, fetchTripRow, upsertTripRow, upsertTripPessoas } from '../lib/db'
 import { hasSupabase } from '../lib/supabase'
 import { categorizeItem } from '../lib/categorizer'
 
@@ -160,10 +160,17 @@ export default function useTrip() {
   // categorizarTudo…) leiam o estado atual sem o listarem nas dependências, e
   // sobretudo evitam fazer efeitos secundários dentro dos updaters do setState
   // (que em StrictMode correm duas vezes e duplicavam/anulavam as escritas).
+  const isMountedRef = useRef(true)
+  useEffect(() => { return () => { isMountedRef.current = false } }, [])
+
   const itemsRef = useRef(items)
   useEffect(() => { itemsRef.current = items }, [items])
   const mealsRef = useRef(meals)
   useEffect(() => { mealsRef.current = meals }, [meals])
+  const pessoasRef = useRef(pessoas)
+  useEffect(() => { pessoasRef.current = pessoas }, [pessoas])
+  const planoRef = useRef(plano)
+  useEffect(() => { planoRef.current = plano }, [plano])
 
   /** Switch to a different trip — updates localStorage/sessionStorage/URL then reloads */
   const setTripId = useCallback((newId) => {
@@ -188,13 +195,38 @@ export default function useTrip() {
       setItems(dbItems)
       setMeals(dbMeals)
       setExpenses(dbExpenses)
-      // Sync pessoas from Supabase non-blocking (no await — doesn't block render)
-      fetchTripPessoas(tripId).then(remotePessoas => {
-        if (remotePessoas && remotePessoas.length > 0) {
+      // Fetch full trip row non-blocking — restores meta, plano, pessoas from Supabase
+      // This is the recovery path after iOS browser wipe or switching devices.
+      fetchTripRow(tripId).then(row => {
+        if (!isMountedRef.current || !row) return
+        // Restore pessoas
+        if (Array.isArray(row.pessoas) && row.pessoas.length > 0) {
           setPessoas(prev => {
-            const merged = [...new Set([...remotePessoas, ...prev])]
+            const merged = [...new Set([...row.pessoas, ...prev])]
             savePessoas(tripId, merged)
             return merged
+          })
+        }
+        // Restore meta (start/end dates) if localStorage was wiped
+        if (row.start_date && row.end_date) {
+          setMeta(prev => {
+            if (prev?.startDate) return prev  // localStorage still intact
+            const restored = {
+              title: row.title,
+              startDate: row.start_date,
+              endDate: row.end_date,
+              structure: buildTripStructure(row.start_date, row.end_date),
+            }
+            localStorage.setItem(`ferias_meta_${tripId}`, JSON.stringify(restored))
+            return restored
+          })
+        }
+        // Restore plano if localStorage was wiped
+        if (row.plano && Object.keys(row.plano).length > 0) {
+          setPlano(prev => {
+            if (Object.keys(prev).length > 0) return prev  // localStorage still intact
+            localStorage.setItem(`ferias_plano_${tripId}`, JSON.stringify(row.plano))
+            return row.plano
           })
         }
       }).catch(() => {})
@@ -212,8 +244,10 @@ export default function useTrip() {
     return () => { cancelled = true }
   }, [loadData])
 
-  // On load, push local pessoas to Supabase so guests can sync them
+  // On load, push local pessoas to Supabase so guests can sync them.
+  // Skip if no Supabase — avoids pointless call on every mount in offline mode.
   useEffect(() => {
+    if (!hasSupabase) return
     const local = loadPessoas(tripId)
     if (local.length > 0) upsertTripPessoas(tripId, local).catch(() => {})
   }, [tripId])
@@ -358,7 +392,6 @@ export default function useTrip() {
 
   // ── Wizard: configurar meta da viagem e gerar slots automaticamente ──
   const setTripMeta = useCallback((newMeta) => {
-    // Gera os slots Almoço/Jantar por dia no range de datas
     const structure = buildTripStructure(newMeta.startDate, newMeta.endDate)
     const generated = {}
     structure.forEach((dia) => {
@@ -371,14 +404,19 @@ export default function useTrip() {
     setPlano((prev) => ({ ...generated, ...prev }))
     localStorage.setItem(`ferias_meta_${tripId}`, JSON.stringify(nextMeta))
     localStorage.setItem(`ferias_plano_${tripId}`, JSON.stringify({ ...generated, ...JSON.parse(localStorage.getItem(`ferias_plano_${tripId}`) || '{}') }))
+    // Persist dates + title to Supabase so they survive browser wipe
+    upsertTripRow(tripId, {
+      title: newMeta.title || 'Nova Viagem',
+      start_date: newMeta.startDate,
+      end_date: newMeta.endDate,
+    }).catch(() => {})
   }, [tripId])
 
   const updatePlano = useCallback((slotKey, selection) => {
-    setPlano(prev => {
-      const next = { ...prev, [slotKey]: selection }
-      localStorage.setItem(`ferias_plano_${tripId}`, JSON.stringify(next))
-      return next
-    })
+    const next = { ...planoRef.current, [slotKey]: selection }
+    localStorage.setItem(`ferias_plano_${tripId}`, JSON.stringify(next))
+    setPlano(next)
+    upsertTripRow(tripId, { plano: next }).catch(() => {})
   }, [tripId])
 
   /* ══ EXPENSES ══ */
@@ -395,23 +433,19 @@ export default function useTrip() {
   }, [tripId])
 
   const addPessoa = useCallback((nome) => {
-    if (!nome.trim()) return
-    setPessoas(prev => {
-      if (prev.includes(nome.trim())) return prev
-      const next = [...prev, nome.trim()]
-      savePessoas(tripId, next)
-      upsertTripPessoas(tripId, next)
-      return next
-    })
+    const trimmed = nome.trim()
+    if (!trimmed || pessoasRef.current.includes(trimmed)) return
+    const next = [...pessoasRef.current, trimmed]
+    savePessoas(tripId, next)
+    setPessoas(next)
+    upsertTripPessoas(tripId, next).catch(() => {})
   }, [tripId])
 
   const removePessoa = useCallback((nome) => {
-    setPessoas(prev => {
-      const next = prev.filter(p => p !== nome)
-      savePessoas(tripId, next)
-      upsertTripPessoas(tripId, next)
-      return next
-    })
+    const next = pessoasRef.current.filter(p => p !== nome)
+    savePessoas(tripId, next)
+    setPessoas(next)
+    upsertTripPessoas(tripId, next).catch(() => {})
   }, [tripId])
 
   const refresh = useCallback(async () => {

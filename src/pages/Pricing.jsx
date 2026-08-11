@@ -32,7 +32,8 @@ export default function Pricing({ onClose, tripId, onSuccess }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tripId, customerEmail: email || undefined }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`)
       if (data.url) {
         window.location.href = data.url
       } else {
@@ -60,7 +61,7 @@ export default function Pricing({ onClose, tripId, onSuccess }) {
         transition={{ type: 'spring', stiffness: 320, damping: 30 }}
         onClick={e => e.stopPropagation()}
         className="w-full max-w-[440px] bg-[#080A0A] border border-white/10 rounded-[28px] p-7 relative"
-        style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,90,38,0.08)' }}
+        style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgb(var(--brand-rgb) / 0.08)' }}
       >
         <button
           onClick={onClose}
@@ -70,9 +71,9 @@ export default function Pricing({ onClose, tripId, onSuccess }) {
         </button>
 
         <div className="flex items-center gap-2.5 mb-6">
-          <Sparkles size={20} style={{ color: '#ff5a26' }} />
+          <Sparkles size={20} className="text-brand" />
           <span className="font-display text-xl font-bold text-cream tracking-tight">
-            GROUP<span style={{ color: '#ff5a26' }}>GRUB</span> Pro
+            GROUP<span className="text-brand">GRUB</span> Pro
           </span>
         </div>
 
@@ -91,16 +92,16 @@ export default function Pricing({ onClose, tripId, onSuccess }) {
             <div className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-muted mb-3">Free</div>
             {FEATURES_FREE.map((f) => (
               <div key={f} className="flex items-start gap-2 mb-2">
-                <Check size={12} className="mt-0.5 flex-shrink-0" style={{ color: '#34d399' }} />
+                <Check size={12} className="mt-0.5 flex-shrink-0 text-success" />
                 <span className="text-[0.72rem] text-muted leading-snug">{f}</span>
               </div>
             ))}
           </div>
           <div className="border rounded-2xl p-4" style={{ borderColor: 'rgba(255,90,38,0.4)', background: 'rgba(255,90,38,0.04)' }}>
-            <div className="text-[0.7rem] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: '#ff5a26' }}>Pro</div>
+            <div className="text-[0.7rem] font-bold uppercase tracking-[0.1em] mb-3 text-brand">Pro</div>
             {FEATURES_PRO.map((f) => (
               <div key={f} className="flex items-start gap-2 mb-2">
-                <Sparkles size={12} className="mt-0.5 flex-shrink-0" style={{ color: '#ff5a26' }} />
+                <Sparkles size={12} className="mt-0.5 flex-shrink-0 text-brand" />
                 <span className="text-[0.72rem] text-cream leading-snug">{f}</span>
               </div>
             ))}
