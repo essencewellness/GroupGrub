@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ArrowLeft, Check, Sparkles, X } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Sparkles, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export default function NewTripWizard({ open, onClose, onCreate }) {

@@ -18,7 +18,7 @@ const FEATURES_PRO = [
   'Tudo do plano Free',
 ]
 
-export default function Pricing({ onClose, tripId, onSuccess }) {
+export default function Pricing({ onClose, tripId }) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)

@@ -12,7 +12,6 @@ export default function ShoppingTab({
   isOwner,
   isGuest,
   isPremium,
-  currentUserName,
   tripId,
   onToggle,
   onRemove,

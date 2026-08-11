@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Plus, Trash2, Sparkles } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
 export default function TripsSelector({
   currentTripId,
@@ -13,7 +12,6 @@ export default function TripsSelector({
   onShowPricing,
   isPremium,
 }) {
-  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
 

@@ -72,32 +72,22 @@ export default function App() {
   // INITIAL_INVITE_VALID faz validação síncrona (formato + localStorage).
   // Este state refina a decisão assim que o Supabase responde.
   // null = a verificar | true = válido | false = inválido
-  const [inviteChecked, setInviteChecked] = useState(!_tripParam || !_keyParam)
+  // Synchronous cases resolve immediately; guest async case needs the effect
+  const needsAsyncCheck = _tripParam && _keyParam && KEY_FORMAT.test(_keyParam) && !(_localKey && _keyParam === _localKey)
+  const [inviteChecked, setInviteChecked] = useState(!needsAsyncCheck)
   const [inviteValid, setInviteValid] = useState(INITIAL_INVITE_VALID)
 
   useEffect(() => {
-    if (!_tripParam || !_keyParam || !KEY_FORMAT.test(_keyParam)) {
-      setInviteChecked(true)
-      setInviteValid(false)
-      return
-    }
-    // Se já validou localmente (owner no mesmo dispositivo), não precisa de Supabase
-    if (_localKey && _keyParam === _localKey) {
-      setInviteChecked(true)
-      setInviteValid(true)
-      return
-    }
-    // Convidado: verifica contra Supabase
+    if (!needsAsyncCheck) return
+    // Convidado: verifica against Supabase
     fetchTripRow(_tripParam).then(row => {
-      const valid = !!(row?.invite_key && row.invite_key === _keyParam)
-      setInviteValid(valid)
+      setInviteValid(!!(row?.invite_key && row.invite_key === _keyParam))
       setInviteChecked(true)
     }).catch(() => {
-      // Sem rede: aceitar provisoriamente se o formato é válido
       setInviteValid(true)
       setInviteChecked(true)
     })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [needsAsyncCheck])
   const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
   const [guestNameInput, setGuestNameInput] = useState('')
   const currentUserName = guestName || localStorage.getItem('groupgrub_user_name') || ''
@@ -106,12 +96,12 @@ export default function App() {
   const [showAddMeal, setAddMeal] = useState(false)
   const [showShare, setShare] = useState(false)
   const [showPricing, setShowPricing] = useState(false)
-  const [showWizard, setShowWizard] = useState(false)
+  const [showWizardOverride, setShowWizardOverride] = useState(false)
   const [wizardDismissed, setWizardDismissed] = useState(false)
-  const [showUpsell, setShowUpsell] = useState(false)
   const [upsellDismissed, setUpsellDismissed] = useState(
     () => !!sessionStorage.getItem('groupgrub_upsell_dismissed')
   )
+  const [upsellForced, setUpsellForced] = useState(false)
   const [toast, setToast] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
   const toastTimerRef = useRef(null)
@@ -156,7 +146,7 @@ export default function App() {
     // wrong key and cause needsSetup=true on the next load, reopening the wizard immediately.
     const structure = buildTripStructure(meta.startDate, meta.endDate)
     localStorage.setItem(`ferias_meta_${newId}`, JSON.stringify({ ...meta, structure }))
-    setShowWizard(false)
+    setWizardDismissed(true)
     showToast(`"${meta.title}" ${t('common.added')}`)
     // Navigate to new trip URL — reload ensures useTrip reads the correct ID
     const url = new URL(window.location)
@@ -164,22 +154,8 @@ export default function App() {
     window.location.href = url.toString()
   }
 
-  // Auto-abre o wizard quando a trip não tem datas configuradas.
-  // Não abre para convidados (INITIAL_INVITE_VALID) — eles estão a juntar-se
-  // a uma trip existente, não a criar uma nova.
-  // wizardDismissed garante que fechar sem completar não re-abre imediatamente.
-  useEffect(() => {
-    if (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid) {
-      setShowWizard(true)
-    }
-  }, [trip.loading, trip.needsSetup, wizardDismissed, inviteValid])
-
-  // Mostra o popup de upsell apenas para visitantes não-premium (uma vez por sessão)
-  useEffect(() => {
-    if (isGuest && !isPremium && !verifying && !upsellDismissed && !trip.loading) {
-      setShowUpsell(true)
-    }
-  }, [isGuest, isPremium, verifying, upsellDismissed, trip.loading])
+  const showWizard = showWizardOverride || (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid)
+  const showUpsell = upsellForced || (isGuest && !isPremium && !verifying && !upsellDismissed && !trip.loading)
 
   // Garante que o nome do owner está sempre na lista de pessoas
   useEffect(() => {
@@ -187,7 +163,7 @@ export default function App() {
     if (ownerName && !trip.pessoas.includes(ownerName)) {
       trip.addPessoa(ownerName)
     }
-  }, [trip.pessoas, trip.addPessoa])
+  }, [trip.pessoas, trip.addPessoa]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (trip.loading) {
     return (
@@ -256,7 +232,7 @@ export default function App() {
                   isPremium={isPremium}
                   onSwitchTrip={trip.setTripId}
                   onDeleteTrip={trips.deleteTrip}
-                  onShowWizard={() => setShowWizard(true)}
+                  onShowWizard={() => setShowWizardOverride(true)}
                   onShowPricing={() => setShowPricing(true)}
                 />
               </div>
@@ -340,7 +316,7 @@ export default function App() {
             </div>
             <motion.button
               whileTap={{ scale: 0.93 }}
-              onClick={() => setShowUpsell(true)}
+              onClick={() => setUpsellForced(true)}
               className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[0.62rem] font-bold cursor-pointer transition-all"
               style={{
                 background: 'linear-gradient(135deg, rgba(255,90,38,0.25), rgba(255,90,38,0.15))',
@@ -485,7 +461,7 @@ export default function App() {
         <GuestUpsellModal
           tripId={trip.tripId}
           onClose={() => {
-            setShowUpsell(false)
+            setUpsellForced(false)
             setUpsellDismissed(true)
             sessionStorage.setItem('groupgrub_upsell_dismissed', '1')
           }}
@@ -493,7 +469,7 @@ export default function App() {
       )}
       <NewTripWizard
         open={showWizard}
-        onClose={() => { setWizardDismissed(true); setShowWizard(false) }}
+        onClose={() => { setWizardDismissed(true); setShowWizardOverride(false) }}
         onCreate={handleCreateTrip}
       />
       {showPricing && (

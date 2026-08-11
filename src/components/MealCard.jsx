@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Pencil, Trash2, Check, X, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -12,25 +12,22 @@ function tipoLabel(tipo) {
 export default function MealCard({ meal, index, isOpen, isOwner = true, onClick, onUpdate, onDelete }) {
   const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState({ nome: meal.nome, emoji: meal.emoji, tipo: meal.tipo, ingredientes: meal.ingredientes })
+  // editOverride holds local edits; null = show live meal data
+  const [editOverride, setEditOverride] = useState(null)
+  const draft = editOverride ?? { nome: meal.nome, emoji: meal.emoji, tipo: meal.tipo, ingredientes: meal.ingredientes || [] }
   const [newIng, setNewIng] = useState('')
+  // confirmDelete resets when card closes — uses React's "state during render" pattern
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen)
+    if (!isOpen && confirmDelete) setConfirmDelete(false)
+  }
   const [focusedInput, setFocusedInput] = useState(null)
 
-  // Reset confirmDelete when card closes to avoid stale state on reopen
-  useEffect(() => {
-    if (!isOpen) setConfirmDelete(false)
-  }, [isOpen])
-
-  // Sync draft with external prop changes (e.g. Realtime updates while card is open)
-  useEffect(() => {
-    if (!editing) {
-      setDraft({ nome: meal.nome, emoji: meal.emoji, tipo: meal.tipo, ingredientes: meal.ingredientes || [] })
-    }
-  }, [meal, editing])
-
-  const saveEdit = () => { onUpdate(draft); setEditing(false) }
-  const cancelEdit = () => { setDraft({ nome: meal.nome, emoji: meal.emoji, tipo: meal.tipo, ingredientes: meal.ingredientes }); setEditing(false) }
+  const setDraft = (fn) => setEditOverride(prev => typeof fn === 'function' ? fn(prev ?? draft) : fn)
+  const saveEdit = () => { onUpdate(draft); setEditOverride(null); setEditing(false) }
+  const cancelEdit = () => { setEditOverride(null); setEditing(false) }
   const addIng = () => { if (newIng.trim()) { setDraft(d => ({ ...d, ingredientes: [...d.ingredientes, newIng.trim()] })); setNewIng('') } }
   const removeIng = (i) => setDraft(d => ({ ...d, ingredientes: d.ingredientes.filter((_, ii) => ii !== i) }))
 

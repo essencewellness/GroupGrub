@@ -14,21 +14,22 @@ export default function AddMealModal({ open, onClose, onAdd }) {
   const [autoEmoji, setAutoEmoji] = useState(null)
   const debounceRef = useRef(null)
 
-  // Auto-detect emoji from meal name
+  // Auto-detect emoji from meal name — all setState inside setTimeout callback (async)
   useEffect(() => {
     clearTimeout(debounceRef.current)
-    if (!form.nome.trim()) { setAutoEmoji(null); return }
+    if (!form.nome.trim()) return
     debounceRef.current = setTimeout(() => {
       const suggested = suggestEmoji(form.nome)
-      if (suggested && suggested !== form.emoji) setAutoEmoji(suggested)
-      else setAutoEmoji(null)
+      setAutoEmoji(suggested && suggested !== form.emoji ? suggested : null)
     }, 300)
     return () => clearTimeout(debounceRef.current)
   }, [form.nome, form.emoji])
+  // Clear suggestion when name is empty — derived, not tracked separately
+  const activeAutoEmoji = form.nome.trim() ? autoEmoji : null
 
   const applyAutoEmoji = () => {
-    if (autoEmoji) {
-      setForm(f => ({ ...f, emoji: autoEmoji }))
+    if (activeAutoEmoji) {
+      setForm(f => ({ ...f, emoji: activeAutoEmoji }))
       setAutoEmoji(null)
     }
   }
@@ -80,7 +81,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
 
       {/* Auto-emoji suggestion */}
       <AnimatePresence>
-        {autoEmoji && (
+        {activeAutoEmoji && (
           <motion.button
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -92,7 +93,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
             <span className="font-mono text-[0.68rem] text-brand font-bold tracking-[0.06em] uppercase">
               {t('meals.autoEmoji')}:
             </span>
-            <span className="text-xl">{autoEmoji}</span>
+            <span className="text-xl">{activeAutoEmoji}</span>
             <span className="ml-auto font-mono text-[0.62rem] text-muted">Aplicar →</span>
           </motion.button>
         )}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Sparkles, ArrowRight, UtensilsCrossed, ShoppingCart, Receipt, Users, Check } from 'lucide-react'
+import { X, Sparkles, ArrowRight } from 'lucide-react'
 
 const PERKS = [
   { icon: '🛰️', text: 'Cria as tuas próprias viagens em grupo' },

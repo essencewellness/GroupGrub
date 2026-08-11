@@ -332,6 +332,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
       )}
 
       <AddExpenseModal
+        key={modalOpen ? 'open' : 'closed'}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onAdd={(expense) => {

@@ -6,7 +6,16 @@ export default function usePremium() {
   const [isPremium, setIsPremium] = useState(() => {
     try { return localStorage.getItem(PREMIUM_KEY) === 'true' } catch { return false }
   })
-  const [verifying, setVerifying] = useState(false)
+  // Detect Stripe redirect params once at module init time (before any render)
+  const _stripeParams = new URLSearchParams(window.location.search)
+  const _paid = _stripeParams.get('paid')
+  const _sessionId = _stripeParams.get('session_id')
+  const _needsVerify = _paid === 'true' && !!_sessionId
+
+  const [verifying, setVerifying] = useState(() => {
+    const alreadyPremium = localStorage.getItem(PREMIUM_KEY) === 'true'
+    return _needsVerify && !alreadyPremium
+  })
 
   // Verifica sessão Stripe após redirect de pagamento bem-sucedido
   useEffect(() => {
@@ -24,7 +33,6 @@ export default function usePremium() {
       return
     }
 
-    setVerifying(true)
     fetch('/api/verify-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

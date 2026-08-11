@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Receipt, Plus, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -21,11 +21,6 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
   const { t } = useTranslation()
   const [form, setForm] = useState(() => defaultForm(pessoas, currentUser))
   const [focusedInput, setFocusedInput] = useState(null)
-
-  // Reset form with fresh pessoas list every time the modal opens
-  useEffect(() => {
-    if (open) setForm(defaultForm(pessoas, currentUser))
-  }, [open, pessoas, currentUser])
 
   const inputCls = (name) =>
     `w-full bg-black/50 border px-4 py-3 rounded-xl text-cream font-mono text-[1rem] outline-none transition-all mb-2.5 ${

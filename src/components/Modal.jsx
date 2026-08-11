@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useId } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 
@@ -6,7 +6,7 @@ const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:n
 
 export default function Modal({ open, onClose, title, children }) {
   const panelRef = useRef(null)
-  const titleId  = useRef(`modal-title-${Math.random().toString(36).slice(2)}`)
+  const titleId  = useId()
   const previousFocus = useRef(null)
   const onCloseRef = useRef(onClose)
   useEffect(() => { onCloseRef.current = onClose })
@@ -58,7 +58,7 @@ export default function Modal({ open, onClose, title, children }) {
             ref={panelRef}
             role="dialog"
             aria-modal="true"
-            aria-labelledby={titleId.current}
+            aria-labelledby={titleId}
             initial={{ opacity: 0, scale: 0.92, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
@@ -70,7 +70,7 @@ export default function Modal({ open, onClose, title, children }) {
               <div className="w-11 h-1 bg-brand/55 rounded-full" />
             </div>
             <div className="flex items-center justify-between px-6 py-4">
-              <span id={titleId.current} className="font-display text-sm font-bold text-cream">{title}</span>
+              <span id={titleId} className="font-display text-sm font-bold text-cream">{title}</span>
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={onClose}

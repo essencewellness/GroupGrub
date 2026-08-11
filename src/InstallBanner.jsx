@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Share, Plus } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
 export default function InstallBanner() {
-  const { t } = useTranslation()
   const [show, setShow] = useState(false)
   const [isIos] = useState(() => /iphone|ipad|ipod/i.test(navigator.userAgent))
   const [deferredPrompt, setDeferredPrompt] = useState(null)

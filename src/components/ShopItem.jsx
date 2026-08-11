@@ -10,7 +10,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
   const [editAssignee, setEditAssignee] = useState(false)
   const [showCatPicker, setShowCatPicker] = useState(false)
   const [qtdVal, setQtdVal]             = useState(item.qtd || '')
-  const [assigneeVal, setAssigneeVal]   = useState(item.assignee || '')
+  const [assigneeVal]                   = useState(item.assignee || '')
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const saveQtd      = () => { onUpdate({ qtd: qtdVal }); setEditQtd(false) }
