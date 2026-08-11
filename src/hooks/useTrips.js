@@ -49,24 +49,35 @@ export function useTrips() {
           setTrips([])
         }
       } else {
-        // Supabase configurado — leitura pública (políticas públicas, sem auth)
+        // C-5 fix: apenas buscar trips que este dispositivo criou ou conhece.
+        // Sem RLS/auth real, uma query sem filtro expunha trips de todos os utilizadores.
+        const activeId = localStorage.getItem(LS_TRIP_ID)
+        let knownIds = []
+        try {
+          knownIds = JSON.parse(localStorage.getItem(LS_TRIPS) || "[]").map((t) => t.id)
+        } catch { localStorage.removeItem(LS_TRIPS) }
+        if (activeId && !knownIds.includes(activeId)) knownIds.push(activeId)
+
+        if (knownIds.length === 0) {
+          setTrips([])
+          return
+        }
+
         const { data, error: fetchError } = await Promise.race([
-          supabase.from("trips").select("*").order("created_at", { ascending: false }),
+          supabase.from("trips").select("*").in("id", knownIds).order("created_at", { ascending: false }),
           new Promise((_, reject) => setTimeout(() => reject(new Error("loadTrips timeout")), 5000)),
         ])
 
         if (fetchError) throw fetchError
         const remote = data || []
 
-        // A trip ativa pode ter sido criada localmente e ainda não existir no
-        // Supabase (sem sessão / RLS). Sem isto o seletor fica preso em "Carregando…".
-        const activeId = localStorage.getItem(LS_TRIP_ID)
+        // A trip ativa pode ter sido criada localmente e ainda não existir no Supabase.
         if (activeId && !remote.some((t) => t.id === activeId)) {
           let localMeta = null
           try {
             const cached = JSON.parse(localStorage.getItem(LS_TRIPS) || "[]")
             localMeta = cached.find((t) => t.id === activeId) || null
-          } catch { localStorage.removeItem(LS_TRIPS) }
+          } catch { /* já limpo acima */ }
           remote.unshift(localMeta || { id: activeId, title: "Minha Viagem", is_local: true })
         }
         setTrips(remote)
@@ -94,27 +105,8 @@ export function useTrips() {
       await loadTrips()
       if (cancelled) return
 
-      if (hasSupabase && supabase) {
-        const channel = supabase
-          .channel("trips-changes")
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "trips" },
-            (payload) => {
-              if (payload.eventType === "INSERT") {
-                setTrips((prev) => [payload.new, ...prev])
-              } else if (payload.eventType === "UPDATE") {
-                setTrips((prev) =>
-                  prev.map((t) => (t.id === payload.new.id ? payload.new : t))
-                )
-              } else if (payload.eventType === "DELETE") {
-                setTrips((prev) => prev.filter((t) => t.id !== payload.old.id))
-              }
-            }
-          )
-          .subscribe()
-        channelCleanup = () => { try { supabase.removeChannel(channel) } catch { /* já removido */ } }
-      }
+      // C-6 fix: sem subscription global a trips — escutava eventos de TODOS os utilizadores.
+      // Trips mudam raramente; o loadTrips no visibilitychange cobre actualizações necessárias.
     })()
 
     return () => {

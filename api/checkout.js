@@ -22,7 +22,10 @@ export default async function handler(req) {
   }
 
   try {
-    const { tripId, customerEmail } = await req.json()
+    const { tripId: rawTripId, customerEmail } = await req.json()
+    // C-14: validate tripId to prevent injection in success_url
+    const tripId = typeof rawTripId === 'string' ? rawTripId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) : ''
+    if (!tripId) return new Response(JSON.stringify({ error: 'Invalid tripId' }), { status: 400, headers: corsHeaders(req) })
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
     const origin = ALLOWED_ORIGINS[0]
 

@@ -17,11 +17,22 @@ import TripsSelector from './components/TripsSelector'
 import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
 import GuestUpsellModal from './components/GuestUpsellModal'
+import { getInviteKey } from './lib/inviteKey'
+import { fetchTripRow } from './lib/db'
 
-// Captured at module load time, before the app modifies the URL.
-// A valid guest invite requires BOTH ?trip=X and ?key=Y — just guessing a trip ID is not enough.
+// C-1 fix: validar ?key= contra a chave real do trip, não apenas verificar que existe.
+// A chave tem formato 12 hex chars (gerada com crypto.getRandomValues).
 const _ip = new URLSearchParams(window.location.search)
-const INITIAL_INVITE_VALID = !!(_ip.get('trip') && _ip.get('key'))
+const _tripParam = _ip.get('trip') || ''
+const _keyParam  = _ip.get('key')  || ''
+const KEY_FORMAT = /^[0-9a-f]{10,}$/
+// Verificação síncrona: formato válido + match com chave local (owner no mesmo dispositivo)
+const _localKey = _tripParam ? getInviteKey(_tripParam) : ''
+const INITIAL_INVITE_VALID = !!(
+  _tripParam && _keyParam &&
+  KEY_FORMAT.test(_keyParam) &&
+  (!_localKey || _keyParam === _localKey)  // se há chave local, tem de coincidir
+)
 
 function Toast({ toast }) {
   return (
@@ -56,6 +67,37 @@ export default function App() {
   const trips = useTrips()
   const { isPremium, verifying } = usePremium()
   const { isOwner, isGuest } = useRole(trip.tripId)
+
+  // C-1 fix (async): valida o ?key= contra o invite_key guardado no Supabase.
+  // INITIAL_INVITE_VALID faz validação síncrona (formato + localStorage).
+  // Este state refina a decisão assim que o Supabase responde.
+  // null = a verificar | true = válido | false = inválido
+  const [inviteChecked, setInviteChecked] = useState(!_tripParam || !_keyParam)
+  const [inviteValid, setInviteValid] = useState(INITIAL_INVITE_VALID)
+
+  useEffect(() => {
+    if (!_tripParam || !_keyParam || !KEY_FORMAT.test(_keyParam)) {
+      setInviteChecked(true)
+      setInviteValid(false)
+      return
+    }
+    // Se já validou localmente (owner no mesmo dispositivo), não precisa de Supabase
+    if (_localKey && _keyParam === _localKey) {
+      setInviteChecked(true)
+      setInviteValid(true)
+      return
+    }
+    // Convidado: verifica contra Supabase
+    fetchTripRow(_tripParam).then(row => {
+      const valid = !!(row?.invite_key && row.invite_key === _keyParam)
+      setInviteValid(valid)
+      setInviteChecked(true)
+    }).catch(() => {
+      // Sem rede: aceitar provisoriamente se o formato é válido
+      setInviteValid(true)
+      setInviteChecked(true)
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
   const [guestNameInput, setGuestNameInput] = useState('')
   const currentUserName = guestName || localStorage.getItem('groupgrub_user_name') || ''
@@ -122,7 +164,7 @@ export default function App() {
   // a uma trip existente, não a criar uma nova.
   // wizardDismissed garante que fechar sem completar não re-abre imediatamente.
   useEffect(() => {
-    if (!trip.loading && trip.needsSetup && !wizardDismissed && !INITIAL_INVITE_VALID) {
+    if (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid) {
       setShowWizard(true)
     }
   }, [trip.loading, trip.needsSetup, wizardDismissed])
@@ -174,8 +216,11 @@ export default function App() {
     )
   }
 
+  // Aguarda verificação async do invite key antes de mostrar paywall
+  if (!inviteChecked) return null
+
   // Non-premium users who didn't arrive via a valid invite link see the onboarding paywall
-  if (!isPremium && !verifying && !INITIAL_INVITE_VALID) {
+  if (!isPremium && !verifying && !inviteValid) {
     return <Onboarding tripId={trip.tripId} />
   }
 
