@@ -22,30 +22,58 @@ export default function Onboarding({ tripId }) {
   const [recovering, setRecovering] = useState(false)
   const [recoveryError, setRecoveryError] = useState(null)
   const [recoveryOk, setRecoveryOk] = useState(false)
+  // Step 2: code verification
+  const [recoveryStep, setRecoveryStep] = useState('email') // 'email' | 'code'
+  const [recoveryCode, setRecoveryCode] = useState('')
+  const [verifyingCode, setVerifyingCode] = useState(false)
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
   const handleRecovery = async () => {
-    if (!recoveryEmail.trim()) { setRecoveryError('Indica o teu email.'); return }
+    const trimmed = recoveryEmail.trim()
+    if (!trimmed) { setRecoveryError('Indica o teu email.'); return }
+    if (!EMAIL_RE.test(trimmed)) { setRecoveryError('Email inválido.'); return }
     setRecovering(true)
     setRecoveryError(null)
     try {
       const res = await fetch('/api/recover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: recoveryEmail.trim() }),
+        body: JSON.stringify({ email: trimmed }),
+      })
+      if (!res.ok) throw new Error(`Erro ${res.status}`)
+      // Always show code step — never reveal if email exists (A-8)
+      setRecoveryStep('code')
+    } catch {
+      setRecoveryError('Sem ligação. Tenta novamente.')
+    } finally {
+      setRecovering(false)
+    }
+  }
+
+  const handleVerifyCode = async () => {
+    const code = recoveryCode.trim()
+    if (!/^\d{6}$/.test(code)) { setRecoveryError('Código de 6 dígitos inválido.'); return }
+    setVerifyingCode(true)
+    setRecoveryError(null)
+    try {
+      const res = await fetch('/api/verify-recovery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: recoveryEmail.trim(), token: code }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`)
       if (data.ok) {
         setRecoveryOk(true)
         localStorage.setItem(PREMIUM_KEY, 'true')
         setTimeout(() => window.location.reload(), 1200)
       } else {
-        setRecoveryError('Email não encontrado. Verifica se usaste o mesmo email no pagamento.')
+        setRecoveryError(data.error || 'Código inválido ou expirado. Tenta novamente.')
       }
     } catch {
       setRecoveryError('Sem ligação. Tenta novamente.')
     } finally {
-      setRecovering(false)
+      setVerifyingCode(false)
     }
   }
 
@@ -246,12 +274,13 @@ export default function Onboarding({ tripId }) {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center justify-center gap-2 py-3 text-success"
+                      className="flex items-center justify-center gap-2 py-3"
+                      style={{ color: '#34d399' }}
                     >
                       <Check size={18} strokeWidth={3} />
                       <span className="font-bold text-[0.9rem]">Acesso recuperado! A recarregar…</span>
                     </motion.div>
-                  ) : (
+                  ) : recoveryStep === 'email' ? (
                     <>
                       <input
                         type="email"
@@ -278,17 +307,57 @@ export default function Onboarding({ tripId }) {
                         }}
                       >
                         {recovering ? (
-                          <>
-                            <span
-                              className="inline-block w-3.5 h-3.5 border-2 rounded-full border-brand/30 border-t-brand"
-                              style={{ animation: 'spin 0.7s linear infinite' }}
-                            />
-                            A verificar…
-                          </>
+                          <><span className="inline-block w-3.5 h-3.5 border-2 rounded-full border-brand/30 border-t-brand" style={{ animation: 'spin 0.7s linear infinite' }} /> A enviar…</>
                         ) : (
-                          <><RotateCcw size={14} /> Recuperar acesso</>
+                          <><RotateCcw size={14} /> Enviar código</>
                         )}
                       </motion.button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-[0.73rem] text-muted mb-3 text-center leading-relaxed">
+                        Enviámos um código de 6 dígitos para<br />
+                        <span className="text-cream font-mono">{recoveryEmail}</span>
+                      </div>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={recoveryCode}
+                        onChange={e => { setRecoveryCode(e.target.value.replace(/\D/g, '')); setRecoveryError(null) }}
+                        onKeyDown={e => { if (e.key === 'Enter') handleVerifyCode() }}
+                        placeholder="000000"
+                        autoFocus
+                        className="w-full bg-black/70 border border-white/10 rounded-xl px-4 py-3 text-cream text-[1.4rem] font-mono text-center tracking-[0.3em] outline-none transition-all mb-2.5"
+                        style={{ borderColor: recoveryError ? 'rgba(255,90,38,0.5)' : undefined }}
+                      />
+                      {recoveryError && (
+                        <div className="text-[0.73rem] text-brand mb-2.5 font-mono leading-relaxed">{recoveryError}</div>
+                      )}
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleVerifyCode}
+                        disabled={verifyingCode}
+                        className="w-full py-3 rounded-xl font-bold text-[0.9rem] flex items-center justify-center gap-2 transition-all mb-2"
+                        style={{
+                          background: verifyingCode ? 'rgba(255,90,38,0.25)' : 'rgba(255,90,38,0.15)',
+                          color: verifyingCode ? 'rgba(255,90,38,0.5)' : '#ff5a26',
+                          border: '1px solid rgba(255,90,38,0.3)',
+                          cursor: verifyingCode ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {verifyingCode ? (
+                          <><span className="inline-block w-3.5 h-3.5 border-2 rounded-full border-brand/30 border-t-brand" style={{ animation: 'spin 0.7s linear infinite' }} /> A verificar…</>
+                        ) : (
+                          <><Check size={14} /> Confirmar código</>
+                        )}
+                      </motion.button>
+                      <button
+                        onClick={() => { setRecoveryStep('email'); setRecoveryCode(''); setRecoveryError(null) }}
+                        className="w-full text-center text-[0.72rem] text-faint hover:text-muted transition-colors"
+                      >
+                        ← Usar outro email
+                      </button>
                     </>
                   )}
                 </div>
