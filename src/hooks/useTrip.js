@@ -138,6 +138,11 @@ function cleanMeal(meal, tripId) {
   }
 }
 
+// Resolved once at import time — shared across all useState initializers below
+const _INITIAL_TRIP_ID = new URLSearchParams(window.location.search).get('trip')
+  || localStorage.getItem('ferias_trip_id')
+  || ''
+
 export default function useTrip() {
   // Lazy init: getTripId() só corre UMA vez (antes corria em cada render,
   // escrevendo localStorage + history.replaceState repetidamente)
@@ -145,22 +150,12 @@ export default function useTrip() {
   const [items, setItems]         = useState([])
   const [meals, setMeals]         = useState([])
   const [expenses, setExpenses]   = useState([])
-  const [pessoas, setPessoas]     = useState(() => {
-    // Read tripId from storage directly — cannot reference the state above yet
-    const id = new URLSearchParams(window.location.search).get('trip')
-         || localStorage.getItem('ferias_trip_id')
-         || ''
-    return loadPessoas(id)
+  const [pessoas, setPessoas]     = useState(() => loadPessoas(_INITIAL_TRIP_ID))
+  const [plano, setPlano]         = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`ferias_plano_${_INITIAL_TRIP_ID}`)) ?? {} } catch { return {} }
   })
-  const [plano, setPlano]     = useState(() => {
-    const id = new URLSearchParams(window.location.search).get('trip')
-         || localStorage.getItem('ferias_trip_id') || ''
-    try { return JSON.parse(localStorage.getItem(`ferias_plano_${id}`)) ?? {} } catch { return {} }
-  })
-  const [meta, setMeta]       = useState(() => {
-    const id = new URLSearchParams(window.location.search).get('trip')
-         || localStorage.getItem('ferias_trip_id') || ''
-    try { return JSON.parse(localStorage.getItem(`ferias_meta_${id}`)) ?? null } catch { return null }
+  const [meta, setMeta]           = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`ferias_meta_${_INITIAL_TRIP_ID}`)) ?? null } catch { return null }
   })
   const [loading, setLoading] = useState(true)
 

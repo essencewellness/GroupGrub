@@ -1,18 +1,5 @@
-/**
- * Export to PDF — Premium feature (Pro €10)
- * Uses jsPDF (zero dependencies, lightweight)
- * Works in all browsers incl. iOS Safari (where html2canvas may fail)
- */
-import { jsPDF } from "jspdf"
-
-/**
- * Export shopping list to PDF
- * @param {string} tripId - Trip identifier
- * @param {Array} items - Shopping items
- * @param {Array} pessoas - People in trip
- * @param {string} tripName - Trip display name
- */
 export async function exportShoppingList({ tripId, items, tripName }) {
+  const { jsPDF } = await import("jspdf")
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -72,9 +59,12 @@ export async function exportShoppingList({ tripId, items, tripName }) {
     outro:      [107, 130, 153],
   }
 
+  const byCategory = new Map(cats.map(c => [c, []]))
+  for (const i of items) byCategory.get(i.categoria || 'outro')?.push(i)
+
   let firstCategory = true
   for (const cat of cats) {
-    const itemsInCat = items.filter((i) => (i.categoria || "outro") === cat)
+    const itemsInCat = byCategory.get(cat) ?? []
     if (!itemsInCat.length) continue
 
     if (!firstCategory) y += 4
@@ -126,10 +116,8 @@ export async function exportShoppingList({ tripId, items, tripName }) {
   doc.save("lista-compras-" + (tripName || tripId).toLowerCase().replace(/ /g, "-") + ".pdf")
 }
 
-/**
- * Export meal plan to PDF
- */
 export async function exportMealPlan({ tripId, meals, tripName }) {
+  const { jsPDF } = await import("jspdf")
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",

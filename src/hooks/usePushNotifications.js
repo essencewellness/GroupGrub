@@ -5,22 +5,19 @@
  */
 import { useEffect, useState } from "react"
 
+const IS_PUSH_AVAILABLE =
+  typeof window !== "undefined" &&
+  "serviceWorker" in navigator &&
+  "PushManager" in window &&
+  "Notification" in window
+
 export function usePushNotifications() {
   const [permission, setPermission] = useState("default")
   const [subscribed, setSubscribed] = useState(false)
-
-  // Check if push is available
-  const isAvailable =
-    "serviceWorker" in navigator &&
-    "PushManager" in window &&
-    "Notification" in window
-
-  // BUGFIX: antes chamava Notification.requestPermission() no mount — mostrava
-  // o popup de permissão sem o utilizador pedir. Agora só LÊ o estado atual.
-  const [loading, setLoading] = useState(isAvailable)
+  const [loading, setLoading] = useState(IS_PUSH_AVAILABLE)
 
   useEffect(() => {
-    if (!isAvailable) return
+    if (!IS_PUSH_AVAILABLE) return
     let cancelled = false
     ;(async () => {
       setPermission(Notification.permission)
@@ -35,10 +32,10 @@ export function usePushNotifications() {
       }
     })()
     return () => { cancelled = true }
-  }, [isAvailable])
+  }, [IS_PUSH_AVAILABLE])
 
   const subscribe = async () => {
-    if (!isAvailable) return { error: "Push not available" }
+    if (!IS_PUSH_AVAILABLE) return { error: "Push not available" }
 
     const perm = await Notification.requestPermission()
     setPermission(perm)
@@ -60,7 +57,7 @@ export function usePushNotifications() {
   }
 
   const unsubscribe = async () => {
-    if (!isAvailable) return
+    if (!IS_PUSH_AVAILABLE) return
     const sw = await navigator.serviceWorker.ready
     const sub = await sw.pushManager.getSubscription()
     if (sub) {
@@ -88,7 +85,7 @@ export function usePushNotifications() {
   }, [])
 
   return {
-    isAvailable,
+    IS_PUSH_AVAILABLE,
     permission,
     subscribed,
     loading,

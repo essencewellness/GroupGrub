@@ -1,7 +1,4 @@
-// Role detection: owner vs guest.
-// Owner = whoever created the trip (has localStorage flag).
-// Guest = anyone who opened a shared link without the flag.
-// No auth required — simplest possible implementation.
+import { useMemo } from 'react'
 
 const KEY = (tripId) => `gg_owner_${tripId}`
 
@@ -10,6 +7,9 @@ export function claimOwner(tripId) {
 }
 
 export function useRole(tripId) {
-  const isOwner = tripId ? localStorage.getItem(KEY(tripId)) === '1' : false
+  const isOwner = useMemo(
+    () => tripId ? localStorage.getItem(KEY(tripId)) === '1' : false,
+    [tripId]
+  )
   return { isOwner, isGuest: !isOwner }
 }

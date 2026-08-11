@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Receipt, ShieldAlert, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -6,8 +6,8 @@ import useTrip, { buildTripStructure } from './hooks/useTrip'
 import { useTrips } from './hooks/useTrips'
 import usePremium from './hooks/usePremium'
 import { useRole } from './hooks/useRole'
-import Pricing from './pages/Pricing'
-import Onboarding from './pages/Onboarding'
+const Pricing = lazy(() => import('./pages/Pricing'))
+const Onboarding = lazy(() => import('./pages/Onboarding'))
 import MealCard from './components/MealCard'
 import ShoppingTab from './components/ShoppingTab'
 import AddMealModal from './components/AddMealModal'
@@ -90,7 +90,8 @@ export default function App() {
   }, [needsAsyncCheck])
   const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
   const [guestNameInput, setGuestNameInput] = useState('')
-  const currentUserName = guestName || localStorage.getItem('groupgrub_user_name') || ''
+  const [ownerName] = useState(() => localStorage.getItem('groupgrub_user_name') || '')
+  const currentUserName = guestName || ownerName
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
@@ -202,7 +203,7 @@ export default function App() {
 
   // Non-premium users who didn't arrive via a valid invite link see the onboarding paywall
   if (!isPremium && !verifying && !inviteValid) {
-    return <Onboarding tripId={trip.tripId} />
+    return <Suspense fallback={null}><Onboarding tripId={trip.tripId} /></Suspense>
   }
 
   return (
@@ -473,10 +474,12 @@ export default function App() {
         onCreate={handleCreateTrip}
       />
       {showPricing && (
-        <Pricing
-          onClose={() => setShowPricing(false)}
-          tripId={trip.tripId}
-        />
+        <Suspense fallback={null}>
+          <Pricing
+            onClose={() => setShowPricing(false)}
+            tripId={trip.tripId}
+          />
+        </Suspense>
       )}
       {verifying && (
         <div className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center gap-4">
