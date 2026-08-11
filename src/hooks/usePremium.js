@@ -6,15 +6,11 @@ export default function usePremium() {
   const [isPremium, setIsPremium] = useState(() => {
     try { return localStorage.getItem(PREMIUM_KEY) === 'true' } catch { return false }
   })
-  // Detect Stripe redirect params once at module init time (before any render)
-  const _stripeParams = new URLSearchParams(window.location.search)
-  const _paid = _stripeParams.get('paid')
-  const _sessionId = _stripeParams.get('session_id')
-  const _needsVerify = _paid === 'true' && !!_sessionId
-
   const [verifying, setVerifying] = useState(() => {
+    const p = new URLSearchParams(window.location.search)
+    const needsVerify = p.get('paid') === 'true' && !!p.get('session_id')
     const alreadyPremium = localStorage.getItem(PREMIUM_KEY) === 'true'
-    return _needsVerify && !alreadyPremium
+    return needsVerify && !alreadyPremium
   })
 
   // Verifica sessão Stripe após redirect de pagamento bem-sucedido
@@ -55,7 +51,7 @@ export default function usePremium() {
         url.searchParams.delete('session_id')
         window.history.replaceState({}, '', url)
       })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // intentionally empty deps — Stripe redirect verification runs once on mount only
   }, [])
 
   // Escuta alterações entre abas

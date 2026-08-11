@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Receipt, Trash2, Share2, Plus, ArrowRight, Check, UserPlus, X, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -19,19 +19,22 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
     () => calculateSettlement(expenses, pessoas),
     [expenses, pessoas]
   )
-  // All participants = pessoas + anyone who appears in expenses but isn't in pessoas yet
-  const allParticipants = [...new Set([
+  const allParticipants = useMemo(() => [...new Set([
     ...pessoas,
     ...expenses.map(e => e.pago_por).filter(Boolean),
     ...expenses.flatMap(e => e.dividir_por || []),
-  ])]
+  ])], [expenses, pessoas])
+
+  const sharedTimerRef = useRef(null)
+  useEffect(() => () => clearTimeout(sharedTimerRef.current), [])
 
   const handleShare = () => {
     const text = formatSettlementWA(settlements)
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`
     window.open(url, '_blank', 'noopener,noreferrer')
     setShared(true)
-    setTimeout(() => setShared(false), 2500)
+    clearTimeout(sharedTimerRef.current)
+    sharedTimerRef.current = setTimeout(() => setShared(false), 2500)
   }
 
   return (
@@ -285,7 +288,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
             <AnimatePresence>
               {[...expenses].reverse().map((exp, i) => (
                 <motion.div
-                  key={exp.id ?? i}
+                  key={exp.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: 30, transition: { duration: 0.18 } }}

@@ -82,6 +82,7 @@ export default function GuestUpsellModal({ tripId, onClose }) {
               {/* Close */}
               <button
                 onClick={handleClose}
+                aria-label="Fechar"
                 className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-cream transition-colors"
                 style={{ background: 'rgba(255,255,255,0.05)' }}
               >

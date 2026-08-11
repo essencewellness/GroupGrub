@@ -141,7 +141,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
       <div className="flex flex-wrap gap-1.5 mb-2.5 min-h-8">
         {form.ingredientes.map((ing, ii) => (
           <span
-            key={ii}
+            key={`${ing}-${ii}`}
             className="bg-white/[0.04] border border-line rounded-xl px-3 py-1 text-[0.8rem] text-cream/90 flex items-center gap-1.5"
           >
             {ing}

@@ -55,6 +55,8 @@ export default function TripsSelector({
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
         className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-line bg-white/[0.04] text-cream/80 text-sm font-medium hover:border-brand/40 transition-colors"
       >
         <span className="max-w-[160px] truncate">{currentTrip.title}</span>
@@ -76,6 +78,7 @@ export default function TripsSelector({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.97 }}
               transition={{ duration: 0.18 }}
+              role="listbox"
               className="absolute top-full left-0 mt-2 w-64 z-[100] rounded-2xl border border-white/10 bg-[#0a0c0c] p-2.5 max-h-[70vh] overflow-y-auto"
               style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}
             >

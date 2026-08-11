@@ -157,13 +157,13 @@ export default function App() {
   const showWizard = showWizardOverride || (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid)
   const showUpsell = upsellForced || (isGuest && !isPremium && !verifying && !upsellDismissed && !trip.loading)
 
-  // Garante que o nome do owner está sempre na lista de pessoas
+  // Garante que o nome do owner está sempre na lista de pessoas — corre uma vez em mount
   useEffect(() => {
     const ownerName = localStorage.getItem('groupgrub_user_name')
     if (ownerName && !trip.pessoas.includes(ownerName)) {
       trip.addPessoa(ownerName)
     }
-  }, [trip.pessoas, trip.addPessoa]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) // intentionally empty — owner name sync is a one-shot mount operation
 
   if (trip.loading) {
     return (

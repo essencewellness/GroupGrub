@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ArrowLeft, Sparkles, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+const today = new Date().toISOString().slice(0, 10)
+
 export default function NewTripWizard({ open, onClose, onCreate }) {
   const { t } = useTranslation()
   const [step, setStep] = useState(1)
@@ -10,8 +12,6 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
-  const today = new Date().toISOString().slice(0, 10)
   const validTitle = title.trim().length > 0
   const dateValid = startDate && endDate && new Date(endDate) >= new Date(startDate)
 
