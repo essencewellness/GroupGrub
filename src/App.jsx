@@ -546,7 +546,7 @@ export default function App() {
                 placeholder="O teu nome"
                 autoFocus
                 maxLength={60}
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.95rem] outline-none mb-4"
+                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-base outline-none mb-4"
               />
               <motion.button
                 whileTap={{ scale: 0.97 }}

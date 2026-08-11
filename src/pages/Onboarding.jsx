@@ -185,7 +185,7 @@ export default function Onboarding({ tripId }) {
               placeholder="O teu nome"
               onFocus={() => setFocusedField('name')}
               onBlur={() => setFocusedField(null)}
-              className="w-full bg-black/70 border rounded-xl px-4 py-3.5 text-cream text-[0.92rem] outline-none transition-all mb-2.5"
+              className="w-full bg-black/70 border rounded-xl px-4 py-3.5 text-cream text-base outline-none transition-all mb-2.5"
               style={inputStyle('name')}
             />
             <input
@@ -195,7 +195,7 @@ export default function Onboarding({ tripId }) {
               placeholder="Email (para recibos e recuperação)"
               onFocus={() => setFocusedField('email')}
               onBlur={() => setFocusedField(null)}
-              className="w-full bg-black/70 border rounded-xl px-4 py-3.5 text-cream text-[0.92rem] outline-none transition-all mb-4"
+              className="w-full bg-black/70 border rounded-xl px-4 py-3.5 text-cream text-base outline-none transition-all mb-4"
               style={inputStyle('email')}
             />
 
@@ -278,7 +278,7 @@ export default function Onboarding({ tripId }) {
                       style={{ color: '#34d399' }}
                     >
                       <Check size={18} strokeWidth={3} />
-                      <span className="font-bold text-[0.9rem]">Acesso recuperado! A recarregar…</span>
+                      <span className="font-bold text-base">Acesso recuperado! A recarregar…</span>
                     </motion.div>
                   ) : recoveryStep === 'email' ? (
                     <>
@@ -288,7 +288,7 @@ export default function Onboarding({ tripId }) {
                         onChange={e => { setRecoveryEmail(e.target.value); setRecoveryError(null) }}
                         placeholder="Email usado no pagamento"
                         onKeyDown={e => { if (e.key === 'Enter') handleRecovery() }}
-                        className="w-full bg-black/70 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.9rem] outline-none transition-all mb-2.5"
+                        className="w-full bg-black/70 border border-white/10 rounded-xl px-4 py-3 text-cream text-base outline-none transition-all mb-2.5"
                         style={{ borderColor: recoveryError ? 'rgba(255,90,38,0.5)' : undefined }}
                       />
                       {recoveryError && (
@@ -298,7 +298,7 @@ export default function Onboarding({ tripId }) {
                         whileTap={{ scale: 0.97 }}
                         onClick={handleRecovery}
                         disabled={recovering}
-                        className="w-full py-3 rounded-xl font-bold text-[0.9rem] flex items-center justify-center gap-2 transition-all"
+                        className="w-full py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all"
                         style={{
                           background: recovering ? 'rgba(255,90,38,0.25)' : 'rgba(255,90,38,0.15)',
                           color: recovering ? 'rgba(255,90,38,0.5)' : '#ff5a26',
@@ -338,7 +338,7 @@ export default function Onboarding({ tripId }) {
                         whileTap={{ scale: 0.97 }}
                         onClick={handleVerifyCode}
                         disabled={verifyingCode}
-                        className="w-full py-3 rounded-xl font-bold text-[0.9rem] flex items-center justify-center gap-2 transition-all mb-2"
+                        className="w-full py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all mb-2"
                         style={{
                           background: verifyingCode ? 'rgba(255,90,38,0.25)' : 'rgba(255,90,38,0.15)',
                           color: verifyingCode ? 'rgba(255,90,38,0.5)' : '#ff5a26',

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Receipt, Trash2, Share2, Plus, ArrowRight, Check, UserPlus, X, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -11,9 +11,14 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
   const [shared, setShared] = useState(false)
   const [newPessoa, setNewPessoa] = useState('')
 
-  const totalGasto = expenses.reduce((sum, e) => sum + (parseFloat(e.valor) || 0), 0)
-  const quotaIndividual = pessoas.length > 0 ? totalGasto / pessoas.length : 0
-  const { settlements, saldos } = calculateSettlement(expenses, pessoas)
+  const totalGasto = useMemo(
+    () => expenses.reduce((sum, e) => sum + (parseFloat(e.valor) || 0), 0),
+    [expenses]
+  )
+  const { settlements, saldos } = useMemo(
+    () => calculateSettlement(expenses, pessoas),
+    [expenses, pessoas]
+  )
   // All participants = pessoas + anyone who appears in expenses but isn't in pessoas yet
   const allParticipants = [...new Set([
     ...pessoas,

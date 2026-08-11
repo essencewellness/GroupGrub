@@ -34,6 +34,12 @@ const WEEKDAY_EMOJI = ['🌅', '🌤️', '⛅', '🌥️', '🌞', '🌆', '☀
 
 // Gera a estrutura de dias (Almoço + Jantar) a partir de um range de datas.
 // Cada dia: { id, label, emoji, slots: ['almoco','jantar'] }
+function localDateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0')
+}
+
 export function buildTripStructure(startDate, endDate) {
   if (!startDate || !endDate) return []
   const start = new Date(startDate + 'T00:00:00')
@@ -41,11 +47,12 @@ export function buildTripStructure(startDate, endDate) {
   if (isNaN(start) || isNaN(end) || end < start) return []
   const days = []
   const cursor = new Date(start)
-  const endStr = end.toISOString().slice(0, 10)
-  while (cursor <= end) {
+  const startStr = localDateStr(start)
+  const endStr = localDateStr(end)
+  while (localDateStr(cursor) <= endStr) {
     const dow = cursor.getDay()
-    const dateStr = cursor.toISOString().slice(0, 10)
-    const isFirst = dateStr === start.toISOString().slice(0, 10)
+    const dateStr = localDateStr(cursor)
+    const isFirst = dateStr === startStr
     const isLast  = dateStr === endStr
     // Arrival day: no lunch (still travelling); Departure day: no dinner (already leaving)
     const slots = isFirst && isLast ? ['almoco', 'jantar']
@@ -60,6 +67,7 @@ export function buildTripStructure(startDate, endDate) {
       slots,
     })
     cursor.setDate(cursor.getDate() + 1)
+    if (days.length > 60) break // safety: max 60 days
   }
   return days
 }

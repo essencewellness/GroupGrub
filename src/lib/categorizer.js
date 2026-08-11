@@ -94,12 +94,26 @@ function normalizar(texto) {
     .trim()
 }
 
+function contemPalavraInteira(texto, palavra) {
+  if (texto === palavra) return true
+  const idx = texto.indexOf(palavra)
+  if (idx === -1) return false
+  const antes = idx === 0 || !/[a-z0-9]/.test(texto[idx - 1])
+  const depois = idx + palavra.length >= texto.length || !/[a-z0-9]/.test(texto[idx + palavra.length])
+  return antes && depois
+}
+
 function encontrarCategoria(nomeNorm) {
-  // Testa match exato primeiro, depois por substring (evita falsos positivos)
+  // 1. Exact match across all cats (highest precision)
   for (const [cat, palavras] of Object.entries(CATEGORIAS)) {
     for (const palavra of palavras) {
-      const palavraNorm = normalizar(palavra)
-      if (nomeNorm === palavraNorm || nomeNorm.includes(palavraNorm)) return cat
+      if (nomeNorm === normalizar(palavra)) return cat
+    }
+  }
+  // 2. Word-boundary match (avoids "sal" matching "salsicha")
+  for (const [cat, palavras] of Object.entries(CATEGORIAS)) {
+    for (const palavra of palavras) {
+      if (contemPalavraInteira(nomeNorm, normalizar(palavra))) return cat
     }
   }
   return null

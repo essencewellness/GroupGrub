@@ -51,7 +51,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
   }
 
   const inputCls = (name) =>
-    `w-full bg-black/50 border px-4 py-3 rounded-xl text-cream font-sans text-[0.95rem] outline-none transition-all mb-3 ${
+    `w-full bg-black/50 border px-4 py-3 rounded-xl text-cream font-sans text-base outline-none transition-all mb-3 ${
       focusedInput === name ? 'border-brand/60 shadow-[0_0_0_2px_rgba(255,90,38,0.2)]' : 'border-line'
     }`
 

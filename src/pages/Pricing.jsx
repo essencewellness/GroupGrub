@@ -113,7 +113,7 @@ export default function Pricing({ onClose, tripId, onSuccess }) {
           value={email}
           onChange={e => setEmail(e.target.value)}
           placeholder="O teu email (opcional)"
-          className="w-full bg-black/50 border border-line rounded-xl px-4 py-3 text-[0.88rem] text-cream outline-none mb-3 focus:border-brand/60 transition-colors"
+          className="w-full bg-black/50 border border-line rounded-xl px-4 py-3 text-base text-cream outline-none mb-3 focus:border-brand/60 transition-colors"
         />
 
         {error && (
