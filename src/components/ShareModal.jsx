@@ -122,7 +122,7 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
           onClick={copy}
           onMouseEnter={() => setCopyHover(true)}
           onMouseLeave={() => setCopyHover(false)}
-          title="Copiar link"
+          aria-label={copied ? 'Copiado' : 'Copiar link'}
           className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
           style={{
             background: copied ? 'rgba(52,211,153,0.18)' : copyHover ? 'rgba(255,90,38,0.18)' : 'rgba(255,90,38,0.09)',
@@ -160,14 +160,16 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
         style={{ border: '1px solid rgba(37,211,102,0.3)', background: 'rgba(37,211,102,0.07)', color: '#25D366', boxShadow: '0 2px 12px rgba(37,211,102,0.12)' }}
       >
         <span className="text-lg">💬</span> Partilhar via WhatsApp
-        <ExternalLink size={13} style={{ opacity: 0.6 }} />
+        <ExternalLink size={13} style={{ opacity: 0.6 }} aria-hidden="true" />
       </motion.a>
 
       {/* Join another trip */}
       <div className="border-t border-line pt-4 mb-2">
         <div className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-muted mb-2.5">ENTRAR NOUTRA LISTA</div>
         <div className="flex gap-2">
+          <label htmlFor="share-join-link" className="sr-only">Link ou código da lista</label>
           <input
+            id="share-join-link"
             value={joinLink}
             onChange={(e) => { setJoinLink(e.target.value); setJoinError(false) }}
             placeholder="Cola aqui o link ou o código…"
@@ -185,7 +187,7 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
             <LogIn size={15} /> Entrar
           </motion.button>
         </div>
-        {joinError && <div className="text-[0.72rem] text-brand mt-1.5 pl-1">Link inválido — cola o link completo ou o código da lista</div>}
+        {joinError && <div role="alert" className="text-[0.72rem] text-brand mt-1.5 pl-1">Link inválido — cola o link completo ou o código da lista</div>}
       </div>
 
       {!hasSupabase && (

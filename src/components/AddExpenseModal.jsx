@@ -55,10 +55,13 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
     <Modal open={open} onClose={onClose} title={t('expenses.add', 'NOVA DESPESA')}>
       {/* Descrição */}
       <div className="font-mono text-[0.66rem] font-bold tracking-[0.12em] text-muted uppercase mb-1.5 flex items-center gap-1.5">
-        <Receipt size={11} />
+        <Receipt size={11} aria-hidden="true" />
         {t('expenses.description', 'DESCRIÇÃO')}
       </div>
+      <label htmlFor="expense-descricao" className="sr-only">{t('expenses.description', 'Descrição')}</label>
       <input
+        id="expense-descricao"
+        aria-required="true"
         value={form.descricao}
         onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
         onFocus={() => setFocusedInput('descricao')}
@@ -69,10 +72,13 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
 
       {/* Valor */}
       <div className="font-mono text-[0.66rem] font-bold tracking-[0.12em] text-muted uppercase mb-1.5 flex items-center gap-1.5">
-        <span className="text-[10px]">€</span>
+        <span className="text-[10px]" aria-hidden="true">€</span>
         {t('expenses.amount', 'VALOR')}
       </div>
+      <label htmlFor="expense-valor" className="sr-only">{t('expenses.amount', 'Valor em euros')}</label>
       <input
+        id="expense-valor"
+        aria-required="true"
         type="text"
         inputMode="decimal"
         value={form.valor}
@@ -95,6 +101,7 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
             <motion.button
               key={p}
               whileTap={{ scale: 0.92 }}
+              aria-pressed={selected}
               onClick={() => togglePessoa(p)}
               className={`px-3 py-1.5 rounded-lg text-[0.75rem] font-mono font-bold border transition-all cursor-pointer ${
                 selected
@@ -119,7 +126,7 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
             : 'bg-white/[0.06] text-muted cursor-not-allowed'
         }`}
       >
-        <Plus size={16} />
+        <Plus size={16} aria-hidden="true" />
         {t('expenses.addExpense', 'ADICIONAR DESPESA')}
       </motion.button>
     </Modal>

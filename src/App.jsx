@@ -511,7 +511,11 @@ export default function App() {
               <div className="text-3xl mb-4 text-center">👋</div>
               <h2 id="guest-name-title" className="font-display text-xl font-bold text-cream text-center mb-1">Bem-vindo!</h2>
               <p className="text-[0.8rem] text-muted text-center mb-5">Como te chamas? O teu nome aparece nas despesas e na lista.</p>
+              <label htmlFor="guest-name-input" className="sr-only">O teu nome</label>
               <input
+                id="guest-name-input"
+                aria-required="true"
+                aria-describedby="guest-name-title"
                 value={guestNameInput}
                 onChange={e => setGuestNameInput(e.target.value.slice(0, 60))}
                 onKeyDown={e => {

@@ -98,6 +98,7 @@ export default function ShoppingTab({
           <motion.button
             whileTap={{ scale: 0.96 }}
             disabled={categorizing}
+            aria-busy={categorizing}
             onClick={async () => {
               setCategorizing(true)
               try { await onCategorizarTudo() } finally { setCategorizing(false) }

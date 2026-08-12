@@ -179,7 +179,10 @@ export default function Onboarding({ tripId }) {
               Cria a tua conta de organizador
             </div>
 
+            <label htmlFor="onboarding-name" className="sr-only">O teu nome</label>
             <input
+              id="onboarding-name"
+              aria-required="true"
               value={name}
               onChange={e => { setName(e.target.value); setError(null) }}
               placeholder="O teu nome"
@@ -188,7 +191,9 @@ export default function Onboarding({ tripId }) {
               className="w-full bg-black/70 border rounded-xl px-4 py-3.5 text-cream text-base outline-none transition-all mb-2.5"
               style={inputStyle('name')}
             />
+            <label htmlFor="onboarding-email" className="sr-only">Email (para recibos e recuperação)</label>
             <input
+              id="onboarding-email"
               type="email"
               value={email}
               onChange={e => { setEmail(e.target.value); setError(null) }}
@@ -201,6 +206,7 @@ export default function Onboarding({ tripId }) {
 
             {error && (
               <motion.div
+                role="alert"
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-[0.75rem] text-brand mb-3 text-center font-mono"
@@ -252,7 +258,7 @@ export default function Onboarding({ tripId }) {
               onClick={() => { setShowRecovery(v => !v); setRecoveryError(null); setRecoveryOk(false) }}
               className="text-[0.78rem] text-muted hover:text-cream transition-colors inline-flex items-center gap-1.5"
             >
-              <RotateCcw size={13} />
+              <RotateCcw size={13} aria-hidden="true" />
               Já compraste? Recuperar acesso
             </button>
           </div>
@@ -282,7 +288,9 @@ export default function Onboarding({ tripId }) {
                     </motion.div>
                   ) : recoveryStep === 'email' ? (
                     <>
+                      <label htmlFor="recovery-email" className="sr-only">Email usado no pagamento</label>
                       <input
+                        id="recovery-email"
                         type="email"
                         value={recoveryEmail}
                         onChange={e => { setRecoveryEmail(e.target.value); setRecoveryError(null) }}
@@ -292,7 +300,7 @@ export default function Onboarding({ tripId }) {
                         style={{ borderColor: recoveryError ? 'rgba(255,90,38,0.5)' : undefined }}
                       />
                       {recoveryError && (
-                        <div className="text-[0.73rem] text-brand mb-2.5 font-mono leading-relaxed">{recoveryError}</div>
+                        <div role="alert" className="text-[0.73rem] text-brand mb-2.5 font-mono leading-relaxed">{recoveryError}</div>
                       )}
                       <motion.button
                         whileTap={{ scale: 0.97 }}
@@ -319,7 +327,9 @@ export default function Onboarding({ tripId }) {
                         Enviámos um código de 6 dígitos para<br />
                         <span className="text-cream font-mono">{recoveryEmail}</span>
                       </div>
+                      <label htmlFor="recovery-code" className="sr-only">Código de verificação de 6 dígitos</label>
                       <input
+                        id="recovery-code"
                         type="text"
                         inputMode="numeric"
                         maxLength={6}
@@ -332,7 +342,7 @@ export default function Onboarding({ tripId }) {
                         style={{ borderColor: recoveryError ? 'rgba(255,90,38,0.5)' : undefined }}
                       />
                       {recoveryError && (
-                        <div className="text-[0.73rem] text-brand mb-2.5 font-mono leading-relaxed">{recoveryError}</div>
+                        <div role="alert" className="text-[0.73rem] text-brand mb-2.5 font-mono leading-relaxed">{recoveryError}</div>
                       )}
                       <motion.button
                         whileTap={{ scale: 0.97 }}

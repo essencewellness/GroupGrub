@@ -117,7 +117,11 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                 />
               ) : (
                 <span
+                  role={isOwner ? 'button' : undefined}
+                  tabIndex={isOwner ? 0 : undefined}
                   onClick={(e) => { if (!isOwner) return; e.stopPropagation(); setEditQtd(true) }}
+                  onKeyDown={(e) => { if (!isOwner) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setEditQtd(true) } }}
+                  aria-label={isOwner ? `${t('shopping.qty')}: ${item.qtd || t('shopping.qty')}` : undefined}
                   className={`font-mono text-[0.68rem] text-muted pb-0.5 min-w-[18px] text-center ${isOwner ? 'border-b border-dashed border-line cursor-text' : ''}`}
                 >
                   {item.qtd || t('shopping.qty')}

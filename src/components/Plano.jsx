@@ -34,6 +34,8 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
         whileTap={{ scale: 0.97 }}
         role="button"
         tabIndex={0}
+        aria-expanded={open}
+        aria-controls={`meal-picker-${curso.key}-list`}
         onClick={() => setOpen((v) => !v)}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((v) => !v) } }}
         className={`w-full text-left cursor-pointer rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition-all ${
@@ -67,6 +69,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
       <AnimatePresence>
         {open && (
           <motion.div
+            id={`meal-picker-${curso.key}-list`}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -146,7 +149,7 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
           </div>
         </div>
 
-        <div className="flex gap-1.5 flex-shrink-0">
+        <div className="flex gap-1.5 flex-shrink-0" aria-hidden="true">
           {CURSOS.map((c) => (
             <div
               key={c.key}

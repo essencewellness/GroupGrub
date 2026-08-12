@@ -67,6 +67,8 @@ export default function AddMealModal({ open, onClose, onAdd }) {
           <motion.button
             key={e}
             whileTap={{ scale: 0.9 }}
+            aria-label={e}
+            aria-pressed={form.emoji === e}
             onClick={() => { setForm(f => ({ ...f, emoji: e })); setAutoEmoji(null) }}
             className={`w-10 h-10 rounded-xl text-xl transition-all ${
               form.emoji === e
@@ -89,7 +91,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
             onClick={applyAutoEmoji}
             className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl border border-brand/40 bg-brand/[0.07] w-full text-left"
           >
-            <Sparkles size={13} className="text-brand flex-shrink-0" />
+            <Sparkles size={13} className="text-brand flex-shrink-0" aria-hidden="true" />
             <span className="font-mono text-[0.68rem] text-brand font-bold tracking-[0.06em] uppercase">
               {t('meals.autoEmoji')}:
             </span>
@@ -100,7 +102,10 @@ export default function AddMealModal({ open, onClose, onAdd }) {
       </AnimatePresence>
 
       {/* Nome */}
+      <label htmlFor="meal-nome" className="sr-only">{t('meals.name')}</label>
       <input
+        id="meal-nome"
+        aria-required="true"
         value={form.nome}
         onChange={(e) => setForm(f => ({ ...f, nome: e.target.value }))}
         placeholder={t('meals.namePlaceholder', 'Ex: Lasanha, Churrasco…')}
@@ -147,15 +152,18 @@ export default function AddMealModal({ open, onClose, onAdd }) {
             {ing}
             <button
               onClick={() => removeIng(ii)}
+              aria-label={`Remover ${ing}`}
               className="bg-none border-0 p-0 flex text-muted hover:text-brand cursor-pointer transition-colors"
             >
-              <X size={11} />
+              <X size={11} aria-hidden="true" />
             </button>
           </span>
         ))}
       </div>
       <div className="flex gap-2 mb-5">
+        <label htmlFor="meal-new-ing" className="sr-only">{t('meals.addIngredient')}</label>
         <input
+          id="meal-new-ing"
           value={newIng}
           onChange={(e) => setNewIng(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && addIng()}
@@ -168,9 +176,10 @@ export default function AddMealModal({ open, onClose, onAdd }) {
         />
         <button
           onClick={addIng}
+          aria-label={t('meals.addIngredient')}
           className="px-3.5 flex items-center justify-center rounded-xl bg-brand/20 border border-brand/60 text-brand hover:bg-brand/30 transition-colors"
         >
-          <Plus size={16} />
+          <Plus size={16} aria-hidden="true" />
         </button>
       </div>
 
@@ -182,7 +191,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
           form.nome.trim() ? 'btn-brand' : 'bg-white/[0.06] text-muted cursor-not-allowed'
         }`}
       >
-        <Check size={17} /> {t('meals.addMeal')}
+        <Check size={17} aria-hidden="true" /> {t('meals.addMeal')}
       </motion.button>
     </Modal>
   )

@@ -238,7 +238,9 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
         </div>
         {isOwner && (
           <div className="flex gap-2">
+            <label htmlFor="expenses-add-person" className="sr-only">Adicionar pessoa</label>
             <input
+              id="expenses-add-person"
               value={newPessoa}
               onChange={e => setNewPessoa(e.target.value)}
               onKeyDown={e => {
@@ -252,6 +254,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
             />
             <motion.button
               whileTap={{ scale: 0.92 }}
+              aria-label="Adicionar pessoa"
               onClick={() => {
                 if (newPessoa.trim()) {
                   onAddPessoa?.(newPessoa.trim())
@@ -260,7 +263,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
               }}
               className="px-3.5 rounded-xl bg-brand/20 border border-brand/50 text-brand"
             >
-              <UserPlus size={15} />
+              <UserPlus size={15} aria-hidden="true" />
             </motion.button>
           </div>
         )}
@@ -320,10 +323,11 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                     {isOwner && (
                       <motion.button
                         whileTap={{ scale: 0.85 }}
+                        aria-label={`Remover despesa ${exp.descricao}`}
                         onClick={() => onRemoveExpense?.(exp.id ?? i)}
                         className="p-2.5 rounded-lg text-muted hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={14} aria-hidden="true" />
                       </motion.button>
                     )}
                   </div>
