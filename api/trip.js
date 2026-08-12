@@ -1,7 +1,16 @@
-/* global process */
 import { validateTripToken, adminHeaders, jsonOk, jsonErr, supabaseUrl } from './_lib/adminClient.js'
 
 export const config = { runtime: 'edge' }
+
+// Allowed top-level columns a client may write/patch on the trips table.
+// invite_token and id are set server-side only; owner_id and created_at must never be client-writable.
+const ALLOWED_TRIP_FIELDS = ['title', 'pessoas', 'plano', 'meta', 'start_date', 'end_date', 'currency', 'note', 'premium', 'settings']
+
+function sanitizeTrip(raw) {
+  const out = {}
+  for (const k of ALLOWED_TRIP_FIELDS) if (k in raw) out[k] = raw[k]
+  return out
+}
 
 export default async function handler(req) {
   const base = supabaseUrl()
@@ -35,7 +44,7 @@ export default async function handler(req) {
     // Upsert full trip row (create or update)
     const { trip } = body
     if (!trip) return jsonErr('trip required')
-    const row = { ...trip, id: tripId, invite_token: token }
+    const row = { ...sanitizeTrip(trip), id: tripId, invite_token: token }
     const res = await fetch(`${base}/rest/v1/trips`, {
       method: 'POST',
       headers: adminHeaders({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
@@ -57,9 +66,8 @@ export default async function handler(req) {
 
   // PATCH — partial update (pessoas, plano, meta, title, etc.)
   if (!patch || typeof patch !== 'object') return jsonErr('patch required')
-  // Never allow overwriting invite_token via patch (only bootstrapped internally)
-  const safePatch = { ...patch }
-  delete safePatch.invite_token
+  // Only allow known safe columns; invite_token, id, owner_id, created_at are never patchable by clients
+  const safePatch = sanitizeTrip(patch)
 
   const res = await fetch(
     `${base}/rest/v1/trips?id=eq.${encodeURIComponent(tripId)}`,

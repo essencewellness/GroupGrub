@@ -25,6 +25,8 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
     ...expenses.flatMap(e => e.dividir_por || []),
   ])], [expenses, pessoas])
 
+  const reversedExpenses = useMemo(() => [...expenses].reverse(), [expenses])
+
   const sharedTimerRef = useRef(null)
   useEffect(() => () => clearTimeout(sharedTimerRef.current), [])
 
@@ -42,8 +44,9 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
 
       {/* ── HUD — Estatísticas Agregadas ── */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="grid grid-cols-3 gap-3"
       >
         {/* Total Gasto */}
@@ -97,10 +100,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
 
       {/* ── Balanço por Membro ── */}
       {pessoas.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.06 }}
+        <div
           className="rounded-2xl border border-line bg-black/40 p-5"
         >
           <div className="font-mono text-[0.65rem] font-bold tracking-[0.14em] text-muted uppercase mb-3.5">
@@ -143,14 +143,11 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
               )
             })}
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* ── Transferências Recomendadas ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      <div
         className="rounded-2xl border border-line bg-black/40 p-5"
       >
         <div className="flex items-center justify-between mb-3">
@@ -160,6 +157,8 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
           {settlements.length > 0 && (
             <motion.button
               whileTap={{ scale: 0.92 }}
+              animate={shared ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+              transition={shared ? { duration: 0.3, ease: 'easeOut' } : {}}
               onClick={handleShare}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[0.66rem] font-bold cursor-pointer transition-all"
               style={{ background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.28)', color: '#25D366' }}
@@ -185,7 +184,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
                   key={`${s.de}-${s.para}-${i}`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ duration: 0.18 }}
                   className="rounded-xl border border-line bg-white/[0.025] px-4 py-3"
                 >
                   <div className="flex justify-between items-center mb-1.5">
@@ -214,7 +213,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
             </AnimatePresence>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* ── Pessoas na viagem ── */}
       <div className="rounded-2xl border border-line bg-black/40 p-5">
@@ -289,13 +288,13 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
           </div>
           <div className="space-y-2">
             <AnimatePresence>
-              {[...expenses].reverse().map((exp, i) => (
+              {reversedExpenses.map((exp, i) => (
                 <motion.div
                   key={exp.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: 30, transition: { duration: 0.18 } }}
-                  transition={{ delay: i * 0.04 }}
+                  transition={{ duration: 0.18 }}
                   className="flex items-center justify-between bg-white/[0.03] border border-line rounded-xl px-4 py-3"
                 >
                   <div className="flex-1 min-w-0">

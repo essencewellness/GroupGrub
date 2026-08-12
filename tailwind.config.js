@@ -48,10 +48,15 @@ export default {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+        'glow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 6px rgba(255,90,38,0.3)' },
+          '50%': { boxShadow: '0 0 18px rgba(255,90,38,0.6)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.3s ease-out both',
         shimmer: 'shimmer 2.2s linear infinite',
+        'glow-brand': 'glow-pulse 2.5s ease-in-out infinite',
       },
     },
   },

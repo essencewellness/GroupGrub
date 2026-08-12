@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import { motion } from 'framer-motion'
 import { Check, X, Sparkles, Lock } from 'lucide-react'
+import { callCheckout } from '../lib/checkout'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 const FEATURES_FREE = [
   '1 viagem activa',
@@ -19,6 +21,9 @@ const FEATURES_PRO = [
 ]
 
 export default function Pricing({ onClose, tripId }) {
+  const titleId = useId()
+  const emailId = useId()
+  const dialogRef = useFocusTrap(true, onClose)
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -27,13 +32,7 @@ export default function Pricing({ onClose, tripId }) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tripId, customerEmail: email || undefined }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`)
+      const data = await callCheckout(tripId, email)
       if (data.url) {
         window.location.href = data.url
       } else {
@@ -55,24 +54,30 @@ export default function Pricing({ onClose, tripId }) {
       onClick={onClose}
     >
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         initial={{ scale: 0.94, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.96, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 30 }}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-[440px] bg-[#080A0A] border border-white/10 rounded-[28px] p-7 relative"
+        className="w-full max-w-[440px] bg-[#080A0A] border border-white/10 rounded-[28px] p-7 relative outline-none"
         style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgb(var(--brand-rgb) / 0.08)' }}
       >
         <button
           onClick={onClose}
+          aria-label="Fechar"
           className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 text-muted hover:text-cream transition-colors"
         >
-          <X size={14} />
+          <X size={14} aria-hidden="true" />
         </button>
 
         <div className="flex items-center gap-2.5 mb-6">
-          <Sparkles size={20} className="text-brand" />
-          <span className="font-display text-xl font-bold text-cream tracking-tight">
+          <Sparkles size={20} className="text-brand" aria-hidden="true" />
+          <span id={titleId} className="font-display text-xl font-bold text-cream tracking-tight">
             GROUP<span className="text-brand">GRUB</span> Pro
           </span>
         </div>
@@ -108,7 +113,9 @@ export default function Pricing({ onClose, tripId }) {
           </div>
         </div>
 
+        <label htmlFor={emailId} className="sr-only">Email (opcional, para recuperar o acesso)</label>
         <input
+          id={emailId}
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
@@ -117,7 +124,7 @@ export default function Pricing({ onClose, tripId }) {
         />
 
         {error && (
-          <div className="text-[0.75rem] text-brand mb-3 text-center">{error}</div>
+          <div role="alert" className="text-[0.75rem] text-brand mb-3 text-center">{error}</div>
         )}
 
         <motion.button
@@ -132,9 +139,9 @@ export default function Pricing({ onClose, tripId }) {
           }}
         >
           {loading ? (
-            <span className="animate-pulse">A redirecionar…</span>
+            <span className="motion-safe:animate-pulse">A redirecionar…</span>
           ) : (
-            <><Lock size={16} /> Desbloquear Pro · 10€</>
+            <><Lock size={16} aria-hidden="true" /> Desbloquear Pro · 10€</>
           )}
         </motion.button>
 

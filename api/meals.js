@@ -1,7 +1,13 @@
-/* global process */
 import { validateTripToken, adminHeaders, jsonOk, jsonErr, supabaseUrl } from './_lib/adminClient.js'
 
 export const config = { runtime: 'edge' }
+
+const ALLOWED_MEAL_FIELDS = ['id', 'name', 'day', 'slot', 'emoji', 'note', 'assigned_to']
+function sanitizeMeal(raw) {
+  const out = {}
+  for (const k of ALLOWED_MEAL_FIELDS) if (k in raw) out[k] = raw[k]
+  return out
+}
 
 export default async function handler(req) {
   if (req.method !== 'POST' && req.method !== 'DELETE') {
@@ -22,7 +28,7 @@ export default async function handler(req) {
   if (req.method === 'POST') {
     const meal = body.meal
     if (!meal) return jsonErr('meal required')
-    const row = { ...meal, trip_id: tripId }
+    const row = { ...sanitizeMeal(meal), trip_id: tripId }
     const res = await fetch(`${base}/rest/v1/meals`, {
       method: 'POST',
       headers: adminHeaders({ Prefer: 'resolution=merge-duplicates,return=minimal' }),

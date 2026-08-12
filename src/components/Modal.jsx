@@ -1,46 +1,11 @@
-import { useEffect, useRef, useId } from 'react'
+import { useId } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
-
-const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 export default function Modal({ open, onClose, title, children }) {
-  const panelRef = useRef(null)
   const titleId  = useId()
-  const previousFocus = useRef(null)
-  const onCloseRef = useRef(onClose)
-  useEffect(() => { onCloseRef.current = onClose })
-
-  useEffect(() => {
-    if (!open) return
-    previousFocus.current = document.activeElement
-
-    // Move focus into modal on open
-    const firstFocusable = panelRef.current?.querySelector(FOCUSABLE)
-    firstFocusable?.focus()
-
-    const trapFocus = (e) => {
-      if (!panelRef.current) return
-      const focusable = [...panelRef.current.querySelectorAll(FOCUSABLE)]
-      if (!focusable.length) return
-      const first = focusable[0]
-      const last  = focusable[focusable.length - 1]
-      if (e.key === 'Tab') {
-        if (e.shiftKey) {
-          if (document.activeElement === first) { e.preventDefault(); last.focus() }
-        } else {
-          if (document.activeElement === last) { e.preventDefault(); first.focus() }
-        }
-      }
-      if (e.key === 'Escape') onCloseRef.current()
-    }
-
-    document.addEventListener('keydown', trapFocus)
-    return () => {
-      document.removeEventListener('keydown', trapFocus)
-      previousFocus.current?.focus()
-    }
-  }, [open])
+  const panelRef = useFocusTrap(open, onClose)
 
   return (
     <AnimatePresence>

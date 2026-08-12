@@ -16,7 +16,7 @@ export function useAuth() {
     try {
       const cached = JSON.parse(localStorage.getItem(LS_KEY))
       if (cached) return cached
-    } catch { localStorage.removeItem(LS_KEY) }
+    } catch { try { localStorage.removeItem(LS_KEY) } catch { /* private browsing */ } }
     if (!hasSupabase) {
       const mock = { id: 'mock-user', email: 'dev@local', name: 'Dev' }
       try { localStorage.setItem(LS_KEY, JSON.stringify(mock)) } catch { /* quota */ }
@@ -33,7 +33,9 @@ export function useAuth() {
 
     supabase.auth.getUser().then(({ data: { user: remote } }) => {
       if (cancelled) return
-      if (remote) localStorage.setItem(LS_KEY, JSON.stringify(remote))
+      if (remote) {
+        try { localStorage.setItem(LS_KEY, JSON.stringify(remote)) } catch { /* quota */ }
+      }
       setUser(remote)
       setLoading(false)
     }).catch(() => { if (!cancelled) setLoading(false) })
@@ -46,7 +48,7 @@ export function useAuth() {
     if (hasSupabase) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (!error && data.user) {
-        localStorage.setItem(LS_KEY, JSON.stringify(data.user))
+        try { localStorage.setItem(LS_KEY, JSON.stringify(data.user)) } catch { /* quota */ }
         setUser(data.user)
       }
       return { user: data.user, error }
@@ -54,7 +56,7 @@ export function useAuth() {
 
     // Mock dev mode — simulates login without backend
     const mockUser = { id: `mock-${Date.now()}`, email, name: email.split('@')[0] }
-    localStorage.setItem(LS_KEY, JSON.stringify(mockUser))
+    try { localStorage.setItem(LS_KEY, JSON.stringify(mockUser)) } catch { /* quota */ }
     setUser(mockUser)
     return { user: mockUser }
   }
@@ -73,9 +75,13 @@ export function useAuth() {
     return signIn(email, password)
   }
 
-  const signOut = () => {
-    if (hasSupabase) supabase.auth.signOut()
-    localStorage.removeItem(LS_KEY)
+  // FIX: signOut is now async and awaits supabase.auth.signOut() to prevent an
+  // unhandled floating promise rejection when the Supabase call fails.
+  const signOut = async () => {
+    if (hasSupabase) {
+      try { await supabase.auth.signOut() } catch { /* ignore sign-out errors */ }
+    }
+    try { localStorage.removeItem(LS_KEY) } catch { /* private browsing */ }
     setUser(null)
   }
 

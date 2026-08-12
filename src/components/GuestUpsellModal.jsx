@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { X, Sparkles, ArrowRight } from 'lucide-react'
+import { callCheckout } from '../lib/checkout'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 const PERKS = [
   { icon: '🛰️', text: 'Cria as tuas próprias viagens em grupo' },
@@ -11,10 +13,15 @@ const PERKS = [
 ]
 
 export default function GuestUpsellModal({ tripId, onClose }) {
+  const shouldReduceMotion = useReducedMotion()
   const [visible, setVisible] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const [name, setName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
   const [email, setEmail] = useState('')
+
+  const closeTimerRef = useRef(null)
+  useEffect(() => () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current) }, [])
 
   useEffect(() => {
     // Espera 3s para o utilizador ter tempo de explorar a app antes de ver o modal
@@ -24,8 +31,11 @@ export default function GuestUpsellModal({ tripId, onClose }) {
 
   const handleClose = () => {
     setVisible(false)
-    setTimeout(onClose, 300)
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(onClose, 300)
   }
+
+  const dialogRef = useFocusTrap(visible, handleClose)
 
   const handleCheckout = async () => {
     if (!name.trim()) return
@@ -33,14 +43,11 @@ export default function GuestUpsellModal({ tripId, onClose }) {
     if (name.trim()) localStorage.setItem('groupgrub_user_name', name.trim())
     if (email.trim()) localStorage.setItem('groupgrub_user_email', email.trim())
     try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tripId, customerEmail: email.trim() || undefined }),
-      })
-      const data = await res.json()
+      const data = await callCheckout(tripId, email.trim())
       if (data.url) window.location.href = data.url
-    } catch { /* ignore */ } finally {
+    } catch (err) {
+      setError(err instanceof TypeError ? 'Sem ligação. Tenta novamente.' : (err?.message || 'Erro ao processar pagamento. Tenta novamente.'))
+    } finally {
       setLoading(false)
     }
   }
@@ -57,6 +64,8 @@ export default function GuestUpsellModal({ tripId, onClose }) {
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
           <motion.div
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby="upsell-title"
@@ -95,8 +104,8 @@ export default function GuestUpsellModal({ tripId, onClose }) {
               {/* Header */}
               <div className="text-center mb-5">
                 <motion.div
-                  animate={{ rotate: [0, -8, 8, -4, 4, 0] }}
-                  transition={{ duration: 0.6, delay: 1.2 }}
+                  animate={shouldReduceMotion ? {} : { rotate: [0, -8, 8, -4, 4, 0] }}
+                  transition={shouldReduceMotion ? {} : { duration: 0.4, delay: 0.1 }}
                   className="text-4xl mb-3"
                 >
                   🍽️
@@ -116,10 +125,10 @@ export default function GuestUpsellModal({ tripId, onClose }) {
               <div className="space-y-2 mb-5">
                 {PERKS.map((p, i) => (
                   <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -12 }}
+                    key={p.icon}
+                    initial={shouldReduceMotion ? false : { opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.0 + i * 0.07 }}
+                    transition={shouldReduceMotion ? { duration: 0 } : { delay: 0.15 + i * 0.04 }}
                     className="flex items-center gap-3 px-3 py-2 rounded-xl"
                     style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                   >
@@ -151,6 +160,10 @@ export default function GuestUpsellModal({ tripId, onClose }) {
                 />
               </div>
 
+              {error && (
+                <div className="text-[0.75rem] text-brand mb-3 text-center" role="alert">{error}</div>
+              )}
+
               {/* CTA */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -167,7 +180,7 @@ export default function GuestUpsellModal({ tripId, onClose }) {
                 }}
               >
                 {loading ? (
-                  <span className="inline-block w-4 h-4 border-2 rounded-full border-white/30 border-t-white" style={{ animation: 'spin 0.7s linear infinite' }} />
+                  <span className="inline-block w-4 h-4 border-2 rounded-full border-white/30 border-t-white motion-safe:animate-spin" />
                 ) : (
                   <><Sparkles size={16} /> COMEÇAR — 10€ vitalício <ArrowRight size={15} /></>
                 )}

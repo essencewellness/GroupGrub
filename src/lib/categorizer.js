@@ -86,6 +86,7 @@ const CATEGORIAS = {
 // antecipado = comprar com antecedência (sem urgência de frescura)
 const ANTECIPADO_CATS = ['dispensa', 'bebidas']
 
+// NOTE: identical normalizar() exists in mealEmoji.js — if this grows, extract to a shared lib/normalize.js
 function normalizar(texto) {
   return (texto || '')
     .toLowerCase()

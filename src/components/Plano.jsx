@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Check, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { onActivateKey } from '../lib/activateKeyDown'
 
 const ESTRUTURA = [
   { id: 'sexta', dia: 'sexta', emoji: '🌆', slots: ['jantar'] },
@@ -37,7 +38,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
         aria-expanded={open}
         aria-controls={`meal-picker-${curso.key}-list`}
         onClick={() => setOpen((v) => !v)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((v) => !v) } }}
+        onKeyDown={onActivateKey(() => setOpen((v) => !v))}
         className={`w-full text-left cursor-pointer rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition-all ${
           selected ? 'border-brand/55 bg-brand/[0.08]' : 'border-line bg-panel'
         }`}
@@ -84,7 +85,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
                   <motion.button
                     key={meal.id}
                     whileTap={{ scale: 0.97 }}
-                    whileHover={!isUsed ? { background: 'rgba(255,90,38,0.08)', x: 2 } : {}}
+                    whileHover={!isUsed ? { background: 'rgba(255,90,38,0.08)' } : {}}
                     onClick={() => { if (!isUsed) { onSelect(meal.id); setOpen(false) } }}
                     className={`w-full text-left rounded-xl border px-3 py-2.5 flex items-center gap-2.5 transition-colors ${
                       isSelected ? 'border-brand/55 bg-brand/[0.12] cursor-pointer' :
@@ -123,7 +124,7 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
   return (
     <motion.div
       layout
-      whileHover={{ scale: 1.005 }}
+      whileHover={{ scale: 1.015 }}
       className="surface overflow-hidden transition-all relative"
       style={{ borderColor: allFilled ? 'rgba(52,211,153,0.35)' : open ? 'rgba(255,90,38,0.4)' : undefined, boxShadow: open ? '0 6px 30px rgba(255,90,38,0.12)' : '0 2px 12px rgba(0,0,0,0.4)' }}
     >
@@ -143,7 +144,7 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
         aria-expanded={open}
         aria-controls={`slot-panel-${key}`}
         onClick={() => setOpen((v) => !v)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((v) => !v) } }}
+        onKeyDown={onActivateKey(() => setOpen((v) => !v))}
         className="p-3.5 sm:p-4 flex items-center gap-3.5 cursor-pointer relative"
       >
         <span className="text-xl flex-shrink-0" style={{ filter: open ? 'drop-shadow(0 0 8px rgba(255,90,38,0.4))' : 'none' }}>{slotEmoji}</span>
@@ -206,9 +207,9 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
 
 export default function Plano({ meals, plano, onUpdate, structure }) {
   // Collect all mealIds currently used anywhere in the plan
-  const allUsedIds = new Set(
+  const allUsedIds = useMemo(() => new Set(
     Object.values(plano).flatMap(sel => Object.values(sel).filter(Boolean))
-  )
+  ), [plano])
   const { t } = useTranslation()
   const ESTRUTURA_FINAL = structure && structure.length ? structure : ESTRUTURA
   const allSlotKeys = ESTRUTURA_FINAL.flatMap((dia) => dia.slots.map((slot) => slotKey(dia.id, slot)))
@@ -268,7 +269,7 @@ export default function Plano({ meals, plano, onUpdate, structure }) {
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressPct}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+            transition={{ duration: 0.45, ease: 'easeOut' }}
             className="h-full rounded-full"
             style={{
               background: progressPct === 100 ? 'linear-gradient(90deg,#1f8a3a,#34d399)' : 'linear-gradient(90deg,#c8431a,#ff5a26)',

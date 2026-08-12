@@ -21,11 +21,23 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders(req) })
   }
 
+  // Body size limit
+  const contentLength = parseInt(req.headers.get('content-length') || '0', 10)
+  if (contentLength > 1024) {
+    return new Response(JSON.stringify({ error: 'Payload too large' }), { status: 413, headers: corsHeaders(req) })
+  }
+
   try {
-    const { tripId: rawTripId, customerEmail } = await req.json()
-    // C-14: validate tripId to prevent injection in success_url
+    const { tripId: rawTripId, customerEmail: rawEmail } = await req.json()
+    // Validate tripId to prevent injection in success_url
     const tripId = typeof rawTripId === 'string' ? rawTripId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) : ''
     if (!tripId) return new Response(JSON.stringify({ error: 'Invalid tripId' }), { status: 400, headers: corsHeaders(req) })
+
+    // Validate customerEmail before passing to Stripe
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const customerEmail = typeof rawEmail === 'string' && emailRegex.test(rawEmail.trim()) && rawEmail.length <= 254
+      ? rawEmail.trim().toLowerCase()
+      : undefined
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
     const origin = ALLOWED_ORIGINS[0]
 
@@ -42,6 +54,6 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders(req) })
   } catch (err) {
     console.error('Stripe Checkout Error:', err)
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders(req) })
+    return new Response(JSON.stringify({ error: 'Checkout unavailable' }), { status: 500, headers: corsHeaders(req) })
   }
 }

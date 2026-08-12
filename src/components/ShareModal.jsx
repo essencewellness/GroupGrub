@@ -123,6 +123,7 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
           onMouseEnter={() => setCopyHover(true)}
           onMouseLeave={() => setCopyHover(false)}
           aria-label={copied ? 'Copiado' : 'Copiar link'}
+          title={copied ? 'Copiado' : 'Copiar link'}
           className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
           style={{
             background: copied ? 'rgba(52,211,153,0.18)' : copyHover ? 'rgba(255,90,38,0.18)' : 'rgba(255,90,38,0.09)',

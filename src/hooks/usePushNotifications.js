@@ -32,7 +32,7 @@ export function usePushNotifications() {
       }
     })()
     return () => { cancelled = true }
-  }, [IS_PUSH_AVAILABLE])
+  }, [])
 
   const subscribe = async () => {
     if (!IS_PUSH_AVAILABLE) return { error: "Push not available" }
@@ -43,12 +43,11 @@ export function usePushNotifications() {
 
     try {
       const sw = await navigator.serviceWorker.ready
-      // BUGFIX: 'userVisibleOptions' não existe na Push API — o campo
-      // obrigatório é 'userVisibleOnly'. Antes isto rebentava sempre.
       const sub = await sw.pushManager.subscribe({ userVisibleOnly: true })
 
       setSubscribed(true)
-      localStorage.setItem("ferias_push_sub", JSON.stringify(sub))
+      // FIX: localStorage.setItem can throw on quota or in private browsing mode.
+      try { localStorage.setItem("ferias_push_sub", JSON.stringify(sub)) } catch { /* quota */ }
       return { sub }
     } catch (e) {
       console.error("Push subscribe falhou", e)

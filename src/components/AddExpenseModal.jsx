@@ -44,7 +44,7 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
 
   const submit = () => {
     if (!form.descricao.trim() || !form.valor || !form.pago_por) return
-    onAdd({ ...form, valor: parseFloat(form.valor) })
+    onAdd({ ...form, valor: parseFloat(form.valor.replace(',', '.')) })
     setForm(defaultForm(pessoas, currentUser))
     onClose()
   }

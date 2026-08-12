@@ -22,3 +22,21 @@ export const TIPOS = [
 ]
 
 export const MEAL_EMOJIS = ['🍽️', '🫕', '🔥', '🐟', '🥩', '🌅', '🥤', '🥗', '🍳', '🥘', '🍖', '🥪', '🍕', '🌮', '🍲', '🫙', '🍰', '🤌', '🦐', '🍝', '🍔', '🥞', '🌯', '🍱']
+
+// ── Magic number constants ──────────────────────────────────────────────────
+// Centralised so a single change propagates everywhere.
+
+/** Maximum length for guest/owner names (enforced in inputs and stored values). */
+export const GUEST_NAME_MAX_LENGTH = 60
+
+/** How long (ms) a toast notification stays visible. */
+export const TOAST_DURATION_MS = 2800
+
+/** Delay (ms) before switching to the shopping tab after adding ingredients. */
+export const TAB_SWITCH_DELAY_MS = 400
+
+/** Application name constant — avoids hardcoding 'GroupGrub' in templates/exports. */
+export const APP_NAME = 'GroupGrub'
+
+/** Minimum valid trip-ID length used as a sanity guard throughout. */
+export const TRIP_ID_MIN_LENGTH = 6

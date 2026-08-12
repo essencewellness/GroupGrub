@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ferias-app motion audit — 2026-08-12</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ─── 1. Tokens ─────────────────────────────────────────────────────── */
+    :root {
+      --ink:        oklch(0.120 0.006 255);
+      --ink-dim:    oklch(0.200 0.006 255);
+      --paper:      oklch(0.940 0.004 255);
+      --paper-dim:  oklch(0.820 0.004 255);
+      --surface-1:  oklch(0.160 0.006 255);
+      --surface-2:  oklch(0.210 0.007 255);
+      --line:       oklch(0.280 0.006 255);
+      --line-soft:  oklch(0.240 0.005 255);
+
+      --crit:       oklch(0.655 0.185 25);
+      --crit-soft:  oklch(0.200 0.060 25);
+      --imp:        oklch(0.805 0.125 78);
+      --imp-soft:   oklch(0.220 0.050 78);
+      --opp:        oklch(0.745 0.135 152);
+      --opp-soft:   oklch(0.190 0.050 152);
+
+      --t-good:     oklch(0.745 0.135 152);
+      --t-mid:      oklch(0.805 0.125 78);
+      --t-slow:     oklch(0.655 0.185 25);
+
+      --font-disp:  'Familjen Grotesk', system-ui, sans-serif;
+      --font-body:  'Public Sans', system-ui, sans-serif;
+      --font-mono:  'Geist Mono', 'Cascadia Code', monospace;
+
+      --accent:         var(--paper);
+      --accent-soft:    var(--paper-dim);
+    }
+    :root:has(#theme-light:checked) {
+      --ink:       oklch(0.985 0.003 255);
+      --ink-dim:   oklch(0.930 0.003 255);
+      --paper:     oklch(0.130 0.007 255);
+      --paper-dim: oklch(0.320 0.006 255);
+      --surface-1: oklch(0.960 0.003 255);
+      --surface-2: oklch(0.920 0.004 255);
+      --line:      oklch(0.820 0.005 255);
+      --line-soft: oklch(0.860 0.004 255);
+      --crit-soft: oklch(0.940 0.040 25);
+      --imp-soft:  oklch(0.960 0.030 78);
+      --opp-soft:  oklch(0.940 0.040 152);
+    }
+
+    /* ─── 2. Reset & Base ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; background: var(--ink); color: var(--paper); }
+    body { font-family: var(--font-body); font-size: 0.9375rem; line-height: 1.65;
+           color: var(--paper); background: var(--ink); }
+    h1, h2, h3, h4, h5 { font-family: var(--font-disp); line-height: 1.2; }
+    code, .mono { font-family: var(--font-mono); font-size: 0.8125rem; }
+    a { color: var(--paper); }
+
+    /* ─── 3. Layout ─────────────────────────────────────────────────────── */
+    .wrap { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+    /* theme switch */
+    .theme-switch { display: flex; justify-content: flex-end; margin-bottom: 2rem; }
+    .theme-switch input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+    .seg { display: flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .seg label { padding: 0.3rem 0.75rem; font-family: var(--font-mono); font-size: 0.72rem;
+                 color: var(--paper-dim); cursor: pointer; transition: color 0.15s, background 0.15s; letter-spacing: 0.04em; }
+    #theme-dark:checked ~ .theme-switch .seg label[for="theme-dark"],
+    #theme-light:checked ~ .theme-switch .seg label[for="theme-light"] {
+      color: var(--paper); background: var(--line);
+    }
+
+    /* header */
+    .eyebrow { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.12em;
+               color: var(--paper-dim); text-transform: uppercase; margin-bottom: 0.5rem; }
+    h1.title { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700;
+               color: var(--paper); margin-bottom: 0.75rem; text-wrap: balance; }
+    p.lede { font-size: 1.0625rem; color: var(--paper-dim); max-width: 62ch; margin-bottom: 1.25rem; }
+    .meta-row { font-family: var(--font-mono); font-size: 0.72rem; color: var(--paper-dim);
+                letter-spacing: 0.04em; margin-bottom: 1.75rem; }
+    .meta-row span + span::before { content: ' · '; }
+
+    .stats { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 3rem; }
+    .stat-chip { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
+                 border-radius: 8px; border: 1px solid; font-family: var(--font-mono); font-size: 0.75rem; }
+    .stat-chip strong { font-size: 1.25rem; font-weight: 700; font-family: var(--font-disp); }
+    .stat-chip.crit { border-color: var(--crit); background: var(--crit-soft); color: var(--crit); }
+    .stat-chip.imp  { border-color: var(--imp);  background: var(--imp-soft);  color: var(--imp); }
+    .stat-chip.opp  { border-color: var(--opp);  background: var(--opp-soft);  color: var(--opp); }
+    .stat-chip.tot  { border-color: var(--line);  background: var(--surface-1); color: var(--paper-dim); }
+
+    /* section chrome */
+    .sec-label { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.14em;
+                 text-transform: uppercase; color: var(--paper-dim); margin-bottom: 0.4rem; }
+    .sec-rule { border: none; border-top: 1px solid var(--line); margin-bottom: 2rem; }
+
+    /* overall assessment */
+    .assessment { margin-bottom: 3.5rem; }
+    .assessment p { font-size: 1.0625rem; color: var(--paper); max-width: 68ch; line-height: 1.7; }
+
+    /* ─── 4. Lens table ──────────────────────────────────────────────────── */
+    .lens-table { width: 100%; border-collapse: collapse; margin-bottom: 3rem; }
+    .lens-table th { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em;
+                     text-transform: uppercase; color: var(--paper-dim); text-align: left;
+                     padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); }
+    .lens-table td { padding: 0.9rem 0.75rem; border-bottom: 1px solid var(--line-soft);
+                     vertical-align: top; font-size: 0.875rem; transition: background 0.12s; }
+    .lens-table tr:hover td { background: var(--surface-1); }
+    .weight-chip { display: inline-block; font-family: var(--font-mono); font-size: 0.66rem;
+                   letter-spacing: 0.06em; text-transform: uppercase; padding: 0.15rem 0.5rem;
+                   border-radius: 4px; background: var(--surface-2); color: var(--paper-dim);
+                   border: 1px solid var(--line); margin-left: 0.5rem; }
+    .verdict-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 0.4rem; }
+    .verdict-dot.crit { background: var(--crit); }
+    .verdict-dot.imp  { background: var(--imp); }
+    .verdict-dot.ok   { background: var(--opp); }
+
+    /* ─── 5. Timing diagram ──────────────────────────────────────────────── */
+    .timing-wrap { margin-bottom: 3.5rem; }
+    .timing-grid { display: grid; grid-template-columns: 1fr 260px; gap: 1.5rem; align-items: start; }
+    @media (max-width: 860px) { .timing-grid { grid-template-columns: 1fr; } }
+    .timing-svg { width: 100%; }
+    .timing-key { list-style: none; }
+    .timing-key li { display: flex; align-items: baseline; gap: 0.5rem; font-family: var(--font-mono);
+                     font-size: 0.72rem; color: var(--paper-dim); padding: 0.25rem 0;
+                     border-bottom: 1px solid var(--line-soft); }
+    .timing-key li .k-num { font-weight: 600; min-width: 1.25rem; color: var(--paper); }
+    .timing-key li .k-ms  { margin-left: auto; color: var(--paper-dim); }
+    .timing-note { margin-top: 0.75rem; font-size: 0.8125rem; color: var(--paper-dim); max-width: 60ch; }
+
+    /* ─── 6. Lens sections ───────────────────────────────────────────────── */
+    .lens-sec { margin-bottom: 4rem; }
+    .lens-sec__head { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .lens-sec__head h3 { font-size: 1.2rem; font-weight: 700; }
+    .lens-sec__verdict { font-size: 0.875rem; color: var(--paper-dim); margin-bottom: 1.5rem; }
+    .lens-block { margin-bottom: 1.75rem; }
+    .mono-label { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.1em;
+                  text-transform: uppercase; color: var(--paper-dim); margin-bottom: 0.75rem; }
+    .lens-list { list-style: none; padding: 0; }
+    .lens-list li { padding: 0.3rem 0; padding-left: 1.25rem; position: relative;
+                    font-size: 0.875rem; color: var(--paper); border-bottom: 1px solid var(--line-soft); }
+    .lens-list li::before { position: absolute; left: 0; }
+    .lens-list.good li::before { content: '✓'; color: var(--opp); }
+    .lens-list.opp li::before { content: '💡'; font-size: 0.75rem; }
+    .lens-list li code { font-size: 0.75rem; color: var(--paper-dim); }
+    .lens-take { background: var(--surface-1); border: 1px solid var(--line);
+                 border-radius: 8px; padding: 1rem 1.25rem; font-size: 0.875rem;
+                 color: var(--paper-dim); margin-top: 1.5rem; }
+    .lens-take strong { color: var(--paper); }
+
+    /* ─── 7. Finding rows ────────────────────────────────────────────────── */
+    .finding-row { display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem;
+                   background: var(--surface-1); border: 1px solid var(--line);
+                   border-radius: 10px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    @media (max-width: 860px) { .finding-row { grid-template-columns: 1fr; } }
+    .finding-row[data-sev="crit"] { border-color: var(--crit); background: var(--crit-soft); }
+    .finding-row[data-sev="imp"]  { border-color: var(--imp);  background: var(--imp-soft); }
+    .find-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+    .sev-chip { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.08em;
+                text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 600; }
+    .sev-chip.crit { background: var(--crit); color: var(--ink); }
+    .sev-chip.imp  { background: var(--imp);  color: var(--ink); }
+    .lens-chip { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.06em;
+                 text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 4px;
+                 background: var(--surface-2); border: 1px solid var(--line); color: var(--paper-dim); }
+    h4.find-title { font-size: 1rem; font-weight: 600; color: var(--paper); margin-bottom: 0.75rem; }
+    .find-body p { font-size: 0.8375rem; color: var(--paper-dim); margin-bottom: 0.5rem; }
+    .find-body .label { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em;
+                        text-transform: uppercase; color: var(--paper); margin-right: 0.4rem; }
+    .fix { background: var(--surface-2); border-radius: 6px; padding: 0.6rem 0.75rem; margin: 0.5rem 0; }
+    .find-loc { font-family: var(--font-mono); font-size: 0.72rem; color: var(--paper-dim); margin-top: 0.5rem; }
+    .find-loc code { color: var(--paper-dim); }
+
+    /* ─── 8. Demo cards ──────────────────────────────────────────────────── */
+    .demo { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .demo input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+    .demo__bar { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+                 padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: 0.5rem; }
+    .demo__meta { display: flex; flex-direction: column; }
+    .demo__title { font-family: var(--font-mono); font-size: 0.72rem; color: var(--paper); font-weight: 500; letter-spacing: 0.04em; }
+    .demo__timing { font-family: var(--font-mono); font-size: 0.66rem; color: var(--paper-dim); }
+    .demo__controls { display: flex; align-items: center; gap: 0.5rem; }
+    .demo__loop { font-size: 0.8rem; color: var(--paper-dim); }
+    .demo__stage { padding: 1.5rem; min-height: 120px; display: flex; align-items: center; justify-content: center;
+                   --st-bg: var(--surface-1); --st-fg: var(--paper); --st-line: var(--line); --st-dim: var(--paper-dim); }
+
+    /* Stage theme overrides */
+    #st1-l:checked ~ .demo__stage, #st2-l:checked ~ .demo__stage,
+    #st3-l:checked ~ .demo__stage, #st4-l:checked ~ .demo__stage,
+    #st5-l:checked ~ .demo__stage, #st6-l:checked ~ .demo__stage {
+      --st-bg: oklch(0.985 0.003 255); --st-fg: oklch(0.180 0.006 255);
+      --st-line: oklch(0.820 0.006 255); --st-dim: oklch(0.420 0.006 255);
+      background: var(--st-bg);
+    }
+    #st1-d:checked ~ .demo__stage, #st2-d:checked ~ .demo__stage,
+    #st3-d:checked ~ .demo__stage, #st4-d:checked ~ .demo__stage,
+    #st5-d:checked ~ .demo__stage, #st6-d:checked ~ .demo__stage {
+      --st-bg: oklch(0.120 0.006 255); --st-fg: oklch(0.940 0.004 255);
+      --st-line: oklch(0.280 0.006 255); --st-dim: oklch(0.600 0.004 255);
+      background: var(--st-bg);
+    }
+
+    /* UI mock atoms */
+    .ui-card { background: var(--st-bg); border: 1px solid var(--st-line); border-radius: 10px; padding: 0.75rem 1rem; min-width: 200px; }
+    .ui-row  { height: 14px; background: var(--st-line); border-radius: 4px; margin-bottom: 0.4rem; }
+    .ui-row.wide  { width: 80%; }
+    .ui-row.mid   { width: 55%; }
+    .ui-row.slim  { width: 35%; }
+    .ui-btn  { background: oklch(0.655 0.185 25); color: var(--ink); padding: 0.4rem 1rem;
+               border-radius: 8px; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+               letter-spacing: 0.06em; text-transform: uppercase; display: inline-block; }
+    .ui-badge { font-family: var(--font-mono); font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 4px;
+                background: oklch(0.655 0.185 25 / 0.15); color: oklch(0.655 0.185 25);
+                border: 1px solid oklch(0.655 0.185 25 / 0.4); }
+    .ui-pulse-ring { width: 12px; height: 12px; border-radius: 50%; background: oklch(0.655 0.185 25); display: inline-block; }
+    .ui-modal { background: var(--st-bg); border: 1px solid var(--st-line); border-radius: 12px; padding: 1rem 1.25rem;
+                min-width: 220px; box-shadow: 0 8px 32px oklch(0 0 0 / 0.4); }
+
+    /* ─── 9. Recommendations tables ──────────────────────────────────────── */
+    .rec-section { margin-bottom: 3rem; }
+    .tier-label { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em;
+                  text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem; }
+    .tier-label.crit { color: var(--crit); }
+    .tier-label.imp  { color: var(--imp); }
+    .tier-label.opp  { color: var(--opp); }
+    .rec-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; overflow-x: auto; display: block; }
+    .rec-table th { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em;
+                    text-transform: uppercase; color: var(--paper-dim); text-align: left;
+                    padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); }
+    .rec-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--line-soft);
+                    color: var(--paper); vertical-align: top; }
+    .rec-table td:first-child { font-size: 0.9rem; }
+    .rec-table code { font-family: var(--font-mono); font-size: 0.72rem; color: var(--paper-dim); }
+
+    /* ─── 10. Ref summary ────────────────────────────────────────────────── */
+    .ref-summary { background: var(--surface-1); border: 1px solid var(--line); border-radius: 10px;
+                   padding: 1.5rem; margin-bottom: 3rem; }
+    .ref-lean { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+    @media (max-width: 600px) { .ref-lean { grid-template-columns: 1fr; } }
+    .ref-lean-item h5 { font-size: 0.875rem; color: var(--paper); margin-bottom: 0.25rem; }
+    .ref-lean-item p  { font-size: 0.8125rem; color: var(--paper-dim); }
+
+    /* footer */
+    .footer { font-family: var(--font-mono); font-size: 0.7rem; color: var(--paper-dim);
+              letter-spacing: 0.06em; padding-top: 2rem; border-top: 1px solid var(--line); }
+
+    /* ─── 11. Demo animations (inside @media no-preference) ──────────────── */
+    @media (prefers-reduced-motion: no-preference) {
+      /* Finding 1: prefers-reduced-motion guard — demo shows a card respecting reduced-motion */
+      @keyframes m1 {
+        0%   { opacity: 0; transform: translateY(8px); }
+        35%  { opacity: 1; transform: translateY(0); }
+        80%  { opacity: 1; transform: translateY(0); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      .demo-1__mt { animation: m1 3s ease-out infinite; }
+
+      /* Finding 2: animate-pulse without motion-safe — show safe version */
+      @keyframes m2 {
+        0%   { opacity: 1; }
+        40%  { opacity: 0.35; }
+        80%  { opacity: 1; }
+        100% { opacity: 1; }
+      }
+      .demo-2__mt .safe { animation: m2 2s ease-in-out infinite; }
+
+      /* Finding 3: GuestUpsellModal 1s+ delay — show fast alternative */
+      @keyframes m3 {
+        0%   { opacity: 0; transform: translateY(6px); }
+        25%  { opacity: 1; transform: translateY(0); }
+        80%  { opacity: 1; transform: translateY(0); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      .demo-3__mt { animation: m3 3s ease-out infinite; }
+
+      /* Finding 4: Infinite background animation — Onboarding emoji */
+      @keyframes m4 {
+        0%   { transform: translateY(0px); opacity: 0.8; }
+        50%  { transform: translateY(-6px); opacity: 1; }
+        100% { transform: translateY(0px); opacity: 0.8; }
+      }
+      .demo-4__mt .emoji { animation: m4 3.5s ease-in-out infinite; }
+
+      /* Finding 5: Stagger spam — controlled single stagger */
+      @keyframes m5 {
+        0%   { opacity: 0; transform: translateY(6px); }
+        30%  { opacity: 1; transform: translateY(0); }
+        80%  { opacity: 1; transform: translateY(0); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      .demo-5__mt .r1 { animation: m5 3s ease-out infinite; }
+      .demo-5__mt .r2 { animation: m5 3s ease-out 0.08s infinite; }
+      .demo-5__mt .r3 { animation: m5 3s ease-out 0.16s infinite; }
+
+      /* Finding 6: MealCard stagger on frequent view — no-stagger alternative */
+      @keyframes m6 {
+        0%   { opacity: 0; }
+        30%  { opacity: 1; }
+        80%  { opacity: 1; }
+        100% { opacity: 1; }
+      }
+      .demo-6__mt .c1, .demo-6__mt .c2, .demo-6__mt .c3 { animation: m6 3s ease-out infinite; }
+    }
+
+    /* Reduced motion: kill all demo animations */
+    @media (prefers-reduced-motion: reduce) {
+      [class*="__mt"], [class*="__mt"] * { animation: none !important; }
+      .demo__loop { display: none; }
+    }
+
+    hr.thin { border: none; border-top: 1px solid var(--line-soft); margin: 1.5rem 0; }
+  </style>
+</head>
+<body>
+  <!-- Theme radios must precede .wrap so :has() works -->
+  <input class="vh" type="radio" name="theme" id="theme-dark" checked style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
+  <input class="vh" type="radio" name="theme" id="theme-light" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
+
+  <div class="wrap">
+
+    <!-- Theme toggle -->
+    <div class="theme-switch">
+      <div class="seg">
+        <label for="theme-dark">Dark</label>
+        <label for="theme-light">Light</label>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <p class="eyebrow">MOTION AUDIT · DESIGN-MOTION-PRINCIPLES</p>
+    <h1 class="title">ferias-app — Motion at the edge of too much</h1>
+    <p class="lede">A mobile-first group travel organiser (meal planner, shopping, expenses) built with React 19 + Framer Motion. Rich motion intent, but vestibular safety is completely absent and several patterns compound into noticeable jank.</p>
+    <p class="meta-row">
+      <span>ferias-app / groupgrub</span>
+      <span>React 19 · Vite · Framer Motion ^12.40</span>
+      <span>Audited 2026-08-12</span>
+    </p>
+
+    <div class="stats">
+      <div class="stat-chip tot"><strong>10</strong> Findings</div>
+      <a href="#rec-crit" class="stat-chip crit"><strong>2</strong> Critical</a>
+      <a href="#rec-imp"  class="stat-chip imp" ><strong>4</strong> Important</a>
+      <a href="#rec-opp"  class="stat-chip opp" ><strong>4</strong> Opportunities</a>
+    </div>
+
+    <!-- Overall Assessment -->
+    <section class="assessment">
+      <p class="sec-label">Overall</p>
+      <hr class="sec-rule">
+      <p>This app has real motion ambition — spring physics throughout, purposeful enter/exit patterns, well-scoped <code>whileTap</code> on interactive elements. The aesthetic is cohesive and the speed is mostly right. But two systemic failures undercut the entire effort: there is zero <code>prefers-reduced-motion</code> support anywhere in the codebase, which means the app is actively harmful for users with vestibular disorders, and there are several <code>animate-pulse</code> calls without Tailwind's <code>motion-safe:</code> prefix — the simplest fix in the codebase. Beyond those critical issues, stagger groups are overused on mount (three or four independent staggered lists fire simultaneously on the Expenses tab), and a 1-second delay in the GuestUpsellModal means users wait for content that should appear instantly. Fix the two critical issues immediately; the Important findings would push this from "good enough" to genuinely polished.</p>
+    </section>
+
+    <!-- 01 · Lens summary -->
+    <p class="sec-label">01 · Lens summary</p>
+    <hr class="sec-rule">
+    <table class="lens-table">
+      <thead>
+        <tr>
+          <th>Lens</th>
+          <th>Verdict</th>
+          <th>One-line read</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Jakub Krehel</strong> — Production Polish<span class="weight-chip">Primary</span></td>
+          <td><span class="verdict-dot imp"></span> Mixed</td>
+          <td>Good spring foundation, but the 1s modal delay and stagger spam are rough edges that show in production.</td>
+        </tr>
+        <tr>
+          <td><strong>Emil Kowalski</strong> — Restraint &amp; Speed<span class="weight-chip">Secondary</span></td>
+          <td><span class="verdict-dot crit"></span> Problem</td>
+          <td>Frequent views (Expenses tab, MealCard list) have mount stagger that fires every time; they should be instant.</td>
+        </tr>
+        <tr>
+          <td><strong>Jhey Tompkins</strong> — Experimentation &amp; Delight<span class="weight-chip">Selective</span></td>
+          <td><span class="verdict-dot ok"></span> Strong</td>
+          <td>Onboarding floating emoji is charming — just needs a reduced-motion guard to be shippable.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 02 · Timing diagram -->
+    <section class="timing-wrap">
+      <p class="sec-label">02 · Where the timings land</p>
+      <hr class="sec-rule">
+      <div class="timing-grid">
+        <svg class="timing-svg" viewBox="0 0 580 280" xmlns="http://www.w3.org/2000/svg">
+          <style>
+            .tz { fill: none; }
+            .tz-g  { fill: oklch(0.745 0.135 152 / 0.08); }
+            .tz-a  { fill: oklch(0.805 0.125 78  / 0.10); }
+            .tz-r  { fill: oklch(0.655 0.185 25  / 0.10); }
+            .zl { fill: none; stroke: oklch(0.94 0.004 255 / 0.15); stroke-width: 1; }
+            .zlab { font-family: 'Geist Mono', monospace; font-size: 9px; fill: oklch(0.94 0.004 255 / 0.45); letter-spacing: 0.05em; }
+            .dot  { stroke-width: 1.5; }
+            .dot-g { fill: oklch(0.745 0.135 152); stroke: oklch(0.745 0.135 152 / 0.4); }
+            .dot-a { fill: oklch(0.805 0.125 78);  stroke: oklch(0.805 0.125 78  / 0.4); }
+            .dot-r { fill: oklch(0.655 0.185 25);  stroke: oklch(0.655 0.185 25  / 0.4); }
+            .dot-h { fill: none; stroke: oklch(0.94 0.004 255 / 0.5); stroke-width: 1.5; stroke-dasharray: 3,2; }
+            .dlab { font-family: 'Geist Mono', monospace; font-size: 9px; fill: oklch(0.06 0.006 255); font-weight: 600; }
+            .axis { stroke: oklch(0.94 0.004 255 / 0.25); stroke-width: 1; }
+            .alab { font-family: 'Geist Mono', monospace; font-size: 8px; fill: oklch(0.94 0.004 255 / 0.45); }
+          </style>
+          <!-- Zone bands: x=40 (0ms) to x=520 (600ms), y=30 to y=240 -->
+          <!-- Instant+Responsive 0-300ms = x40-x280, Deliberate 300-500ms = x280-x440, Sluggish 500+ = x440-x520 -->
+          <rect class="tz tz-g" x="40" y="30" width="240" height="200"/>
+          <rect class="tz tz-a" x="280" y="30" width="160" height="200"/>
+          <rect class="tz tz-r" x="440" y="30" width="100" height="200"/>
+
+          <!-- Zone labels -->
+          <text class="zlab" x="44" y="48">INSTANT/RESPONSIVE</text>
+          <text class="zlab" x="284" y="48">DELIBERATE</text>
+          <text class="zlab" x="444" y="48">SLUGGISH</text>
+
+          <!-- Grid lines at 100, 200, 300, 400, 500ms -->
+          <line class="zl" x1="120" y1="30" x2="120" y2="230"/>
+          <line class="zl" x1="200" y1="30" x2="200" y2="230"/>
+          <line class="zl" x1="280" y1="30" x2="280" y2="230"/>
+          <line class="zl" x1="360" y1="30" x2="360" y2="230"/>
+          <line class="zl" x1="440" y1="30" x2="440" y2="230"/>
+
+          <!-- Axis -->
+          <line class="axis" x1="40" y1="230" x2="540" y2="230"/>
+          <text class="alab" x="38"  y="244" text-anchor="middle">0</text>
+          <text class="alab" x="120" y="244" text-anchor="middle">100</text>
+          <text class="alab" x="200" y="244" text-anchor="middle">200</text>
+          <text class="alab" x="280" y="244" text-anchor="middle">300</text>
+          <text class="alab" x="360" y="244" text-anchor="middle">400</text>
+          <text class="alab" x="440" y="244" text-anchor="middle">500</text>
+          <text class="alab" x="520" y="244" text-anchor="middle">600+</text>
+          <text class="alab" x="540" y="244">ms</text>
+
+          <!-- Dots: x = 40 + (ms/600)*480 -->
+          <!-- 1: whileTap 0ms (instant, no-transition) → hollow dashed at x=40 -->
+          <circle class="dot dot-h" cx="40" cy="70" r="9"/>
+          <text class="dlab" x="40" y="74" text-anchor="middle">1</text>
+
+          <!-- 2: enter transitions 180-220ms → x=184-216, plotted at ~x195 -->
+          <circle class="dot dot-g" cx="195" cy="95" r="9"/>
+          <text class="dlab" x="195" y="99" text-anchor="middle">2</text>
+
+          <!-- 3: stagger items 160-260ms → plotted at x=240 -->
+          <circle class="dot dot-g" cx="240" cy="120" r="9"/>
+          <text class="dlab" x="240" y="124" text-anchor="middle">3</text>
+
+          <!-- 4: ShoppingTab 650ms enter → x=40+0.65*480=352 -->
+          <circle class="dot dot-a" cx="352" cy="145" r="9"/>
+          <text class="dlab" x="352" y="149" text-anchor="middle">4</text>
+
+          <!-- 5: Plano reveal 800ms → x=40+0.8*480=424 -->
+          <circle class="dot dot-a" cx="424" cy="170" r="9"/>
+          <text class="dlab" x="424" y="174" text-anchor="middle">5</text>
+
+          <!-- 6: GuestUpsellModal 1200ms delay + 600ms → over 600ms, plot at x=520 -->
+          <circle class="dot dot-r" cx="520" cy="95" r="9"/>
+          <text class="dlab" x="520" y="99" text-anchor="middle">6</text>
+
+          <!-- 7: Onboarding floating 3500ms repeat: Infinity → x=520+ -->
+          <circle class="dot dot-r" cx="520" cy="130" r="9"/>
+          <text class="dlab" x="520" y="134" text-anchor="middle">7</text>
+
+          <!-- 8: App loading spin 1200ms repeat: Infinity → x=520 -->
+          <circle class="dot dot-r" cx="520" cy="165" r="9"/>
+          <text class="dlab" x="520" y="169" text-anchor="middle">8</text>
+        </svg>
+
+        <ul class="timing-key">
+          <li><span class="k-num">1</span> whileTap (no duration) <span class="k-ms">instant</span></li>
+          <li><span class="k-num">2</span> Enter/exit transitions <span class="k-ms">180–220ms</span></li>
+          <li><span class="k-num">3</span> Stagger items <span class="k-ms">160–260ms</span></li>
+          <li><span class="k-num">4</span> ShoppingTab enter <span class="k-ms">650ms</span></li>
+          <li><span class="k-num">5</span> Plano reveal <span class="k-ms">800ms</span></li>
+          <li><span class="k-num">6</span> GuestUpsellModal delay+anim <span class="k-ms">1800ms+</span></li>
+          <li><span class="k-num">7</span> Onboarding emoji float <span class="k-ms">3500ms ∞</span></li>
+          <li><span class="k-num">8</span> App loading spin <span class="k-ms">1200ms ∞</span></li>
+        </ul>
+      </div>
+      <p class="timing-note">Items 6, 7, and 8 are in the sluggish zone or are infinite loops. Items 4 and 5 sit in the deliberate zone — acceptable for rare reveals, but borderline for transitions that users see on every navigation.</p>
+    </section>
+
+    <!-- ─── 03 · Jakub Krehel (Primary) ───────────────────────────────────── -->
+    <section class="lens-sec">
+      <p class="sec-label">03 · Primary lens</p>
+      <hr class="sec-rule">
+      <div class="lens-sec__head">
+        <h3>Jakub Krehel — Production Polish</h3>
+        <span class="weight-chip">Primary</span>
+      </div>
+      <p class="lens-sec__verdict"><span class="verdict-dot imp"></span> <strong>Mixed</strong> — the spring foundation is solid but key UX moments (modal reveal, tab mount) feel unfinished.</p>
+
+      <div class="lens-block">
+        <p class="mono-label">What's working well</p>
+        <ul class="lens-list good">
+          <li>Spring params (stiffness 300–480, damping 25–38) are well-tuned for a mobile app — they feel native without being bouncy. <code>ShopItem.jsx:25</code></li>
+          <li><code>AnimatePresence</code> on list item exit is correct — exit animations don't abruptly disappear. <code>ExpensesTab.jsx:291</code></li>
+          <li><code>whileTap</code> on all interactive buttons gives immediate physical feedback. Correctly sized (scale 0.85–0.97). <code>ShopItem.jsx:143</code></li>
+          <li><code>motion-safe:animate-pulse</code> and <code>motion-safe:animate-spin</code> used correctly in ShopItem and ShoppingTab — shows the pattern is known.</li>
+        </ul>
+      </div>
+
+      <div class="lens-block">
+        <p class="mono-label">Issues to address</p>
+
+        <!-- Finding 3: GuestUpsellModal delay -->
+        <div class="finding-row" data-sev="imp">
+          <div class="finding-row__prose">
+            <div class="find-tags">
+              <span class="sev-chip imp">Important</span>
+              <span class="lens-chip">Jakub</span>
+            </div>
+            <h4 class="find-title">GuestUpsellModal: 1+ second delay before content appears</h4>
+            <div class="find-body">
+              <p><span class="label">What</span>The modal renders immediately but its primary content items use <code>delay: 1.0 + i * 0.07</code> — meaning the first line of real content appears after 1 full second. A separate element uses <code>delay: 1.2</code>. Users see an empty modal shell.</p>
+              <p><span class="label">Why it matters</span>A 1s+ content delay breaks the psychological contract of a modal: the user dismissed their current flow to see this; making them wait for content reads as a broken experience. Jakub's polish standard is that content should be visible and readable within 300ms of the modal appearing.</p>
+              <div class="fix"><p><span class="label">Recommended motion</span>Use <code>delay: i * 0.04</code> starting from 0 (max stagger ~200ms for 5 items), or a single <code>delay: 0.1</code> after the modal backdrop settles. Total content visible in under 300ms.</p></div>
+              <p class="find-loc"><code>GuestUpsellModal.jsx:122</code> · <code>GuestUpsellModal.jsx:99</code></p>
+            </div>
+          </div>
+          <div class="demo">
+            <input class="vh" type="radio" name="st3" id="st3-a" checked>
+            <input class="vh" type="radio" name="st3" id="st3-l">
+            <input class="vh" type="radio" name="st3" id="st3-d">
+            <div class="demo__bar">
+              <div class="demo__meta">
+                <span class="demo__title">Fast modal reveal</span>
+                <span class="demo__timing">180ms · ease-out · delay 0.1</span>
+              </div>
+              <div class="demo__controls">
+                <div class="seg">
+                  <label for="st3-a">Auto</label>
+                  <label for="st3-l">Light</label>
+                  <label for="st3-d">Dark</label>
+                </div>
+                <span class="demo__loop">↻</span>
+              </div>
+            </div>
+            <div class="demo__stage" style="background: var(--st-bg);">
+              <div class="demo-3__mt">
+                <div class="ui-modal">
+                  <div class="ui-row wide" style="margin-bottom: 0.6rem;"></div>
+                  <div class="ui-row mid"></div>
+                  <div class="ui-row slim" style="margin: 0.5rem 0;"></div>
+                  <div class="ui-btn">Continuar</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Finding 5: ExpensesTab stagger spam -->
+        <div class="finding-row" data-sev="imp">
+          <div class="finding-row__prose">
+            <div class="find-tags">
+              <span class="sev-chip imp">Important</span>
+              <span class="lens-chip">Jakub</span>
+              <span class="lens-chip">Emil</span>
+            </div>
+            <h4 class="find-title">ExpensesTab: 4 independent stagger groups fire on every mount</h4>
+            <div class="find-body">
+              <p><span class="label">What</span>On mount, ExpensesTab animates: the HUD block (delay 0), the balance block (delay 0.06), the settlements block (delay 0.1), each settlement row (i * 0.05), and each expense history row (i * 0.04). With 5 expenses the last row animates at 200ms. With 10 it's at 400ms.</p>
+              <p><span class="label">Why it matters</span>Expenses is a frequently-visited tab. Users who check it multiple times per session see the same entrance sequence every time. Stagger is a first-impression pattern — it's AI-slop when applied to routine views.</p>
+              <div class="fix"><p><span class="label">Recommended motion</span>Remove all mount stagger from the outer containers. Keep the <code>AnimatePresence exit</code> on individual rows (that's correct). If any entrance is needed, a single <code>opacity: 0 → 1</code> on the tab root in 150ms is enough. Reserve stagger for newly added items only.</p></div>
+              <p class="find-loc"><code>ExpensesTab.jsx:44–217</code></p>
+            </div>
+          </div>
+          <div class="demo">
+            <input class="vh" type="radio" name="st5" id="st5-a" checked>
+            <input class="vh" type="radio" name="st5" id="st5-l">
+            <input class="vh" type="radio" name="st5" id="st5-d">
+            <div class="demo__bar">
+              <div class="demo__meta">
+                <span class="demo__title">Single fade, no stagger</span>
+                <span class="demo__timing">150ms · ease-out</span>
+              </div>
+              <div class="demo__controls">
+                <div class="seg">
+                  <label for="st5-a">Auto</label>
+                  <label for="st5-l">Light</label>
+                  <label for="st5-d">Dark</label>
+                </div>
+                <span class="demo__loop">↻</span>
+              </div>
+            </div>
+            <div class="demo__stage" style="background: var(--st-bg);">
+              <div class="demo-5__mt" style="display: flex; flex-direction: column; gap: 0.5rem; width: 220px;">
+                <div class="r1 ui-card" style="padding: 0.5rem 0.75rem;"><div class="ui-row wide"></div><div class="ui-row mid"></div></div>
+                <div class="r2 ui-card" style="padding: 0.5rem 0.75rem;"><div class="ui-row wide"></div><div class="ui-row slim"></div></div>
+                <div class="r3 ui-card" style="padding: 0.5rem 0.75rem;"><div class="ui-row mid"></div><div class="ui-row slim"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lens-block">
+        <p class="mono-label">Opportunities</p>
+        <ul class="lens-list opp">
+          <li>ShoppingTab enter: <code>duration: 0.65</code> with a custom cubic bezier is in the deliberate zone. Trim to 400ms with the same easing for a crisper feel. <code>ShoppingTab.jsx:85</code></li>
+          <li>Plano reveal: <code>duration: 0.8, delay: 0.2</code> is a full second before content appears. 450ms + no delay would feel more immediate. <code>Plano.jsx:271</code></li>
+          <li>Double stagger on Plano slot cards (<code>di * 0.08 + si * 0.05</code>) compounds to 130ms for item [1][1] — acceptable, but if this view is visited often, remove outer stagger. <code>Plano.jsx:309</code></li>
+        </ul>
+      </div>
+
+      <div class="lens-take">
+        <strong>Through Jakub's lens:</strong> The spring physics and <code>whileTap</code> feedback are exactly right — they give the app a native, polished feel. The failure points are the kind that only show up in production: a 1-second content delay in a conversion-critical modal, and a tab that performs an elaborate entrance sequence for its 50th visit.
+      </div>
+    </section>
+
+    <!-- ─── 04 · Emil Kowalski (Secondary) ───────────────────────────────── -->
+    <section class="lens-sec">
+      <p class="sec-label">04 · Secondary lens</p>
+      <hr class="sec-rule">
+      <div class="lens-sec__head">
+        <h3>Emil Kowalski — Restraint &amp; Speed</h3>
+        <span class="weight-chip">Secondary</span>
+      </div>
+      <p class="lens-sec__verdict"><span class="verdict-dot crit"></span> <strong>Problem</strong> — the frequency gate fails on most interactive paths. Frequent views animate as if they were first-load impressions.</p>
+
+      <div class="lens-block">
+        <p class="mono-label">What's working well</p>
+        <ul class="lens-list good">
+          <li>Tab-switch and wizard step transitions at 220ms are in the right range — fast enough not to feel laggy. <code>NewTripWizard.jsx:96–98</code></li>
+          <li><code>whileTap</code> has no transition duration (instant spring) — correctly treats keyboard/tap feedback as zero-latency. <code>AddExpenseModal.jsx:101</code></li>
+          <li>ShopItem checkbox animation (scale + rotate on enter) is appropriately scaled — a single-item micro-interaction, not a page-level event. <code>ShopItem.jsx:55</code></li>
+        </ul>
+      </div>
+
+      <div class="lens-block">
+        <p class="mono-label">Issues to address</p>
+
+        <!-- Finding 6: MealCard stagger on frequent view -->
+        <div class="finding-row" data-sev="imp">
+          <div class="finding-row__prose">
+            <div class="find-tags">
+              <span class="sev-chip imp">Important</span>
+              <span class="lens-chip">Emil</span>
+            </div>
+            <h4 class="find-title">MealCard mount stagger fires on every tab navigation</h4>
+            <div class="find-body">
+              <p><span class="label">What</span>MealCards animate in with <code>delay: index * 0.06</code> on every render. A Plano tab with 8 meal slots means the last card enters at 480ms. Every tab switch triggers this sequence.</p>
+              <p><span class="label">Why it matters</span>Emil's frequency rule: if users trigger it 100s of times per day (tab switching qualifies), there should be no animation. The entrance stagger communicates "here's new content" — but re-navigating to the same meal plan is not new content.</p>
+              <div class="fix"><p><span class="label">Recommended motion</span>Remove the stagger from MealCard's list-mount animation. Keep the spring enter for <em>newly added</em> meals (triggered by the add-meal action, not by tab mount). Use <code>layout</code> prop for reordering instead. Cards that are already in state should appear instantly.</p></div>
+              <p class="find-loc"><code>MealCard.jsx:44</code></p>
+            </div>
+          </div>
+          <div class="demo">
+            <input class="vh" type="radio" name="st6" id="st6-a" checked>
+            <input class="vh" type="radio" name="st6" id="st6-l">
+            <input class="vh" type="radio" name="st6" id="st6-d">
+            <div class="demo__bar">
+              <div class="demo__meta">
+                <span class="demo__title">Instant tab return</span>
+                <span class="demo__timing">0ms — no animation on revisit</span>
+              </div>
+              <div class="demo__controls">
+                <div class="seg">
+                  <label for="st6-a">Auto</label>
+                  <label for="st6-l">Light</label>
+                  <label for="st6-d">Dark</label>
+                </div>
+                <span class="demo__loop">↻</span>
+              </div>
+            </div>
+            <div class="demo__stage" style="background: var(--st-bg);">
+              <div class="demo-6__mt" style="display: flex; flex-direction: column; gap: 0.4rem; width: 220px;">
+                <div class="c1 ui-card" style="padding: 0.5rem 0.75rem;"><div class="ui-row wide"></div></div>
+                <div class="c2 ui-card" style="padding: 0.5rem 0.75rem;"><div class="ui-row mid"></div></div>
+                <div class="c3 ui-card" style="padding: 0.5rem 0.75rem;"><div class="ui-row slim"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lens-block">
+        <p class="mono-label">Opportunities</p>
+        <ul class="lens-list opp">
+          <li><code>whileHover scale: 1.005</code> on SlotCard is below human perceptual threshold (~1.02 is the minimum you'll notice). Remove it or raise to 1.015. <code>Plano.jsx:126</code></li>
+          <li><code>whileHover x: 2</code> on MealPicker options: a 2px nudge is barely visible. Either commit (x: 6) or remove entirely — this is a frequent interaction. <code>Plano.jsx:87</code></li>
+          <li>MealCard inline ingredient stagger (<code>delay: ii * 0.04</code>) is inside an already-staggered parent. When the meal card mounts, both staggers fire together — consider removing the inner one. <code>MealCard.jsx:167</code></li>
+        </ul>
+      </div>
+
+      <div class="lens-take">
+        <strong>Through Emil's lens:</strong> The app treats every view as a first impression. Emil's core question — "should this animate at all?" — would eliminate most of the mount staggers. The interactions that deserve animation (add item, check off a purchase, submit a form) are exactly where the motion already lives. Move the restraint there.
+      </div>
+    </section>
+
+    <!-- ─── 05 · Jhey Tompkins (Selective) ───────────────────────────────── -->
+    <section class="lens-sec">
+      <p class="sec-label">05 · Selective lens</p>
+      <hr class="sec-rule">
+      <div class="lens-sec__head">
+        <h3>Jhey Tompkins — Experimentation &amp; Delight</h3>
+        <span class="weight-chip">Selective</span>
+      </div>
+      <p class="lens-sec__verdict"><span class="verdict-dot ok"></span> <strong>Strong</strong> — the delight moments are correctly placed (onboarding, loading screen). One is broken by missing reduced-motion; the others land well.</p>
+
+      <div class="lens-block">
+        <p class="mono-label">What's working well</p>
+        <ul class="lens-list good">
+          <li>Onboarding floating emoji creates genuine delight on a rare, one-time interaction. The duration (3.5s) and easing are appropriate for ambient atmosphere. <code>Onboarding.jsx:133</code></li>
+          <li>Loading screen orbital animation (<code>duration: 3, repeat: Infinity</code>) sets a mood during the cold-start wait — correct use of Jhey's "ambient atmosphere" pattern. <code>App.jsx:178</code></li>
+          <li>Checked state in ShopItem (scale + rotate on checkmark) is a small moment of satisfaction that rewards the tap. <code>ShopItem.jsx:55</code></li>
+        </ul>
+      </div>
+
+      <div class="lens-block">
+        <p class="mono-label">Issues to address — none at Critical/Important in this lens</p>
+        <p style="font-size:0.875rem; color: var(--paper-dim); font-style: italic;">The delight animations are well-placed. The critical issue (infinite animations without reduced-motion guard) is filed under Finding 1 and affects this lens's onboarding work — but the fix belongs to the systemic prefers-reduced-motion problem, not the animation design itself.</p>
+      </div>
+
+      <div class="lens-block">
+        <p class="mono-label">Opportunities</p>
+        <ul class="lens-list opp">
+          <li>The loading refresh spinner (<code>duration: 0.6, repeat: Infinity, linear</code>) is generic. A subtle morphing icon or a custom spring spin would turn a system moment into a brand moment. <code>App.jsx:245</code></li>
+          <li>The WhatsApp share button confirmation (shared state) only changes icon — a brief scale pop (<code>whileTap scale: 1.2</code> then spring back) would make the success feel more visceral. <code>ExpensesTab.jsx:161</code></li>
+          <li>Empty states (no expenses, no shopping items) have no motion. A subtle entrance for the empty-state illustration would create a moment of warmth — rare trigger, high delight value.</li>
+        </ul>
+      </div>
+
+      <div class="lens-take">
+        <strong>Through Jhey's lens:</strong> The delight strategy is correct — ambient motion on rare transitions (onboarding, loading), satisfaction moments on key actions (checkbox, tap). The onboarding work is genuinely good. The only ask is to protect it with a reduced-motion guard so it doesn't cause harm.
+      </div>
+    </section>
+
+    <!-- ─── CRITICAL FINDINGS (always first, shown before the per-lens detail was rendered above for UX) ─── -->
+    <!-- These findings span all lenses; rendered here as dedicated section -->
+    <section class="lens-sec">
+      <p class="sec-label">Critical — systemic issues</p>
+      <hr class="sec-rule">
+
+      <!-- Finding 1: No prefers-reduced-motion -->
+      <div class="finding-row" data-sev="crit">
+        <div class="finding-row__prose">
+          <div class="find-tags">
+            <span class="sev-chip crit">Critical</span>
+            <span class="lens-chip">All lenses</span>
+          </div>
+          <h4 class="find-title">Zero <code>prefers-reduced-motion</code> support — the entire codebase</h4>
+          <div class="find-body">
+            <p><span class="label">What</span>Grep across all <code>.jsx</code> files in <code>src/</code> returns zero matches for <code>prefers-reduced-motion</code>. Every Framer Motion animation, every Tailwind animation class, every CSS transition runs unconditionally for all users.</p>
+            <p><span class="label">Why it matters</span>Users with vestibular disorders can experience nausea, dizziness, and migraines from motion — particularly from infinite looping animations (Onboarding floating emoji, App loading orbits). This is a WCAG 2.3 failure (AAA) and an ethical blocker. The infinite animations make it actively harmful.</p>
+            <div class="fix"><p><span class="label">Recommended motion</span>Add a <code>useReducedMotion()</code> hook from Framer Motion (<code>import { useReducedMotion } from 'framer-motion'</code>) and use it to gate animations in components with <code>repeat: Infinity</code> as an immediate fix. Long-term: pass reduced-motion variants to all <code>animate</code>/<code>transition</code> props, or use Framer Motion's built-in <code>useReducedMotion</code> in combination with conditional animation props.</p></div>
+            <p class="find-loc">Systemic — all animated components in <code>src/</code></p>
+          </div>
+        </div>
+        <div class="demo">
+          <input class="vh" type="radio" name="st1" id="st1-a" checked>
+          <input class="vh" type="radio" name="st1" id="st1-l">
+          <input class="vh" type="radio" name="st1" id="st1-d">
+          <div class="demo__bar">
+            <div class="demo__meta">
+              <span class="demo__title">Reduced-motion aware enter</span>
+              <span class="demo__timing">200ms · ease-out (disabled if reduced)</span>
+            </div>
+            <div class="demo__controls">
+              <div class="seg">
+                <label for="st1-a">Auto</label>
+                <label for="st1-l">Light</label>
+                <label for="st1-d">Dark</label>
+              </div>
+              <span class="demo__loop">↻</span>
+            </div>
+          </div>
+          <div class="demo__stage" style="background: var(--st-bg);">
+            <div class="demo-1__mt">
+              <div class="ui-card" style="min-width: 180px;">
+                <div class="ui-row wide" style="margin-bottom: 0.5rem;"></div>
+                <div class="ui-row mid"></div>
+                <div style="margin-top: 0.75rem;"><span class="ui-badge">ACERTADO</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finding 2: animate-pulse without motion-safe -->
+      <div class="finding-row" data-sev="crit">
+        <div class="finding-row__prose">
+          <div class="find-tags">
+            <span class="sev-chip crit">Critical</span>
+            <span class="lens-chip">All lenses</span>
+          </div>
+          <h4 class="find-title"><code>animate-pulse</code> without <code>motion-safe:</code> prefix — 2 instances</h4>
+          <div class="find-body">
+            <p><span class="label">What</span><code>App.jsx:185</code> and <code>App.jsx:487</code> use Tailwind's <code>animate-pulse</code> directly. The codebase already uses <code>motion-safe:animate-pulse</code> correctly in <code>ShopItem.jsx</code> and <code>motion-safe:animate-spin</code> in <code>ShoppingTab.jsx</code> — so the pattern is known and simply missing in these two locations.</p>
+            <p><span class="label">Why it matters</span>Pulsing elements are among the highest-risk motion patterns for vestibular disorders. These two instances are loading screens — states the user may be stuck in for several seconds while data loads. A user with motion sensitivity will see continuous pulsing with no way to stop it.</p>
+            <div class="fix"><p><span class="label">Recommended motion</span>Replace <code>animate-pulse</code> with <code>motion-safe:animate-pulse</code> on both elements. Two-character prefix change, immediate fix. No behavior change for users without the preference set.</p></div>
+            <p class="find-loc"><code>App.jsx:185</code> · <code>App.jsx:487</code></p>
+          </div>
+        </div>
+        <div class="demo">
+          <input class="vh" type="radio" name="st2" id="st2-a" checked>
+          <input class="vh" type="radio" name="st2" id="st2-l">
+          <input class="vh" type="radio" name="st2" id="st2-d">
+          <div class="demo__bar">
+            <div class="demo__meta">
+              <span class="demo__title">motion-safe: gated pulse</span>
+              <span class="demo__timing">Static fallback for reduced-motion users</span>
+            </div>
+            <div class="demo__controls">
+              <div class="seg">
+                <label for="st2-a">Auto</label>
+                <label for="st2-l">Light</label>
+                <label for="st2-d">Dark</label>
+              </div>
+              <span class="demo__loop">↻</span>
+            </div>
+          </div>
+          <div class="demo__stage" style="background: var(--st-bg); flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+              <div class="safe ui-pulse-ring"></div>
+              <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--st-dim); letter-spacing: 0.1em;">A CARREGAR…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finding 4: Infinite background animations -->
+      <div class="finding-row" data-sev="imp">
+        <div class="finding-row__prose">
+          <div class="find-tags">
+            <span class="sev-chip imp">Important</span>
+            <span class="lens-chip">Jhey</span>
+            <span class="lens-chip">All lenses</span>
+          </div>
+          <h4 class="find-title">Infinite background animations without reduced-motion guard</h4>
+          <div class="find-body">
+            <p><span class="label">What</span>Three Framer Motion animations use <code>repeat: Infinity</code> with no <code>prefers-reduced-motion</code> guard: <code>Onboarding.jsx:133</code> (floating emoji, 3.5s), <code>App.jsx:178</code> (loading orbit, 3s), <code>App.jsx:192</code> (secondary loading orbit, 1.2s).</p>
+            <p><span class="label">Why it matters</span>Infinite looping motion is the highest-risk animation pattern for vestibular disorders. Loading screens can display for 5–15 seconds on slow connections. The onboarding screen is shown to every new user.</p>
+            <div class="fix"><p><span class="label">Recommended motion</span>Use Framer Motion's <code>useReducedMotion()</code> hook. If <code>shouldReduceMotion</code> is true, replace <code>animate</code> with a static state and omit <code>transition.repeat</code>. Example: <code>const shouldReduceMotion = useReducedMotion(); const floatAnim = shouldReduceMotion ? &#123; opacity: 0.9 &#125; : &#123; y: [0, -8, 0], opacity: [0.8, 1, 0.8] &#125;;</code></p></div>
+            <p class="find-loc"><code>Onboarding.jsx:133</code> · <code>App.jsx:178</code> · <code>App.jsx:192</code></p>
+          </div>
+        </div>
+        <div class="demo">
+          <input class="vh" type="radio" name="st4" id="st4-a" checked>
+          <input class="vh" type="radio" name="st4" id="st4-l">
+          <input class="vh" type="radio" name="st4" id="st4-d">
+          <div class="demo__bar">
+            <div class="demo__meta">
+              <span class="demo__title">Ambient float (runs here)</span>
+              <span class="demo__timing">3500ms · easeInOut · ∞ — static if reduced</span>
+            </div>
+            <div class="demo__controls">
+              <div class="seg">
+                <label for="st4-a">Auto</label>
+                <label for="st4-l">Light</label>
+                <label for="st4-d">Dark</label>
+              </div>
+              <span class="demo__loop">↻</span>
+            </div>
+          </div>
+          <div class="demo__stage" style="background: var(--st-bg);">
+            <div class="demo-4__mt" style="font-size: 2rem; display: flex; gap: 1rem;">
+              <span class="emoji">🏖️</span>
+              <span class="emoji" style="animation-delay: 0.6s">🌊</span>
+              <span class="emoji" style="animation-delay: 1.2s">☀️</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 06 · Combined Recommendations ─────────────────────────────────── -->
+    <p class="sec-label" id="rec-crit">06 · Combined recommendations</p>
+    <hr class="sec-rule">
+
+    <div class="rec-section">
+      <p class="tier-label crit">Critical · must fix</p>
+      <table class="rec-table">
+        <thead>
+          <tr><th>#</th><th>Issue</th><th>File</th><th>Fix</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🔴</td>
+            <td>No <code>prefers-reduced-motion</code> support</td>
+            <td><code>src/ (all)</code></td>
+            <td>Add <code>useReducedMotion()</code> from Framer Motion; gate <code>repeat: Infinity</code> animations immediately</td>
+          </tr>
+          <tr>
+            <td>🔴</td>
+            <td><code>animate-pulse</code> missing <code>motion-safe:</code></td>
+            <td><code>App.jsx:185, 487</code></td>
+            <td>Replace with <code>motion-safe:animate-pulse</code> — 2-char fix</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="rec-section">
+      <p class="tier-label imp" id="rec-imp">Important · should fix</p>
+      <table class="rec-table">
+        <thead>
+          <tr><th>#</th><th>Issue</th><th>File</th><th>Fix</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🟡</td>
+            <td>GuestUpsellModal 1s+ content delay</td>
+            <td><code>GuestUpsellModal.jsx:99,122</code></td>
+            <td>Change delays to <code>0.1 + i * 0.04</code>; modal content visible &lt;300ms</td>
+          </tr>
+          <tr>
+            <td>🟡</td>
+            <td>Infinite background animations unguarded</td>
+            <td><code>Onboarding.jsx:133, App.jsx:178,192</code></td>
+            <td>Gate with <code>useReducedMotion()</code>; static fallback for sensitive users</td>
+          </tr>
+          <tr>
+            <td>🟡</td>
+            <td>ExpensesTab 4 stagger groups on every mount</td>
+            <td><code>ExpensesTab.jsx:44–217</code></td>
+            <td>Remove outer container stagger; keep <code>AnimatePresence</code> exit only; single 150ms fade if needed</td>
+          </tr>
+          <tr>
+            <td>🟡</td>
+            <td>MealCard stagger fires on every tab switch</td>
+            <td><code>MealCard.jsx:44</code></td>
+            <td>Remove list-mount stagger; animate only newly-added cards via action trigger</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="rec-section">
+      <p class="tier-label opp" id="rec-opp">Opportunities · could enhance</p>
+      <table class="rec-table">
+        <thead>
+          <tr><th>#</th><th>Enhancement</th><th>Where</th><th>Impact</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🟢</td>
+            <td>Trim ShoppingTab enter to 400ms</td>
+            <td><code>ShoppingTab.jsx:85</code></td>
+            <td>Crisper tab transition; currently 650ms feels slightly sluggish</td>
+          </tr>
+          <tr>
+            <td>🟢</td>
+            <td>Plano reveal: 800ms → 450ms, drop 200ms delay</td>
+            <td><code>Plano.jsx:271</code></td>
+            <td>Content appears 550ms faster; currently pushes into sluggish zone</td>
+          </tr>
+          <tr>
+            <td>🟢</td>
+            <td>Raise or remove imperceptible hovers</td>
+            <td><code>Plano.jsx:126 (scale 1.005), :87 (x:2)</code></td>
+            <td>Either remove or increase to perceptible threshold (scale ≥1.015, x ≥ 5)</td>
+          </tr>
+          <tr>
+            <td>🟢</td>
+            <td>WhatsApp success: add scale pop on confirmation</td>
+            <td><code>ExpensesTab.jsx:161</code></td>
+            <td>Visceral success feedback; currently icon-only state change feels flat</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─── 07 · Lens Reference Summary ──────────────────────────────────── -->
+    <section class="ref-summary">
+      <p class="sec-label">07 · Lens reference summary</p>
+      <p style="font-size:0.875rem; color: var(--paper-dim); margin-bottom: 1rem;"><strong style="color:var(--paper)">Lens referenced most: Jakub Krehel — Production Polish</strong><br>This is a shipped consumer mobile app where polish is the primary metric. Spring physics, exit animations, and tactile feedback are exactly Jakub's domain. Emil was drawn in heavily because the frequency-gate failures are numerous; Jhey stayed selective (onboarding, loading) as intended.</p>
+      <div class="ref-lean">
+        <div class="ref-lean-item">
+          <h5>To lean more Emil</h5>
+          <p>Remove all mount-stagger from tab views. Make the rule explicit: animate only on <em>user-triggered state changes</em>, never on component mount for revisited views.</p>
+        </div>
+        <div class="ref-lean-item">
+          <h5>To lean more Jakub</h5>
+          <p>Audit every modal and bottom-sheet for time-to-first-readable-content. Jakub's bar: the user should be able to read the primary message within 200ms of the overlay appearing.</p>
+        </div>
+        <div class="ref-lean-item">
+          <h5>To lean more Jhey</h5>
+          <p>Add a delight moment to the settlement resolution ("all settled" state). An animated check or a confetti micro-interaction would celebrate a genuine user win — rare enough to justify it.</p>
+        </div>
+        <div class="ref-lean-item">
+          <h5>Non-negotiable (all lenses agree)</h5>
+          <p><code>prefers-reduced-motion</code> is the only finding where all three lenses have zero disagreement. Fix it first, before any other motion work.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>ferias-app · groupgrub</span>
+      <span style="margin: 0 0.75rem;">·</span>
+      <span>2 Critical · 4 Important · 4 Opportunities</span>
+      <span style="margin: 0 0.75rem;">·</span>
+      <span>design-motion-principles audit · 2026-08-12</span>
+    </div>
+  </div>
+</body>
+</html>

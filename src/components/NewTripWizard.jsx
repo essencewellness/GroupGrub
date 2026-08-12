@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useId } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ArrowLeft, Sparkles, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 const today = new Date().toISOString().slice(0, 10)
 
@@ -36,29 +37,21 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
     reset()
   }
 
-  const dialogRef = useRef(null)
-  const prevFocusRef = useRef(null)
-  useEffect(() => {
-    if (open) {
-      prevFocusRef.current = document.activeElement
-      dialogRef.current?.focus()
-    } else {
-      prevFocusRef.current?.focus()
-    }
-  }, [open])
+  const dialogRef = useFocusTrap(open, close)
 
-  if (!open) return null
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto"
-      >
+      {open && (
         <motion.div
-          ref={dialogRef}
+          key="wizard"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <motion.div
+            ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby="wizard-dialog-title"
@@ -216,8 +209,9 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
           >
             <X size={16} />
           </button>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   )
 }

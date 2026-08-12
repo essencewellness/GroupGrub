@@ -1,9 +1,43 @@
 /* global process */
 export const config = { runtime: 'edge' }
 
+// Supabase-backed rate limiter (in-memory Maps reset per Edge isolate invocation)
+async function isRateLimited(ip, supabaseUrl, supabaseKey, max = 10, windowSec = 60) {
+  if (!supabaseUrl || !supabaseKey) return false
+  try {
+    const windowStart = new Date(Date.now() - windowSec * 1000).toISOString()
+    const countRes = await fetch(
+      `${supabaseUrl}/rest/v1/rate_limits?ip=eq.${encodeURIComponent(ip)}&hit_at=gte.${windowStart}&select=id`,
+      { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+    )
+    const hits = await countRes.json().catch(() => [])
+    if (Array.isArray(hits) && hits.length >= max) return true
+    fetch(`${supabaseUrl}/rest/v1/rate_limits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` },
+      body: JSON.stringify({ ip, hit_at: new Date().toISOString() }),
+    }).catch(() => {})
+    return false
+  } catch { return false }
+}
+
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
+  }
+
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (await isRateLimited(ip, supabaseUrl, supabaseKey)) {
+    return new Response(JSON.stringify({ ok: false, error: 'Too many requests' }), { status: 429 })
+  }
+
+  // Enforce body size limit (email + 6-digit token fits well under 512 bytes)
+  const contentLength = parseInt(req.headers.get('content-length') || '0', 10)
+  if (contentLength > 512) {
+    return new Response(JSON.stringify({ ok: false, error: 'Payload too large' }), { status: 413 })
   }
 
   try {
@@ -16,8 +50,6 @@ export default async function handler(req) {
     }
 
     const normalizedEmail = email.trim().toLowerCase()
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
     if (!supabaseUrl || !supabaseKey) {
       return new Response(JSON.stringify({ ok: false, error: 'Serviço indisponível' }), { status: 500 })
@@ -63,6 +95,7 @@ export default async function handler(req) {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500 })
+    console.error('verify-recovery error:', err)
+    return new Response(JSON.stringify({ ok: false, error: 'Internal server error' }), { status: 500 })
   }
 }

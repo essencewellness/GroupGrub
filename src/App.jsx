@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Receipt, ShieldAlert, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import useTrip, { buildTripStructure } from './hooks/useTrip'
@@ -17,7 +17,9 @@ import TripsSelector from './components/TripsSelector'
 import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
 import GuestUpsellModal from './components/GuestUpsellModal'
+import GuestNamePrompt from './components/GuestNamePrompt'
 import { getInviteKey } from './lib/inviteKey'
+import { GUEST_NAME_MAX_LENGTH, TOAST_DURATION_MS, TAB_SWITCH_DELAY_MS } from './lib/constants'
 import { fetchTripRow } from './lib/db'
 
 // C-1 fix: validar ?key= contra a chave real do trip, não apenas verificar que existe.
@@ -88,6 +90,7 @@ export default function App() {
       setInviteChecked(true)
     })
   }, [needsAsyncCheck])
+  const shouldReduceMotion = useReducedMotion()
   const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
   const [guestNameInput, setGuestNameInput] = useState('')
   const [ownerName] = useState(() => localStorage.getItem('groupgrub_user_name') || '')
@@ -111,33 +114,34 @@ export default function App() {
   const showToast = useCallback((msg, type = 'ok') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
     setToast({ msg, type })
-    toastTimerRef.current = setTimeout(() => setToast(null), 2800)
+    toastTimerRef.current = setTimeout(() => setToast(null), TOAST_DURATION_MS)
   }, [])
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true)
     try {
       await trip.refresh()
       showToast(t('common.updated'))
     } catch {
-      showToast('Erro ao sincronizar', 'err')
+      showToast(t('common.syncError'), 'err')
     } finally {
       setRefreshing(false)
     }
-  }
+  }, [trip.refresh, showToast, t])
 
-  const handleAddMealWithIngredientes = async (meal) => {
+  const handleAddMealWithIngredientes = useCallback(async (meal) => {
     await trip.addMeal(meal)
     if (meal.ingredientes?.length) {
       const count = await trip.addIngredientes(meal.ingredientes, trip.items)
       if (count > 0) {
         showToast(`${count} ingrediente${count !== 1 ? 's' : ''} adicionado${count !== 1 ? 's' : ''} às ${t('nav.shopping')}!`)
-        setTimeout(() => setTab('compras'), 400)
+        setTimeout(() => setTab('compras'), TAB_SWITCH_DELAY_MS)
       } else {
         showToast(t('common.alreadyThere'))
       }
     }
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trip.addMeal, trip.addIngredientes, trip.items, showToast, t])
 
   /** Called by the New Trip Wizard. Creates the trip, saves meta, navigates to the new trip URL. */
   const handleCreateTrip = async (meta) => {
@@ -155,6 +159,10 @@ export default function App() {
     window.location.href = url.toString()
   }
 
+  // Stable toggle callback for ShoppingTab — avoids recreating an arrow function
+  // per render that would break React.memo on ShopItem items.
+  const handleToggleItem = useCallback((id) => trip.toggleItem(id, currentUserName), [trip.toggleItem, currentUserName])
+
   const showWizard = showWizardOverride || (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid)
   const showUpsell = upsellForced || (isGuest && !isPremium && !verifying && !upsellDismissed && !trip.loading)
 
@@ -164,6 +172,7 @@ export default function App() {
     if (ownerName && !trip.pessoas.includes(ownerName)) {
       trip.addPessoa(ownerName)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // intentionally empty — owner name sync is a one-shot mount operation
 
   if (trip.loading) {
@@ -174,22 +183,22 @@ export default function App() {
           background: 'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,90,38,0.08) 0%, transparent 70%)'
         }} />
         <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          animate={shouldReduceMotion ? {} : { y: [0, -6, 0] }}
+          transition={shouldReduceMotion ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           className="text-5xl"
         >🛰️</motion.div>
         <div>
           <div className="font-display text-2xl font-bold tracking-[-0.01em] text-cream text-center">
             GROUP<span className="text-brand">GRUB</span>
           </div>
-          <div className="font-mono text-[0.6rem] tracking-[0.25em] text-faint uppercase text-center mt-1.5 animate-pulse">
+          <div className="font-mono text-[0.6rem] tracking-[0.25em] text-faint uppercase text-center mt-1.5 motion-safe:animate-pulse">
             {t('app.initializing')}
           </div>
         </div>
         <div className="w-[140px] h-[2px] bg-white/[0.06] overflow-hidden rounded-full">
           <motion.div
             animate={{ x: ['-100%', '280%'] }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
             className="w-[40%] h-full rounded-full"
             style={{ background: 'linear-gradient(90deg, transparent, #ff5a26, transparent)', boxShadow: '0 0 10px #ff5a26' }}
           />
@@ -242,7 +251,7 @@ export default function App() {
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
-                transition={refreshing ? { duration: 0.6, repeat: Infinity, ease: 'linear' } : {}}
+                transition={refreshing && !shouldReduceMotion ? { duration: 0.6, repeat: Infinity, ease: 'linear' } : {}}
                 onClick={handleRefresh}
                 aria-label={t('common.sync')}
                 className="w-11 h-11 flex items-center justify-center rounded-lg border border-line bg-white/[0.03] text-faint hover:text-cream hover:border-lineStrong transition-all"
@@ -347,11 +356,10 @@ export default function App() {
               transition={{ duration: 0.24 }}
               className="grid gap-2.5"
             >
-              {trip.meals.map((meal, i) => (
+              {trip.meals.map((meal) => (
                 <MealCard
                   key={meal.id}
                   meal={meal}
-                  index={i}
                   isOpen={expanded === meal.id}
                   isOwner={isOwner}
                   onClick={() => setExpanded(expanded === meal.id ? null : meal.id)}
@@ -440,9 +448,9 @@ export default function App() {
                 isOwner={isOwner}
                 isGuest={isGuest}
                 isPremium={isPremium}
-                currentUserName={currentUserName}
+
                 tripId={trip.tripId}
-                onToggle={(id) => trip.toggleItem(id, currentUserName)}
+                onToggle={handleToggleItem}
                 onRemove={trip.removeItem}
                 onUpdate={trip.updateItem}
                 onAddItem={trip.addItem}
@@ -484,7 +492,7 @@ export default function App() {
       {verifying && (
         <div role="status" aria-live="polite" aria-label="A verificar pagamento, aguarda um momento" className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center gap-4">
           <div className="text-4xl">✨</div>
-          <div className="font-mono text-[0.75rem] tracking-[0.2em] text-brand uppercase animate-pulse">
+          <div className="font-mono text-[0.75rem] tracking-[0.2em] text-brand uppercase motion-safe:animate-pulse">
             A verificar pagamento…
           </div>
         </div>
@@ -492,67 +500,17 @@ export default function App() {
       {/* Guest name prompt — shown once when a guest opens the app without a name */}
       <AnimatePresence>
         {isGuest && !guestName && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="guest-name-title"
-            className="fixed inset-0 z-[500] flex items-center justify-center px-5"
-            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
-          >
-            <motion.div
-              initial={{ scale: 0.92, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="w-full max-w-[340px] rounded-2xl p-7"
-              style={{ background: '#0e0e10', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              <div className="text-3xl mb-4 text-center">👋</div>
-              <h2 id="guest-name-title" className="font-display text-xl font-bold text-cream text-center mb-1">Bem-vindo!</h2>
-              <p className="text-[0.8rem] text-muted text-center mb-5">Como te chamas? O teu nome aparece nas despesas e na lista.</p>
-              <label htmlFor="guest-name-input" className="sr-only">O teu nome</label>
-              <input
-                id="guest-name-input"
-                aria-required="true"
-                aria-describedby="guest-name-title"
-                value={guestNameInput}
-                onChange={e => setGuestNameInput(e.target.value.slice(0, 60))}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && guestNameInput.trim()) {
-                    const n = guestNameInput.trim().slice(0, 60)
-                    localStorage.setItem('groupgrub_guest_name', n)
-                    trip.addPessoa(n)
-                    setGuestName(n)
-                  }
-                }}
-                placeholder="O teu nome"
-                autoFocus
-                maxLength={60}
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-base outline-none mb-4"
-              />
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                disabled={!guestNameInput.trim()}
-                aria-label="Guardar nome e entrar na lista"
-                onClick={() => {
-                  const n = guestNameInput.trim().slice(0, 60)
-                  if (!n) return
-                  localStorage.setItem('groupgrub_guest_name', n)
-                  trip.addPessoa(n)
-                  setGuestName(n)
-                }}
-                className="w-full py-3.5 rounded-xl font-bold text-[0.95rem]"
-                style={{
-                  background: guestNameInput.trim() ? 'linear-gradient(135deg,#c8431a,#ff5a26)' : 'rgba(255,255,255,0.06)',
-                  color: guestNameInput.trim() ? '#fff' : 'rgba(255,255,255,0.3)',
-                  cursor: guestNameInput.trim() ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Entrar na lista →
-              </motion.button>
-            </motion.div>
-          </motion.div>
+          <GuestNamePrompt
+            guestNameInput={guestNameInput}
+            onInputChange={setGuestNameInput}
+            onConfirm={() => {
+              const n = guestNameInput.trim().slice(0, GUEST_NAME_MAX_LENGTH)
+              if (!n) return
+              localStorage.setItem('groupgrub_guest_name', n)
+              trip.addPessoa(n)
+              setGuestName(n)
+            }}
+          />
         )}
       </AnimatePresence>
 

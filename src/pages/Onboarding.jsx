@@ -1,17 +1,19 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, UtensilsCrossed, ShoppingCart, Receipt, Users, RotateCcw, Check } from 'lucide-react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { ArrowRight, RotateCcw, Check } from 'lucide-react'
+import { callCheckout } from '../lib/checkout'
 
 const PREMIUM_KEY = 'groupgrub_lifetime_pro'
 
 const FEATURES = [
-  { icon: UtensilsCrossed, emoji: '🍽️', title: 'Plano de refeições', desc: 'Organiza todos os jantares e almoços, com lista de ingredientes automática.' },
-  { icon: ShoppingCart, emoji: '🛒', title: 'Lista de compras inteligente', desc: 'Auto-categoriza por tipo — Frescos, Talho, Bebidas, Dispensa.' },
-  { icon: Receipt, emoji: '🧾', title: 'Divide as despesas', desc: 'Regista quem pagou o quê e vê o resumo de quem deve a quem.' },
-  { icon: Users, emoji: '👥', title: 'Convida os amigos', desc: 'Partilha um link por WhatsApp — os convidados vêem e colaboram gratuitamente.' },
+  { emoji: '🍽️', title: 'Plano de refeições', desc: 'Organiza todos os jantares e almoços, com lista de ingredientes automática.' },
+  { emoji: '🛒', title: 'Lista de compras inteligente', desc: 'Auto-categoriza por tipo — Frescos, Talho, Bebidas, Dispensa.' },
+  { emoji: '🧾', title: 'Divide as despesas', desc: 'Regista quem pagou o quê e vê o resumo de quem deve a quem.' },
+  { emoji: '👥', title: 'Convida os amigos', desc: 'Partilha um link por WhatsApp — os convidados vêem e colaboram gratuitamente.' },
 ]
 
 export default function Onboarding({ tripId }) {
+  const shouldReduceMotion = useReducedMotion()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -84,13 +86,7 @@ export default function Onboarding({ tripId }) {
     if (name.trim()) localStorage.setItem('groupgrub_user_name', name.trim())
     if (email.trim()) localStorage.setItem('groupgrub_user_email', email.trim())
     try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tripId, customerEmail: email.trim() || undefined }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`)
+      const data = await callCheckout(tripId, email.trim())
       if (data.url) {
         window.location.href = data.url
       } else {
@@ -129,8 +125,8 @@ export default function Onboarding({ tripId }) {
           className="text-center mb-9"
         >
           <motion.div
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            animate={shouldReduceMotion ? {} : { y: [0, -5, 0] }}
+            transition={shouldReduceMotion ? {} : { duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
             className="text-5xl mb-5"
           >
             🍽️
@@ -318,7 +314,9 @@ export default function Onboarding({ tripId }) {
                         }}
                       >
                         {recovering ? (
-                          <><span className="inline-block w-3.5 h-3.5 border-2 rounded-full border-brand/30 border-t-brand" style={{ animation: 'spin 0.7s linear infinite' }} /> A enviar…</>
+        /* ARCH-DRY: This inline spinner pattern is repeated in ShoppingTab.jsx and below.
+                         Extract to a shared <Spinner> component. */
+                  <><span className="inline-block w-3.5 h-3.5 border-2 rounded-full border-brand/30 border-t-brand" style={{ animation: 'spin 0.7s linear infinite' }} /> A enviar…</>
                         ) : (
                           <><RotateCcw size={14} /> Enviar código</>
                         )}

@@ -64,6 +64,7 @@ const pt = {
     dinner: 'Jantar',
     almoco: 'Almoço',
     jantar: 'Jantar',
+    lanche: 'Lanche',
     tea: 'Lanche Ajantarado',
     mealsDefined: 'REFEIÇÕES DEFINIDAS',
   },
@@ -189,6 +190,7 @@ const pt = {
     freeLimit: 'Limite free: 1 viagem',
     unlockPro: 'Unlock Pro → 10€',
     continue: 'GUARDAR',
+    syncError: 'Erro ao sincronizar',
   },
 }
 

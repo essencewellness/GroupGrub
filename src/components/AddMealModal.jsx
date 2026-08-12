@@ -34,6 +34,8 @@ export default function AddMealModal({ open, onClose, onAdd }) {
     }
   }
 
+  // ARCH-DRY: addIng / removeIng / IngredientList JSX below are duplicated verbatim in
+  // MealCard.jsx. Extract to a shared <IngredientEditor> component when refactoring.
   const addIng = () => {
     if (newIng.trim()) {
       setForm(f => ({ ...f, ingredientes: [...f.ingredientes, newIng.trim()] }))
@@ -117,6 +119,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
       />
 
       {/* Tipo — chips */}
+      {/* ARCH-DRY: This TIPOS chip picker is duplicated in MealCard.jsx. Extract to <TipoSelector>. */}
       <div className="font-mono text-[0.62rem] font-bold tracking-[0.14em] text-muted uppercase mb-2">
         {t('meals.type')}
       </div>

@@ -1,21 +1,34 @@
 /* global process */
 export const config = { runtime: 'edge' }
 
-// Simple in-memory rate limit (5 attempts/IP/min) — best-effort on Edge
-const _hits = new Map()
-function isRateLimited(ip, max = 5, windowMs = 60_000) {
-  const now = Date.now()
-  const recent = (_hits.get(ip) || []).filter(t => now - t < windowMs)
-  if (recent.length >= max) return true
-  recent.push(now)
-  _hits.set(ip, recent)
-  return false
+// Supabase-backed rate limiter — persists across Edge isolates (in-memory Maps reset per invocation)
+async function isRateLimited(ip, supabaseUrl, supabaseKey, max = 5, windowSec = 60) {
+  if (!supabaseUrl || !supabaseKey) return false
+  try {
+    const windowStart = new Date(Date.now() - windowSec * 1000).toISOString()
+    const countRes = await fetch(
+      `${supabaseUrl}/rest/v1/rate_limits?ip=eq.${encodeURIComponent(ip)}&hit_at=gte.${windowStart}&select=id`,
+      { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+    )
+    const hits = await countRes.json().catch(() => [])
+    if (Array.isArray(hits) && hits.length >= max) return true
+    // Record this hit (fire-and-forget)
+    fetch(`${supabaseUrl}/rest/v1/rate_limits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` },
+      body: JSON.stringify({ ip, hit_at: new Date().toISOString() }),
+    }).catch(() => {})
+    return false
+  } catch { return false }
 }
 
+// Bias-free 6-digit OTP: sample bytes until we get a value in the unbiased range
 function generateToken() {
-  const arr = new Uint32Array(1)
-  crypto.getRandomValues(arr)
-  return String(arr[0] % 1_000_000).padStart(6, '0')
+  const limit = 1_000_000
+  const cap = Math.floor(0x100000000 / limit) * limit // largest multiple of 1e6 fitting in uint32
+  const buf = new Uint32Array(1)
+  do { crypto.getRandomValues(buf) } while (buf[0] >= cap)
+  return String(buf[0] % limit).padStart(6, '0')
 }
 
 export default async function handler(req) {
@@ -24,8 +37,17 @@ export default async function handler(req) {
   }
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'
-  if (isRateLimited(ip)) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (await isRateLimited(ip, supabaseUrl, supabaseKey)) {
     return new Response(JSON.stringify({ ok: false, error: 'Too many requests' }), { status: 429 })
+  }
+
+  // Enforce a request body size limit (1 KB is more than enough for an email)
+  const contentLength = parseInt(req.headers.get('content-length') || '0', 10)
+  if (contentLength > 1024) {
+    return new Response(JSON.stringify({ ok: false, error: 'Payload too large' }), { status: 413 })
   }
 
   try {
@@ -36,12 +58,10 @@ export default async function handler(req) {
     }
 
     const normalizedEmail = email.trim().toLowerCase()
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
     const resendKey = process.env.RESEND_API_KEY
 
     if (!supabaseUrl || !supabaseKey) {
-      return new Response(JSON.stringify({ ok: false, error: 'Serviço indisponível' }), { status: 500 })
+      return new Response(JSON.stringify({ ok: false, error: 'Serviço indisponível' }), { status: 503 })
     }
 
     // A-8 fix: always respond the same way — never reveal if email exists
@@ -106,6 +126,7 @@ export default async function handler(req) {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 500 })
+    console.error('recover error:', err)
+    return new Response(JSON.stringify({ ok: false, error: 'Internal server error' }), { status: 500 })
   }
 }
