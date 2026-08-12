@@ -218,7 +218,7 @@ export default function App() {
   return (
     <div className="min-h-dvh flex flex-col bg-black text-cream">
       {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-line" style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px) saturate(1.5)' }}>
+      <header className="sticky top-0 z-50 border-b border-line" style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px) saturate(1.5)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[680px] mx-auto px-5">
           <div className="flex items-center justify-between py-3.5">
             <div className="flex items-center gap-3 min-w-0">
@@ -343,16 +343,16 @@ export default function App() {
 
       {/* CONTENT */}
       <main className="flex-1 max-w-[680px] w-full mx-auto px-4 py-6 pb-52" style={{ paddingBottom: 'max(13rem, calc(8rem + env(keyboard-inset-height, 0px)))' }}>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode={shouldReduceMotion ? 'sync' : 'wait'}>
           {tab === 'refeicoes' && (
             <motion.div
               key="ref"
               id="tabpanel-refeicoes"
               role="tabpanel"
               aria-labelledby="tab-refeicoes"
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -16 }}
               transition={{ duration: 0.24 }}
               className="grid gap-2.5"
             >
@@ -398,9 +398,9 @@ export default function App() {
               id="tabpanel-plano"
               role="tabpanel"
               aria-labelledby="tab-plano"
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -16 }}
               transition={{ duration: 0.24 }}
             >
               <Plano meals={trip.meals} plano={trip.plano} onUpdate={trip.updatePlano} structure={trip.structure} />
@@ -413,9 +413,9 @@ export default function App() {
               id="tabpanel-contas"
               role="tabpanel"
               aria-labelledby="tab-contas"
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -16 }}
               transition={{ duration: 0.24 }}
             >
               <ExpensesTab
@@ -437,9 +437,9 @@ export default function App() {
               id="tabpanel-compras"
               role="tabpanel"
               aria-labelledby="tab-compras"
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -16 }}
               transition={{ duration: 0.24 }}
             >
               <ShoppingTab

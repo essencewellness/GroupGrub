@@ -1,5 +1,5 @@
 import { useState, useId } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ArrowLeft, Sparkles, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useFocusTrap } from '../hooks/useFocusTrap'
@@ -8,6 +8,7 @@ const today = new Date().toISOString().slice(0, 10)
 
 export default function NewTripWizard({ open, onClose, onCreate }) {
   const { t } = useTranslation()
+  const shouldReduceMotion = useReducedMotion()
   const [step, setStep] = useState(1)
   const [title, setTitle] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -81,13 +82,13 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
             </span>
           </div>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode={shouldReduceMotion ? 'sync' : 'wait'}>
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, x: -20 }}
                 transition={{ duration: 0.22 }}
               >
                 <div className="text-center mb-7">
@@ -130,9 +131,9 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
             {step === 2 && (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, x: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, x: -20 }}
                 transition={{ duration: 0.22 }}
               >
                 <div className="text-center mb-7">
