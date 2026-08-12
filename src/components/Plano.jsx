@@ -138,7 +138,12 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
 
       <motion.div
         whileTap={{ scale: 0.99 }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        aria-controls={`slot-panel-${key}`}
         onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((v) => !v) } }}
         className="p-3.5 sm:p-4 flex items-center gap-3.5 cursor-pointer relative"
       >
         <span className="text-xl flex-shrink-0" style={{ filter: open ? 'drop-shadow(0 0 8px rgba(255,90,38,0.4))' : 'none' }}>{slotEmoji}</span>
@@ -167,6 +172,7 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
       <AnimatePresence>
         {open && (
           <motion.div
+            id={`slot-panel-${key}`}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}

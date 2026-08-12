@@ -224,6 +224,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                   {pessoas.map((p) => (
                     <button
                       key={p}
+                      aria-pressed={assigneeVal === p}
                       onClick={() => saveAssignee(p)}
                       className="px-3 py-1.5 rounded-lg font-mono text-[0.72rem] uppercase tracking-[0.04em] border transition-colors"
                       style={
@@ -255,10 +256,10 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setConfirmDelete(false)}
-            aria-label="Cancelar"
+            aria-label="Cancelar remoção"
             className="px-3 py-1.5 rounded-lg border border-line bg-white/[0.03] text-muted font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em] flex-shrink-0"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </motion.button>
         </motion.div>
       )}

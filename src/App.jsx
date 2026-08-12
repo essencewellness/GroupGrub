@@ -168,7 +168,7 @@ export default function App() {
 
   if (trip.loading) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
+      <div role="status" aria-live="polite" aria-label={t('app.initializing')} className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
         {/* Atmospheric glow */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,90,38,0.08) 0%, transparent 70%)'
@@ -482,7 +482,7 @@ export default function App() {
         </Suspense>
       )}
       {verifying && (
-        <div className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center gap-4">
+        <div role="status" aria-live="polite" aria-label="A verificar pagamento, aguarda um momento" className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center gap-4">
           <div className="text-4xl">✨</div>
           <div className="font-mono text-[0.75rem] tracking-[0.2em] text-brand uppercase animate-pulse">
             A verificar pagamento…

@@ -255,6 +255,8 @@ export default function Onboarding({ tripId }) {
           {/* Recovery section */}
           <div className="text-center">
             <button
+              aria-expanded={showRecovery}
+              aria-controls="recovery-panel"
               onClick={() => { setShowRecovery(v => !v); setRecoveryError(null); setRecoveryOk(false) }}
               className="text-[0.78rem] text-muted hover:text-cream transition-colors inline-flex items-center gap-1.5"
             >
@@ -266,6 +268,7 @@ export default function Onboarding({ tripId }) {
           <AnimatePresence>
             {showRecovery && (
               <motion.div
+                id="recovery-panel"
                 initial={{ opacity: 0, height: 0, marginTop: 0 }}
                 animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}

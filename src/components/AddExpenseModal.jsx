@@ -90,11 +90,11 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
       />
 
       {/* Dividir por */}
-      <div className="font-mono text-[0.66rem] font-bold tracking-[0.12em] text-muted uppercase mb-2 flex items-center gap-1.5">
-        <Users size={11} />
+      <div id="split-by-label" className="font-mono text-[0.66rem] font-bold tracking-[0.12em] text-muted uppercase mb-2 flex items-center gap-1.5">
+        <Users size={11} aria-hidden="true" />
         {t('expenses.splitBy', 'DIVIDIR POR')}
       </div>
-      <div className="flex flex-wrap gap-2 mb-5">
+      <div role="group" aria-labelledby="split-by-label" className="flex flex-wrap gap-2 mb-5">
         {pessoas.map((p) => {
           const selected = form.dividir_por.includes(p)
           return (

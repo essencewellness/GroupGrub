@@ -88,6 +88,10 @@ export default function TripsSelector({
                   {trips.map((trip) => (
                     <div
                       key={trip.id}
+                      role="option"
+                      aria-selected={trip.id === currentTripId}
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSwitch(trip.id) } }}
                       className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 mb-1 cursor-pointer transition-colors ${
                         trip.id === currentTripId
                           ? 'border border-brand/40 bg-brand/[0.08]'
@@ -119,9 +123,9 @@ export default function TripsSelector({
                             color: confirmDelete === trip.id ? '#ff3b30' : 'rgba(255,255,255,0.35)',
                             border: confirmDelete === trip.id ? '1px solid rgba(255,59,48,0.4)' : '1px solid transparent',
                           }}
-                          title={confirmDelete === trip.id ? 'Clica de novo para confirmar' : 'Eliminar viagem'}
+                          aria-label={confirmDelete === trip.id ? 'Confirmar eliminação da viagem' : 'Eliminar viagem'}
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={12} aria-hidden="true" />
                         </motion.button>
                       )}
                     </div>

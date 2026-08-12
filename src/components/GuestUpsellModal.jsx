@@ -57,6 +57,9 @@ export default function GuestUpsellModal({ tripId, onClose }) {
           onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="upsell-title"
             initial={{ y: 80, opacity: 0, scale: 0.97 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 60, opacity: 0 }}
@@ -101,7 +104,7 @@ export default function GuestUpsellModal({ tripId, onClose }) {
                 <div className="font-mono text-[0.6rem] font-bold tracking-[0.18em] uppercase mb-2 text-brand">
                   Estás a gostar?
                 </div>
-                <h2 className="font-display text-[1.45rem] font-bold text-cream leading-tight tracking-tight">
+                <h2 id="upsell-title" className="font-display text-[1.45rem] font-bold text-cream leading-tight tracking-tight">
                   Organiza a <span className="text-brand">tua próxima</span> viagem
                 </h2>
                 <p className="text-muted text-[0.8rem] mt-2 leading-relaxed">
@@ -128,13 +131,18 @@ export default function GuestUpsellModal({ tripId, onClose }) {
 
               {/* Form */}
               <div className="space-y-2 mb-4">
+                <label htmlFor="upsell-name" className="sr-only">O teu nome</label>
                 <input
+                  id="upsell-name"
+                  aria-required="true"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="O teu nome"
                   className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-[0.88rem] outline-none focus:border-brand/50 transition-all"
                 />
+                <label htmlFor="upsell-email" className="sr-only">Email (para recuperar o acesso)</label>
                 <input
+                  id="upsell-email"
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}

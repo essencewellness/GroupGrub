@@ -172,7 +172,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
 
         {settlements.length === 0 ? (
           <div className="flex items-center gap-2 py-2">
-            <Check size={15} className="text-success" />
+            <Check size={15} className="text-success" aria-hidden="true" />
             <span className="font-mono text-[0.78rem] text-success">
               {t('expenses.allSettled', 'Tudo acertado! 🎉')}
             </span>
@@ -230,7 +230,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
               {p}
               {isOwner && (
                 <button onClick={() => onRemovePessoa?.(p)} aria-label={`Remover ${p}`} className="w-5 h-5 flex items-center justify-center text-muted hover:text-brand transition-colors ml-0.5 -mr-1">
-                  <X size={11} />
+                  <X size={11} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -276,7 +276,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-brand text-white font-mono text-[0.8rem] font-bold tracking-[0.1em] cursor-pointer transition-all"
         style={{ boxShadow: '0 4px 24px rgba(255,90,38,0.35)' }}
       >
-        <Plus size={16} />
+        <Plus size={16} aria-hidden="true" />
         {t('expenses.new', 'NOVA DESPESA')}
       </motion.button>
 
@@ -284,7 +284,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
       {expenses.length > 0 && (
         <div>
           <div className="font-mono text-[0.65rem] font-bold tracking-[0.14em] text-muted uppercase mb-2.5 flex items-center gap-1.5">
-            <Receipt size={11} />
+            <Receipt size={11} aria-hidden="true" />
             {t('expenses.history', 'HISTÓRICO')}
           </div>
           <div className="space-y-2">

@@ -88,6 +88,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
+            aria-label={`Aplicar emoji sugerido: ${activeAutoEmoji}`}
             onClick={applyAutoEmoji}
             className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl border border-brand/40 bg-brand/[0.07] w-full text-left"
           >
@@ -126,6 +127,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
             <motion.button
               key={key}
               whileTap={{ scale: 0.93 }}
+              aria-pressed={active}
               onClick={() => setForm(f => ({ ...f, tipo: active ? '' : key }))}
               className="px-3.5 py-2 rounded-xl text-[0.8rem] font-medium transition-all border"
               style={active

@@ -146,7 +146,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                   <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#FF5A26]/10 border border-[#FF5A26]/25 flex items-center justify-center text-2xl">
                     📅
                   </div>
-                  <h2 className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step2Title')}</h2>
+                  <h2 id="wizard-dialog-title" className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step2Title')}</h2>
                   <p className="text-[0.78rem] text-muted mt-1.5">{t('wizard.step2Sub')}</p>
                 </div>
 
