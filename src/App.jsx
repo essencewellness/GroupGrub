@@ -234,7 +234,7 @@ export default function App() {
                 </div>
               </div>
               <div className="w-px h-8 bg-line flex-shrink-0" />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <TripsSelector
                   currentTripId={trip.tripId}
                   trips={trips.trips}
@@ -266,7 +266,7 @@ export default function App() {
               >
                 <Share2 size={14} aria-hidden="true" />
               </motion.button>
-              <div className="text-xl ml-1" aria-hidden="true">🛰️</div>
+              <div className="hidden sm:block text-xl ml-1" aria-hidden="true">🛰️</div>
             </div>
           </div>
 

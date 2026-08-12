@@ -54,14 +54,14 @@ export default function TripsSelector({
   if (tripsLoading) return null
 
   return (
-    <div className="relative inline-block">
+    <div className="relative min-w-0">
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={`Viagem actual: ${currentTrip.title}. Clica para mudar de viagem.`}
-        className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-line bg-white/[0.04] text-cream/80 text-sm font-medium hover:border-brand/40 transition-colors"
+        className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-line bg-white/[0.04] text-cream/80 text-sm font-medium hover:border-brand/40 transition-colors min-w-0 max-w-full"
       >
         <span aria-hidden="true" className="max-w-[160px] truncate">{currentTrip.title}</span>
         <ChevronDown
