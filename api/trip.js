@@ -4,7 +4,7 @@ export const config = { runtime: 'edge' }
 
 // Allowed top-level columns a client may write/patch on the trips table.
 // invite_token and id are set server-side only; owner_id and created_at must never be client-writable.
-const ALLOWED_TRIP_FIELDS = ['title', 'pessoas', 'plano', 'meta', 'start_date', 'end_date', 'currency', 'note', 'settings', 'template_type']
+const ALLOWED_TRIP_FIELDS = ['title', 'plano', 'meta', 'start_date', 'end_date', 'currency', 'note', 'settings', 'template_type']
 
 function sanitizeTrip(raw) {
   const out = {}
@@ -71,7 +71,7 @@ export default async function handler(req) {
     return jsonOk({ ok: true })
   }
 
-  // PATCH — partial update (pessoas, plano, meta, title, etc.)
+  // PATCH — partial update (plano, meta, title, etc.)
   if (!patch || typeof patch !== 'object') return jsonErr('patch required')
   // Only allow known safe columns; invite_token, id, owner_id, created_at are never patchable by clients
   const safePatch = sanitizeTrip(patch)

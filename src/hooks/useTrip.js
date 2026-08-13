@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { v4 as uuid } from 'uuid'
-import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip, fetchExpenses, upsertExpense, deleteExpense, fetchTripRow, upsertTripRow, upsertTripPessoas } from '../lib/db'
+import { fetchItems, fetchMeals, upsertItem, upsertMeal, deleteItem, deleteMeal, bulkUpsertItems, subscribeTrip, fetchExpenses, upsertExpense, deleteExpense, fetchTripRow, upsertTripRow, fetchPessoas, addPessoaRemote, removePessoaRemote } from '../lib/db'
 import { hasSupabase } from '../lib/supabase'
 import { categorizeItem } from '../lib/categorizer'
 
@@ -193,24 +193,23 @@ export default function useTrip() {
   /* ── load data ── */
   const loadData = useCallback(async (isFirst = false) => {
     try {
-      const [dbItems, dbMeals, dbExpenses] = await Promise.all([
-        fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId)
+      const [dbItems, dbMeals, dbExpenses, dbPessoas] = await Promise.all([
+        fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId), fetchPessoas(tripId)
       ])
       setItems(dbItems)
       setMeals(dbMeals)
       setExpenses(dbExpenses)
-      // Fetch full trip row non-blocking — restores meta, plano, pessoas from Supabase
+      if (dbPessoas.length > 0) {
+        setPessoas(prev => {
+          const merged = [...new Set([...dbPessoas, ...prev])]
+          savePessoas(tripId, merged)
+          return merged
+        })
+      }
+      // Fetch full trip row non-blocking — restores meta/plano from Supabase
       // This is the recovery path after iOS browser wipe or switching devices.
       fetchTripRow(tripId).then(row => {
         if (!isMountedRef.current || !row) return
-        // Restore pessoas
-        if (Array.isArray(row.pessoas) && row.pessoas.length > 0) {
-          setPessoas(prev => {
-            const merged = [...new Set([...row.pessoas, ...prev])]
-            savePessoas(tripId, merged)
-            return merged
-          })
-        }
         // Restore meta (start/end dates) if localStorage was wiped
         if (row.start_date && row.end_date) {
           setMeta(prev => {
@@ -290,6 +289,15 @@ export default function useTrip() {
         } else if (row?.id) {
           setExpenses(p => { const idx = p.findIndex(e => e.id === row.id); return idx >= 0 ? p.map(e => e.id === row.id ? row : e) : [...p, row] })
         }
+      },
+      ({ eventType, new: row, old }) => {
+        const nome = row?.nome || old?.nome
+        if (!nome) return
+        setPessoas(p => {
+          const next = eventType === 'DELETE' ? p.filter(n => n !== nome) : (p.includes(nome) ? p : [...p, nome])
+          savePessoas(tripId, next)
+          return next
+        })
       }
     )
     return unsub
@@ -442,27 +450,26 @@ export default function useTrip() {
     const next = [...pessoasRef.current, trimmed]
     savePessoas(tripId, next)
     setPessoas(next)
-    // Merge with the server's current list before pushing — a device that
-    // just joined may not have the latest remote pessoas yet, and pushing
-    // its own stale/local view would blindly overwrite names added by
-    // other devices in the same window (read-then-write race on join).
-    try {
-      const row = await fetchTripRow(tripId)
-      const serverPessoas = Array.isArray(row?.pessoas) ? row.pessoas : []
-      const merged = [...new Set([...serverPessoas, ...next])]
-      if (merged.length !== next.length) {
-        savePessoas(tripId, merged)
-        setPessoas(merged)
-      }
-      await upsertTripPessoas(tripId, merged)
-    } catch { /* fallback: local state above still applies */ }
+    // Insert into the dedicated `pessoas` table (unique constraint on trip_id+nome)
+    // instead of read-merge-write on a jsonb array — a plain INSERT is atomic in
+    // Postgres, so two people joining within the same window can never clobber
+    // each other's write (confirmed reproducible with the old jsonb approach).
+    const serverPessoas = await addPessoaRemote(tripId, trimmed)
+    if (serverPessoas) {
+      savePessoas(tripId, serverPessoas)
+      setPessoas(serverPessoas)
+    }
   }, [tripId])
 
-  const removePessoa = useCallback((nome) => {
+  const removePessoa = useCallback(async (nome) => {
     const next = pessoasRef.current.filter(p => p !== nome)
     savePessoas(tripId, next)
     setPessoas(next)
-    upsertTripPessoas(tripId, next).catch(() => {})
+    const serverPessoas = await removePessoaRemote(tripId, nome)
+    if (serverPessoas) {
+      savePessoas(tripId, serverPessoas)
+      setPessoas(serverPessoas)
+    }
   }, [tripId])
 
   const refresh = useCallback(async () => {

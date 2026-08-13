@@ -81,7 +81,7 @@ export async function fetchTrips(userId) {
       const { data } = await withTimeout(
         supabase
           .from('trips')
-          .select('id,title,owner_id,template_type,start_date,end_date,pessoas,plano,created_at,updated_at')
+          .select('id,title,owner_id,template_type,start_date,end_date,plano,created_at,updated_at')
           .eq('owner_id', userId)
           .order('created_at', { ascending: false })
       )
@@ -117,7 +117,7 @@ export async function fetchTripRow(tripId) {
     const { data } = await withTimeout(
       supabase
         .from('trips')
-        .select('id,title,owner_id,template_type,start_date,end_date,pessoas,plano,created_at,updated_at')
+        .select('id,title,owner_id,template_type,start_date,end_date,plano,created_at,updated_at')
         .eq('id', tripId)
         .maybeSingle()
     )
@@ -125,13 +125,7 @@ export async function fetchTripRow(tripId) {
   } catch { return null }
 }
 
-/** Backward-compat alias used by existing code. */
-export async function fetchTripPessoas(tripId) {
-  const row = await fetchTripRow(tripId)
-  return Array.isArray(row?.pessoas) ? row.pessoas : null
-}
-
-/** Upsert any subset of fields into the trips row (pessoas, plano, meta, etc.). */
+/** Upsert any subset of fields into the trips row (plano, meta, etc.). */
 export async function upsertTripRow(tripId, patch) {
   if (!hasSupabase) return
   const token = getEffectiveToken(tripId)
@@ -141,9 +135,45 @@ export async function upsertTripRow(tripId, patch) {
   } catch { /* fallback: localStorage only */ }
 }
 
-/** Persist the pessoas array for a trip to Supabase. */
-export async function upsertTripPessoas(tripId, pessoas) {
-  await upsertTripRow(tripId, { pessoas })
+/** Fetch the trip's people from the dedicated `pessoas` table (one row per person). */
+export async function fetchPessoas(tripId) {
+  if (!hasSupabase) return []
+  try {
+    const { data } = await withTimeout(
+      supabase
+        .from('pessoas')
+        .select('nome')
+        .eq('trip_id', tripId)
+        .order('joined_at')
+    )
+    return Array.isArray(data) ? data.map(r => r.nome) : []
+  } catch { return [] }
+}
+
+/**
+ * Add a person via the API's insert-with-conflict-ignore — a plain unique-constraint
+ * INSERT is atomic in Postgres, so two people joining at nearly the same time can
+ * never clobber each other (unlike merging a jsonb array client-side, which was
+ * reproducibly racy). Returns the resulting full pessoas array.
+ */
+export async function addPessoaRemote(tripId, nome) {
+  if (!hasSupabase) return null
+  const token = getEffectiveToken(tripId)
+  if (!token) return null
+  try {
+    await withTimeout(apiWrite('/api/pessoas', { tripId, token, nome }))
+    return await fetchPessoas(tripId)
+  } catch { return null }
+}
+
+export async function removePessoaRemote(tripId, nome) {
+  if (!hasSupabase) return null
+  const token = getEffectiveToken(tripId)
+  if (!token) return null
+  try {
+    await withTimeout(apiDelete('/api/pessoas', { tripId, token, nome }))
+    return await fetchPessoas(tripId)
+  } catch { return null }
 }
 
 export async function deleteTrip(tripId) {
@@ -322,7 +352,7 @@ export async function deleteExpense(tripId, id) {
 /* ══════════════════════════════
    REALTIME subscription
 ══════════════════════════════ */
-export function subscribeTrip(tripId, onItemChange, onMealChange, onExpenseChange) {
+export function subscribeTrip(tripId, onItemChange, onMealChange, onExpenseChange, onPessoaChange) {
   if (!hasSupabase) return () => {}
 
   // NOTA: `supabase.channel(name)` devolve o canal EXISTENTE se já houver um com
@@ -339,6 +369,7 @@ export function subscribeTrip(tripId, onItemChange, onMealChange, onExpenseChang
     .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `trip_id=eq.${tripId}` }, onItemChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'meals', filter: `trip_id=eq.${tripId}` }, onMealChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `trip_id=eq.${tripId}` }, onExpenseChange ?? (() => {}))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pessoas', filter: `trip_id=eq.${tripId}` }, onPessoaChange ?? (() => {}))
     .subscribe()
 
   return () => { try { supabase.removeChannel(channel) } catch { /* já removido */ } }
