@@ -193,8 +193,8 @@ export default function useTrip() {
   /* ── load data ── */
   const loadData = useCallback(async (isFirst = false) => {
     try {
-      const [dbItems, dbMeals, dbExpenses, dbPessoas] = await Promise.all([
-        fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId), fetchPessoas(tripId)
+      const [dbItems, dbMeals, dbExpenses, dbPessoas, row] = await Promise.all([
+        fetchItems(tripId), fetchMeals(tripId), fetchExpenses(tripId), fetchPessoas(tripId), fetchTripRow(tripId)
       ])
       setItems(dbItems)
       setMeals(dbMeals)
@@ -206,10 +206,11 @@ export default function useTrip() {
           return merged
         })
       }
-      // Fetch full trip row non-blocking — restores meta/plano from Supabase
-      // This is the recovery path after iOS browser wipe or switching devices.
-      fetchTripRow(tripId).then(row => {
-        if (!isMountedRef.current || !row) return
+      // Restore meta/plano from Supabase — this must resolve BEFORE loading flips
+      // to false, otherwise needsSetup (computed from meta) briefly reads "no meta
+      // yet" on a guest opening an existing trip's link and flashes the "create
+      // trip" wizard on top of the name prompt (confirmed reproducible).
+      if (isMountedRef.current && row) {
         // Restore meta (start/end dates) if localStorage was wiped
         if (row.start_date && row.end_date) {
           setMeta(prev => {
@@ -232,7 +233,7 @@ export default function useTrip() {
             return row.plano
           })
         }
-      }).catch(() => {})
+      }
     } catch (e) {
       console.warn('loadData error', e)
     } finally {
