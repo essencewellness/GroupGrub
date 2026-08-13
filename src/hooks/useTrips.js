@@ -13,24 +13,6 @@ import { getOrCreateInviteKey } from "../lib/inviteKey"
 const LS_TRIPS = "ferias_trips"
 const LS_TRIP_ID = "ferias_trip_id"
 
-/**
- * Expand a YYYY-MM-DD range into an array of Date objects (inclusive).
- * Used by the New Trip Wizard to generate Almoço/Jantar slots per day.
- * @param {string} startDate - YYYY-MM-DD
- * @param {string} endDate   - YYYY-MM-DD
- * @returns {Date[]}
- */
-export function dateRange(startDate, endDate) {
-  if (!startDate || !endDate) return []
-  const start = new Date(startDate + "T00:00:00")
-  const end = new Date(endDate + "T00:00:00")
-  const days = []
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    days.push(new Date(d))
-  }
-  return days
-}
-
 export function useTrips() {
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
@@ -99,7 +81,6 @@ export function useTrips() {
 
   useEffect(() => {
     let cancelled = false
-    let channelCleanup = () => {}
 
     ;(async () => {
       await loadTrips()
@@ -111,7 +92,6 @@ export function useTrips() {
 
     return () => {
       cancelled = true
-      channelCleanup()
     }
   }, [loadTrips])
 

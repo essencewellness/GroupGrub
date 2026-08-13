@@ -1,7 +1,13 @@
-/* global process */
 import { validateTripToken, adminHeaders, jsonOk, jsonErr, supabaseUrl } from './_lib/adminClient.js'
 
 export const config = { runtime: 'edge' }
+
+const ALLOWED_EXPENSE_FIELDS = ['id', 'description', 'amount', 'currency', 'paid_by', 'split_between', 'date', 'category', 'note']
+function sanitizeExpense(raw) {
+  const out = {}
+  for (const k of ALLOWED_EXPENSE_FIELDS) if (k in raw) out[k] = raw[k]
+  return out
+}
 
 export default async function handler(req) {
   if (req.method !== 'POST' && req.method !== 'DELETE') {
@@ -22,7 +28,7 @@ export default async function handler(req) {
   if (req.method === 'POST') {
     const expense = body.expense
     if (!expense) return jsonErr('expense required')
-    const row = { ...expense, trip_id: tripId }
+    const row = { ...sanitizeExpense(expense), trip_id: tripId }
     const res = await fetch(`${base}/rest/v1/expenses`, {
       method: 'POST',
       headers: adminHeaders({ Prefer: 'resolution=merge-duplicates,return=minimal' }),

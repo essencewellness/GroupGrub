@@ -1,7 +1,13 @@
-/* global process */
 import { validateTripToken, adminHeaders, jsonOk, jsonErr, supabaseUrl } from './_lib/adminClient.js'
 
 export const config = { runtime: 'edge' }
+
+const ALLOWED_ITEM_FIELDS = ['id', 'name', 'qty', 'unit', 'category', 'checked', 'assigned_to', 'note']
+function sanitizeItem(raw) {
+  const out = {}
+  for (const k of ALLOWED_ITEM_FIELDS) if (k in raw) out[k] = raw[k]
+  return out
+}
 
 export default async function handler(req) {
   if (req.method !== 'POST' && req.method !== 'DELETE') {
@@ -21,9 +27,9 @@ export default async function handler(req) {
 
   if (req.method === 'POST') {
     const rows = body.items
-      ? body.items.map(r => ({ ...r, trip_id: tripId }))
+      ? body.items.map(r => ({ ...sanitizeItem(r), trip_id: tripId }))
       : body.item
-        ? [{ ...body.item, trip_id: tripId }]
+        ? [{ ...sanitizeItem(body.item), trip_id: tripId }]
         : null
     if (!rows) return jsonErr('item or items required')
 

@@ -1,15 +1,20 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Pencil, Trash2, Check, X, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { TIPOS, MEAL_EMOJIS } from '../lib/constants'
+import { onActivateKey } from '../lib/activateKeyDown'
 
 function tipoLabel(tipo) {
   const found = TIPOS.find(t => t.key === tipo)
   return found ? found.label : tipo
 }
 
-export default function MealCard({ meal, index, isOpen, isOwner = true, onClick, onUpdate, onDelete }) {
+// React.memo prevents MealCard from re-rendering on unrelated App state changes
+// (toast visibility, tab switch, refreshing flag, etc.). The onUpdate/onDelete
+// handlers close over per-meal data so they will still update when meal data
+// changes — that's intentional and correct.
+const MealCard = memo(function MealCard({ meal, isOpen, isOwner = true, onClick, onUpdate, onDelete }) {
   const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   // editOverride holds local edits; null = show live meal data
@@ -28,6 +33,8 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
   const setDraft = (fn) => setEditOverride(prev => typeof fn === 'function' ? fn(prev ?? draft) : fn)
   const saveEdit = () => { onUpdate(draft); setEditOverride(null); setEditing(false) }
   const cancelEdit = () => { setEditOverride(null); setEditing(false) }
+  // ARCH-DRY: addIng / removeIng / IngredientList JSX below are duplicated verbatim in
+  // AddMealModal.jsx. Extract to a shared <IngredientEditor> component when refactoring.
   const addIng = () => { if (newIng.trim()) { setDraft(d => ({ ...d, ingredientes: [...d.ingredientes, newIng.trim()] })); setNewIng('') } }
   const removeIng = (i) => setDraft(d => ({ ...d, ingredientes: d.ingredientes.filter((_, ii) => ii !== i) }))
 
@@ -41,7 +48,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 28 }}
       className={`surface overflow-hidden transition-all duration-300 ${isOpen ? 'border-brand/40' : ''}`}
       style={isOpen ? { boxShadow: '0 8px 40px rgba(255,90,38,0.12)' } : {}}
     >
@@ -52,7 +59,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
         role="button"
         aria-expanded={isOpen}
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
+        onKeyDown={onActivateKey(onClick)}
       >
         <div className="relative flex-shrink-0 flex items-center justify-center w-12 h-12">
           <AnimatePresence>
@@ -130,7 +137,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                   aria-label="Cancelar"
                   className="px-2.5 py-1 rounded-lg border border-line bg-white/[0.03] text-muted font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em]"
                 >
-                  {t('pricing.cancel')}
+                  {t('common.cancel')}
                 </button>
               </motion.div>
             )
@@ -198,6 +205,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                     onBlur={() => setFocusedInput(null)}
                     className={inputCls('nome')}
                   />
+                  {/* ARCH-DRY: TIPOS chip picker duplicated from AddMealModal.jsx — extract to <TipoSelector>. */}
                   <div className="flex flex-wrap gap-1.5 mb-3.5" role="group" aria-label={t('meals.type')}>
                     {TIPOS.map(({ key, label }) => {
                       const active = draft.tipo === key
@@ -263,7 +271,7 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
                       onClick={cancelEdit}
                       className="py-2.5 px-3.5 rounded-xl border border-line bg-white/[0.03] text-muted font-mono text-[0.8rem] uppercase tracking-[0.08em]"
                     >
-                      {t('pricing.cancel')}
+                      {t('common.cancel')}
                     </motion.button>
                   </div>
                 </div>
@@ -274,4 +282,6 @@ export default function MealCard({ meal, index, isOpen, isOwner = true, onClick,
       </AnimatePresence>
     </motion.div>
   )
-}
+})
+
+export default MealCard

@@ -1,17 +1,17 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, RotateCcw, FileText, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { CATS, CAT_ORDER } from '../lib/constants'
+import { CATS, CAT_ORDER, APP_NAME } from '../lib/constants'
 import ShopItem from './ShopItem'
 import { exportShoppingList } from '../lib/exportPdf'
 
+// ARCH-PROP-DRILL: `pessoas` and `isOwner` are drilled App → ShoppingTab → ShopItem.
+// If this chain grows, consider a TripContext (React.createContext) to expose these values.
 export default function ShoppingTab({
   items = [],
   pessoas = [],
   isOwner,
-  isGuest,
-  isPremium,
   tripId,
   onToggle,
   onRemove,
@@ -19,7 +19,6 @@ export default function ShoppingTab({
   onAddItem,
   onResetTicks,
   onCategorizarTudo,
-  onShowPricing,
   showToast,
 }) {
   const { t } = useTranslation()
@@ -41,13 +40,23 @@ export default function ShoppingTab({
     return g
   }, [items])
 
-  const handleAddItem = async () => {
+  const handleAddItem = useCallback(async () => {
     const nome = novoItem.trim()
     if (!nome) return
     setNovoItem('')
     await onAddItem(nome)
     showToast(`"${nome}" ${t('common.added')}`)
-  }
+  }, [novoItem, onAddItem, showToast, t])
+
+  const handleCategorizarTudo = useCallback(async () => {
+    setCategorizing(true)
+    try { await onCategorizarTudo() } finally { setCategorizing(false) }
+  }, [onCategorizarTudo])
+
+  const handleResetTicks = useCallback(async () => {
+    await onResetTicks()
+    showToast(t('shopping.clear'))
+  }, [onResetTicks, showToast, t])
 
   return (
     <>
@@ -82,7 +91,7 @@ export default function ShoppingTab({
         <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
           <motion.div
             animate={{ width: pct + '%' }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="h-full rounded-full"
             style={{
               background: pct === 100 ? 'linear-gradient(90deg,#1a7a35,#34d399)' : 'linear-gradient(90deg,#c8431a,#ff5a26,#ff7a50)',
@@ -98,10 +107,8 @@ export default function ShoppingTab({
           <motion.button
             whileTap={{ scale: 0.96 }}
             disabled={categorizing}
-            onClick={async () => {
-              setCategorizing(true)
-              try { await onCategorizarTudo() } finally { setCategorizing(false) }
-            }}
+            aria-busy={categorizing}
+            onClick={handleCategorizarTudo}
             className="flex-1 py-3 rounded-xl border text-xs font-semibold tracking-[0.1em] transition-all"
             style={{
               borderColor: 'rgba(255,90,38,0.55)',
@@ -119,7 +126,7 @@ export default function ShoppingTab({
         )}
         <motion.button
           whileTap={{ scale: 0.93 }}
-          onClick={async () => { await onResetTicks(); showToast(t('shopping.clear')) }}
+          onClick={handleResetTicks}
           aria-label={t('shopping.clear')}
           className="py-3 px-3.5 rounded-xl border border-line bg-white/[0.03] text-muted hover:text-cream transition-colors"
         >
@@ -128,8 +135,7 @@ export default function ShoppingTab({
         <motion.button
           whileTap={{ scale: 0.93 }}
           onClick={async () => {
-            if (!isPremium) { onShowPricing?.(); return }
-            await exportShoppingList({ tripId, items, pessoas, tripName: 'GroupGrub' })
+            await exportShoppingList({ tripId, items, pessoas, tripName: APP_NAME })
             showToast(t('common.pdfExported'))
           }}
           className="py-3 px-3.5 rounded-xl border text-xs font-semibold tracking-[0.08em] transition-colors"
@@ -181,9 +187,9 @@ export default function ShoppingTab({
                     cat={item.categoria || 'outro'}
                     pessoas={pessoas}
                     isOwner={isOwner}
-                    onToggle={() => onToggle(item.id)}
-                    onRemove={() => onRemove(item.id)}
-                    onUpdate={(patch) => onUpdate(item.id, patch)}
+                    onToggle={onToggle}
+                    onRemove={onRemove}
+                    onUpdate={onUpdate}
                   />
                 ))}
               </AnimatePresence>
@@ -193,13 +199,6 @@ export default function ShoppingTab({
       })}
 
       {/* Add item */}
-      {isGuest && (
-        <div className="mt-2 px-3.5 py-2.5 rounded-xl border border-line bg-white/[0.02] text-center">
-          <span className="font-mono text-[0.65rem] text-faint tracking-[0.1em]">
-            Só o organizador pode adicionar itens
-          </span>
-        </div>
-      )}
       {isOwner && (
         <motion.div
           initial={{ opacity: 0 }}

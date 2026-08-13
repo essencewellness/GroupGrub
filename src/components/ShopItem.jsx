@@ -1,20 +1,26 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Trash2, User, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { CATS, CAT_ORDER } from '../lib/constants'
+import { onActivateKey } from '../lib/activateKeyDown'
 
-export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pessoas, isOwner = true }) {
+// React.memo prevents re-renders when sibling items change — the list can be
+// large and each toggle/add would otherwise repaint every ShopItem.
+// Callbacks are now called with item.id so the parent can pass stable
+// function references without per-item arrow wrappers in the map loop.
+const ShopItem = memo(function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pessoas, isOwner = true }) {
   const { t } = useTranslation()
   const [editQtd, setEditQtd]           = useState(false)
   const [editAssignee, setEditAssignee] = useState(false)
   const [showCatPicker, setShowCatPicker] = useState(false)
   const [qtdVal, setQtdVal]             = useState(item.qtd || '')
-  const [assigneeVal]                   = useState(item.assignee || '')
+  // Derive directly from item.assignee so aria-pressed stays in sync after onUpdate calls.
+  const assigneeVal = item.assignee || ''
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const saveQtd      = () => { onUpdate({ qtd: qtdVal }); setEditQtd(false) }
-  const saveAssignee = (val) => { onUpdate({ assignee: val }); setEditAssignee(false) }
+  const saveQtd      = () => { onUpdate(item.id, { qtd: qtdVal }); setEditQtd(false) }
+  const saveAssignee = (val) => { onUpdate(item.id, { assignee: val }); setEditAssignee(false) }
 
   const catKey      = cat || item.categoria || 'outro'
   const catCfg      = CATS[catKey] || CATS.outro
@@ -37,12 +43,12 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
             {/* Checkbox — proper role + aria-checked */}
             <motion.div
               whileTap={{ scale: 1.2 }}
-              onClick={onToggle}
+              onClick={() => onToggle(item.id)}
               role="checkbox"
               aria-checked={item.comprado}
               aria-label={item.nome}
               tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
+              onKeyDown={onActivateKey(() => onToggle(item.id))}
               className="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center transition-all cursor-pointer"
               style={{
                 background: item.comprado ? '#34d399' : 'transparent',
@@ -117,7 +123,11 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                 />
               ) : (
                 <span
+                  role={isOwner ? 'button' : undefined}
+                  tabIndex={isOwner ? 0 : undefined}
                   onClick={(e) => { if (!isOwner) return; e.stopPropagation(); setEditQtd(true) }}
+                  onKeyDown={onActivateKey(() => setEditQtd(true), { enabled: isOwner, stopPropagation: true })}
+                  aria-label={isOwner ? `${t('shopping.qty')}: ${item.qtd || t('shopping.qty')}` : undefined}
                   className={`font-mono text-[0.68rem] text-muted pb-0.5 min-w-[18px] text-center ${isOwner ? 'border-b border-dashed border-line cursor-text' : ''}`}
                 >
                   {item.qtd || t('shopping.qty')}
@@ -189,7 +199,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                         key={k}
                         type="button"
                         onClick={() => {
-                          onUpdate({ categoria: k, antecipado: ['dispensa', 'bebidas'].includes(k) })
+                          onUpdate(item.id, { categoria: k, antecipado: ['dispensa', 'bebidas'].includes(k) })
                           setShowCatPicker(false)
                         }}
                         className="flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all hover:bg-white/[0.06] active:scale-95"
@@ -220,6 +230,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
                   {pessoas.map((p) => (
                     <button
                       key={p}
+                      aria-pressed={assigneeVal === p}
                       onClick={() => saveAssignee(p)}
                       className="px-3 py-1.5 rounded-lg font-mono text-[0.72rem] uppercase tracking-[0.04em] border transition-colors"
                       style={
@@ -243,7 +254,7 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
           </span>
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={onRemove}
+            onClick={() => onRemove(item.id)}
             className="px-3 py-1.5 rounded-lg bg-brand text-black font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em] flex-shrink-0"
           >
             {t('shopping.remove')}
@@ -251,13 +262,15 @@ export default function ShopItem({ item, cat, onToggle, onRemove, onUpdate, pess
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setConfirmDelete(false)}
-            aria-label="Cancelar"
+            aria-label="Cancelar remoção"
             className="px-3 py-1.5 rounded-lg border border-line bg-white/[0.03] text-muted font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em] flex-shrink-0"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </motion.button>
         </motion.div>
       )}
     </motion.div>
   )
-}
+})
+
+export default ShopItem

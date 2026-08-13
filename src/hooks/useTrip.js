@@ -234,7 +234,7 @@ export default function useTrip() {
         }
       }).catch(() => {})
     } catch (e) {
-      console.error('loadData error', e)
+      console.warn('loadData error', e)
     } finally {
       if (isFirst) setLoading(false)
     }

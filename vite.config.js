@@ -73,18 +73,30 @@ export default defineConfig({
     react(),
     VitePWA(pwaOptions),
   ],
+  resolve: {
+    alias: { '@': new URL('./src', import.meta.url).pathname },
+  },
+  server: {
+    warmup: {
+      clientFiles: ['./src/main.jsx', './src/App.jsx'],
+    },
+  },
   build: {
+    // PWA instalável — apenas browsers modernos com Service Worker support.
+    // 'esnext' skips legacy syntax transforms (optional chaining, nullish coalescing,
+    // async/await, etc.) saving ~5–8% of JS output and improving parse time.
+    target: 'esnext',
     // O bundle passava dos 1000 kB num único chunk. Separamos os vendors pesados
     // (jspdf/html2canvas só são precisos ao exportar PDF) para o carregamento
     // inicial ficar leve.
     chunkSizeWarningLimit: 700,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return
           if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('dompurify')) return 'pdf'
           if (id.includes('@supabase')) return 'supabase'
-          if (id.includes('framer-motion')) return 'motion'
+          if (id.includes('framer-motion') || id.includes('/motion/')) return 'motion'
           if (id.includes('react-dom') || id.includes('/react/') || id.includes('scheduler')) return 'react'
           return 'vendor'
         },

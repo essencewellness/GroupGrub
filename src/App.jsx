@@ -1,13 +1,9 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Receipt, ShieldAlert, Sparkles } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Receipt } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import useTrip, { buildTripStructure } from './hooks/useTrip'
 import { useTrips } from './hooks/useTrips'
-import usePremium from './hooks/usePremium'
-import { useRole } from './hooks/useRole'
-const Pricing = lazy(() => import('./pages/Pricing'))
-const Onboarding = lazy(() => import('./pages/Onboarding'))
 import MealCard from './components/MealCard'
 import ShoppingTab from './components/ShoppingTab'
 import AddMealModal from './components/AddMealModal'
@@ -16,32 +12,22 @@ import Plano from './components/Plano'
 import TripsSelector from './components/TripsSelector'
 import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
-import GuestUpsellModal from './components/GuestUpsellModal'
-import { getInviteKey } from './lib/inviteKey'
-import { fetchTripRow } from './lib/db'
+import GuestNamePrompt from './components/GuestNamePrompt'
+import { GUEST_NAME_MAX_LENGTH, TOAST_DURATION_MS, TAB_SWITCH_DELAY_MS } from './lib/constants'
 
-// C-1 fix: validar ?key= contra a chave real do trip, não apenas verificar que existe.
-// A chave tem formato 12 hex chars (gerada com crypto.getRandomValues).
-const _ip = new URLSearchParams(window.location.search)
-const _tripParam = _ip.get('trip') || ''
-const _keyParam  = _ip.get('key')  || ''
-const KEY_FORMAT = /^[0-9a-f]{10,}$/
-// Verificação síncrona: formato válido + match com chave local (owner no mesmo dispositivo)
-const _localKey = _tripParam ? getInviteKey(_tripParam) : ''
-const INITIAL_INVITE_VALID = !!(
-  _tripParam && _keyParam &&
-  KEY_FORMAT.test(_keyParam) &&
-  (!_localKey || _keyParam === _localKey)  // se há chave local, tem de coincidir
-)
+// App gratuita, sem contas: quem tem o link tem acesso total. Só pedimos o
+// nome uma vez (para atribuir despesas/itens) — ver `myName` mais abaixo.
+const isOwner = true
 
 function Toast({ toast }) {
+  const shouldReduceMotion = useReducedMotion()
   return (
     <AnimatePresence>
       {toast && (
         <motion.div
-          initial={{ opacity: 0, y: 60, scale: 0.9 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 60, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 40 }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0, y: 40 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           role="alert"
           aria-live="assertive"
@@ -65,44 +51,19 @@ export default function App() {
   const { t } = useTranslation()
   const trip = useTrip()
   const trips = useTrips()
-  const { isPremium, verifying } = usePremium()
-  const { isOwner, isGuest } = useRole(trip.tripId)
-
-  // C-1 fix (async): valida o ?key= contra o invite_key guardado no Supabase.
-  // INITIAL_INVITE_VALID faz validação síncrona (formato + localStorage).
-  // Este state refina a decisão assim que o Supabase responde.
-  // null = a verificar | true = válido | false = inválido
-  // Synchronous cases resolve immediately; guest async case needs the effect
-  const needsAsyncCheck = _tripParam && _keyParam && KEY_FORMAT.test(_keyParam) && !(_localKey && _keyParam === _localKey)
-  const [inviteChecked, setInviteChecked] = useState(!needsAsyncCheck)
-  const [inviteValid, setInviteValid] = useState(INITIAL_INVITE_VALID)
-
-  useEffect(() => {
-    if (!needsAsyncCheck) return
-    // Convidado: verifica against Supabase
-    fetchTripRow(_tripParam).then(row => {
-      setInviteValid(!!(row?.invite_key && row.invite_key === _keyParam))
-      setInviteChecked(true)
-    }).catch(() => {
-      setInviteValid(true)
-      setInviteChecked(true)
-    })
-  }, [needsAsyncCheck])
-  const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
+  const shouldReduceMotion = useReducedMotion()
+  // Nome de quem está a usar a app agora — pedido uma única vez (ver GuestNamePrompt
+  // mais abaixo), independentemente de ter criado a viagem ou entrado por um link.
+  const [myName, setMyName] = useState(
+    () => localStorage.getItem('groupgrub_user_name') || localStorage.getItem('groupgrub_guest_name') || ''
+  )
   const [guestNameInput, setGuestNameInput] = useState('')
-  const [ownerName] = useState(() => localStorage.getItem('groupgrub_user_name') || '')
-  const currentUserName = guestName || ownerName
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
   const [showShare, setShare] = useState(false)
-  const [showPricing, setShowPricing] = useState(false)
   const [showWizardOverride, setShowWizardOverride] = useState(false)
   const [wizardDismissed, setWizardDismissed] = useState(false)
-  const [upsellDismissed, setUpsellDismissed] = useState(
-    () => !!sessionStorage.getItem('groupgrub_upsell_dismissed')
-  )
-  const [upsellForced, setUpsellForced] = useState(false)
   const [toast, setToast] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
   const toastTimerRef = useRef(null)
@@ -111,33 +72,34 @@ export default function App() {
   const showToast = useCallback((msg, type = 'ok') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
     setToast({ msg, type })
-    toastTimerRef.current = setTimeout(() => setToast(null), 2800)
+    toastTimerRef.current = setTimeout(() => setToast(null), TOAST_DURATION_MS)
   }, [])
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true)
     try {
       await trip.refresh()
       showToast(t('common.updated'))
     } catch {
-      showToast('Erro ao sincronizar', 'err')
+      showToast(t('common.syncError'), 'err')
     } finally {
       setRefreshing(false)
     }
-  }
+  }, [trip.refresh, showToast, t])
 
-  const handleAddMealWithIngredientes = async (meal) => {
+  const handleAddMealWithIngredientes = useCallback(async (meal) => {
     await trip.addMeal(meal)
     if (meal.ingredientes?.length) {
       const count = await trip.addIngredientes(meal.ingredientes, trip.items)
       if (count > 0) {
         showToast(`${count} ingrediente${count !== 1 ? 's' : ''} adicionado${count !== 1 ? 's' : ''} às ${t('nav.shopping')}!`)
-        setTimeout(() => setTab('compras'), 400)
+        setTimeout(() => setTab('compras'), TAB_SWITCH_DELAY_MS)
       } else {
         showToast(t('common.alreadyThere'))
       }
     }
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trip.addMeal, trip.addIngredientes, trip.items, showToast, t])
 
   /** Called by the New Trip Wizard. Creates the trip, saves meta, navigates to the new trip URL. */
   const handleCreateTrip = async (meta) => {
@@ -155,41 +117,44 @@ export default function App() {
     window.location.href = url.toString()
   }
 
-  const showWizard = showWizardOverride || (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid)
-  const showUpsell = upsellForced || (isGuest && !isPremium && !verifying && !upsellDismissed && !trip.loading)
+  // Stable toggle callback for ShoppingTab — avoids recreating an arrow function
+  // per render that would break React.memo on ShopItem items.
+  const handleToggleItem = useCallback((id) => trip.toggleItem(id, myName), [trip.toggleItem, myName])
 
-  // Garante que o nome do owner está sempre na lista de pessoas — corre uma vez em mount
+  const showWizard = showWizardOverride || (!trip.loading && trip.needsSetup && !wizardDismissed)
+
+  // Garante que quem já tinha dado o nome está sempre na lista de pessoas — corre uma vez em mount
   useEffect(() => {
-    const ownerName = localStorage.getItem('groupgrub_user_name')
-    if (ownerName && !trip.pessoas.includes(ownerName)) {
-      trip.addPessoa(ownerName)
+    if (myName && !trip.pessoas.includes(myName)) {
+      trip.addPessoa(myName)
     }
-  }, []) // intentionally empty — owner name sync is a one-shot mount operation
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // intentionally empty — one-shot mount operation
 
   if (trip.loading) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
+      <div role="status" aria-live="polite" aria-label={t('app.initializing')} className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
         {/* Atmospheric glow */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,90,38,0.08) 0%, transparent 70%)'
         }} />
         <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          animate={shouldReduceMotion ? {} : { y: [0, -6, 0] }}
+          transition={shouldReduceMotion ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           className="text-5xl"
         >🛰️</motion.div>
         <div>
           <div className="font-display text-2xl font-bold tracking-[-0.01em] text-cream text-center">
             GROUP<span className="text-brand">GRUB</span>
           </div>
-          <div className="font-mono text-[0.6rem] tracking-[0.25em] text-faint uppercase text-center mt-1.5 animate-pulse">
+          <div className="font-mono text-[0.6rem] tracking-[0.25em] text-faint uppercase text-center mt-1.5 motion-safe:animate-pulse">
             {t('app.initializing')}
           </div>
         </div>
         <div className="w-[140px] h-[2px] bg-white/[0.06] overflow-hidden rounded-full">
           <motion.div
             animate={{ x: ['-100%', '280%'] }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
             className="w-[40%] h-full rounded-full"
             style={{ background: 'linear-gradient(90deg, transparent, #ff5a26, transparent)', boxShadow: '0 0 10px #ff5a26' }}
           />
@@ -198,18 +163,10 @@ export default function App() {
     )
   }
 
-  // Aguarda verificação async do invite key antes de mostrar paywall
-  if (!inviteChecked) return null
-
-  // Non-premium users who didn't arrive via a valid invite link see the onboarding paywall
-  if (!isPremium && !verifying && !inviteValid) {
-    return <Suspense fallback={null}><Onboarding tripId={trip.tripId} /></Suspense>
-  }
-
   return (
     <div className="min-h-dvh flex flex-col bg-black text-cream">
       {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-line" style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px) saturate(1.5)' }}>
+      <header className="sticky top-0 z-50 border-b border-line" style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px) saturate(1.5)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[680px] mx-auto px-5">
           <div className="flex items-center justify-between py-3.5">
             <div className="flex items-center gap-3 min-w-0">
@@ -225,16 +182,14 @@ export default function App() {
                 </div>
               </div>
               <div className="w-px h-8 bg-line flex-shrink-0" />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <TripsSelector
                   currentTripId={trip.tripId}
                   trips={trips.trips}
                   tripsLoading={trips.loading}
-                  isPremium={isPremium}
                   onSwitchTrip={trip.setTripId}
                   onDeleteTrip={trips.deleteTrip}
                   onShowWizard={() => setShowWizardOverride(true)}
-                  onShowPricing={() => setShowPricing(true)}
                 />
               </div>
             </div>
@@ -242,7 +197,7 @@ export default function App() {
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
-                transition={refreshing ? { duration: 0.6, repeat: Infinity, ease: 'linear' } : {}}
+                transition={refreshing && !shouldReduceMotion ? { duration: 0.6, repeat: Infinity, ease: 'linear' } : {}}
                 onClick={handleRefresh}
                 aria-label={t('common.sync')}
                 className="w-11 h-11 flex items-center justify-center rounded-lg border border-line bg-white/[0.03] text-faint hover:text-cream hover:border-lineStrong transition-all"
@@ -257,7 +212,7 @@ export default function App() {
               >
                 <Share2 size={14} aria-hidden="true" />
               </motion.button>
-              <div className="text-xl ml-1" aria-hidden="true">🛰️</div>
+              <div className="hidden sm:block text-xl ml-1" aria-hidden="true">🛰️</div>
             </div>
           </div>
 
@@ -297,61 +252,25 @@ export default function App() {
         </div>
       </header>
 
-      {/* GUEST BANNER */}
-      {isGuest && (
-        <div className="max-w-[680px] mx-auto px-4 pt-3">
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl border"
-            style={{ background: 'rgba(155,123,255,0.08)', borderColor: 'rgba(155,123,255,0.28)' }}
-          >
-            <ShieldAlert size={16} style={{ color: '#9b7bff', flexShrink: 0 }} />
-            <div className="flex-1 min-w-0">
-              <div className="font-mono text-[0.65rem] font-bold tracking-[0.12em] uppercase" style={{ color: '#9b7bff' }}>
-                {t('role.guestBanner')}
-              </div>
-              <div className="text-[0.72rem] text-muted mt-0.5">
-                {t('role.guestDesc')}
-              </div>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.93 }}
-              onClick={() => setUpsellForced(true)}
-              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[0.62rem] font-bold cursor-pointer transition-all"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,90,38,0.25), rgba(255,90,38,0.15))',
-                border: '1px solid rgba(255,90,38,0.45)',
-                color: '#ff5a26',
-              }}
-            >
-              <Sparkles size={11} />
-              10€ vitalício
-            </motion.button>
-          </motion.div>
-        </div>
-      )}
-
       {/* CONTENT */}
       <main className="flex-1 max-w-[680px] w-full mx-auto px-4 py-6 pb-52" style={{ paddingBottom: 'max(13rem, calc(8rem + env(keyboard-inset-height, 0px)))' }}>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode={shouldReduceMotion ? 'sync' : 'wait'}>
           {tab === 'refeicoes' && (
             <motion.div
               key="ref"
               id="tabpanel-refeicoes"
               role="tabpanel"
               aria-labelledby="tab-refeicoes"
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -16 }}
               transition={{ duration: 0.24 }}
               className="grid gap-2.5"
             >
-              {trip.meals.map((meal, i) => (
+              {trip.meals.map((meal) => (
                 <MealCard
                   key={meal.id}
                   meal={meal}
-                  index={i}
                   isOpen={expanded === meal.id}
                   isOwner={isOwner}
                   onClick={() => setExpanded(expanded === meal.id ? null : meal.id)}
@@ -390,9 +309,9 @@ export default function App() {
               id="tabpanel-plano"
               role="tabpanel"
               aria-labelledby="tab-plano"
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -16 }}
               transition={{ duration: 0.24 }}
             >
               <Plano meals={trip.meals} plano={trip.plano} onUpdate={trip.updatePlano} structure={trip.structure} />
@@ -405,9 +324,9 @@ export default function App() {
               id="tabpanel-contas"
               role="tabpanel"
               aria-labelledby="tab-contas"
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -16 }}
               transition={{ duration: 0.24 }}
             >
               <ExpensesTab
@@ -418,7 +337,7 @@ export default function App() {
                 onAddPessoa={trip.addPessoa}
                 onRemovePessoa={trip.removePessoa}
                 isOwner={isOwner}
-                currentUser={currentUserName}
+                currentUser={myName}
               />
             </motion.div>
           )}
@@ -429,26 +348,22 @@ export default function App() {
               id="tabpanel-compras"
               role="tabpanel"
               aria-labelledby="tab-compras"
-              initial={{ opacity: 0, y: 20 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -16 }}
               transition={{ duration: 0.24 }}
             >
               <ShoppingTab
                 items={trip.items}
                 pessoas={trip.pessoas}
                 isOwner={isOwner}
-                isGuest={isGuest}
-                isPremium={isPremium}
-                currentUserName={currentUserName}
                 tripId={trip.tripId}
-                onToggle={(id) => trip.toggleItem(id, currentUserName)}
+                onToggle={handleToggleItem}
                 onRemove={trip.removeItem}
                 onUpdate={trip.updateItem}
                 onAddItem={trip.addItem}
                 onResetTicks={trip.resetTicks}
                 onCategorizarTudo={trip.categorizarTudo}
-                onShowPricing={() => setShowPricing(true)}
                 showToast={showToast}
               />
             </motion.div>
@@ -458,97 +373,25 @@ export default function App() {
 
       <AddMealModal open={showAddMeal} onClose={() => setAddMeal(false)} onAdd={handleAddMealWithIngredientes} />
       <ShareModal open={showShare} onClose={() => setShare(false)} shareUrl={trip.shareUrl} tripId={trip.tripId} isOwner={isOwner} />
-      {showUpsell && (
-        <GuestUpsellModal
-          tripId={trip.tripId}
-          onClose={() => {
-            setUpsellForced(false)
-            setUpsellDismissed(true)
-            sessionStorage.setItem('groupgrub_upsell_dismissed', '1')
-          }}
-        />
-      )}
       <NewTripWizard
         open={showWizard}
         onClose={() => { setWizardDismissed(true); setShowWizardOverride(false) }}
         onCreate={handleCreateTrip}
       />
-      {showPricing && (
-        <Suspense fallback={null}>
-          <Pricing
-            onClose={() => setShowPricing(false)}
-            tripId={trip.tripId}
-          />
-        </Suspense>
-      )}
-      {verifying && (
-        <div className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center gap-4">
-          <div className="text-4xl">✨</div>
-          <div className="font-mono text-[0.75rem] tracking-[0.2em] text-brand uppercase animate-pulse">
-            A verificar pagamento…
-          </div>
-        </div>
-      )}
-      {/* Guest name prompt — shown once when a guest opens the app without a name */}
+      {/* Pedido de nome — mostrado uma única vez, a quem quer que abra a app sem nome guardado */}
       <AnimatePresence>
-        {isGuest && !guestName && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="guest-name-title"
-            className="fixed inset-0 z-[500] flex items-center justify-center px-5"
-            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
-          >
-            <motion.div
-              initial={{ scale: 0.92, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="w-full max-w-[340px] rounded-2xl p-7"
-              style={{ background: '#0e0e10', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              <div className="text-3xl mb-4 text-center">👋</div>
-              <h2 id="guest-name-title" className="font-display text-xl font-bold text-cream text-center mb-1">Bem-vindo!</h2>
-              <p className="text-[0.8rem] text-muted text-center mb-5">Como te chamas? O teu nome aparece nas despesas e na lista.</p>
-              <input
-                value={guestNameInput}
-                onChange={e => setGuestNameInput(e.target.value.slice(0, 60))}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && guestNameInput.trim()) {
-                    const n = guestNameInput.trim().slice(0, 60)
-                    localStorage.setItem('groupgrub_guest_name', n)
-                    trip.addPessoa(n)
-                    setGuestName(n)
-                  }
-                }}
-                placeholder="O teu nome"
-                autoFocus
-                maxLength={60}
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-cream text-base outline-none mb-4"
-              />
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                disabled={!guestNameInput.trim()}
-                aria-label="Guardar nome e entrar na lista"
-                onClick={() => {
-                  const n = guestNameInput.trim().slice(0, 60)
-                  if (!n) return
-                  localStorage.setItem('groupgrub_guest_name', n)
-                  trip.addPessoa(n)
-                  setGuestName(n)
-                }}
-                className="w-full py-3.5 rounded-xl font-bold text-[0.95rem]"
-                style={{
-                  background: guestNameInput.trim() ? 'linear-gradient(135deg,#c8431a,#ff5a26)' : 'rgba(255,255,255,0.06)',
-                  color: guestNameInput.trim() ? '#fff' : 'rgba(255,255,255,0.3)',
-                  cursor: guestNameInput.trim() ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Entrar na lista →
-              </motion.button>
-            </motion.div>
-          </motion.div>
+        {!myName && (
+          <GuestNamePrompt
+            guestNameInput={guestNameInput}
+            onInputChange={setGuestNameInput}
+            onConfirm={() => {
+              const n = guestNameInput.trim().slice(0, GUEST_NAME_MAX_LENGTH)
+              if (!n) return
+              localStorage.setItem('groupgrub_user_name', n)
+              trip.addPessoa(n)
+              setMyName(n)
+            }}
+          />
         )}
       </AnimatePresence>
 

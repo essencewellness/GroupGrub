@@ -16,6 +16,15 @@ async function apiWrite(path, body) {
   if (!res.ok) throw new Error(`API ${path} ${res.status}`)
 }
 
+async function apiPatch(path, body) {
+  const res = await fetch(path, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`API ${path} PATCH ${res.status}`)
+}
+
 async function apiDelete(path, body) {
   const res = await fetch(path, {
     method: 'DELETE',
@@ -59,11 +68,22 @@ function withTimeout(promise, ms = 5000) {
 /* ══════════════════════════════
    TRIPS (Multi-trip support)
 ══════════════════════════════ */
+/**
+ * NOTE: This app has no Supabase Auth — owner_id is never set on trips rows,
+ * so querying by owner_id always returns an empty array. The Supabase branch
+ * below is therefore unreachable in practice; trip lists live in localStorage.
+ * Do not remove the guard — it documents the intended upgrade path if auth
+ * is added later (owner_id would be populated at trip creation time).
+ */
 export async function fetchTrips(userId) {
   if (hasSupabase && userId) {
     try {
       const { data } = await withTimeout(
-        supabase.from('trips').select('*').eq('owner_id', userId).order('created_at', { ascending: false })
+        supabase
+          .from('trips')
+          .select('id,title,owner_id,template_type,start_date,end_date,pessoas,plano,created_at,updated_at')
+          .eq('owner_id', userId)
+          .order('created_at', { ascending: false })
       )
       return data ?? []
     } catch { return lsGet(LS_TRIPS, []) }
@@ -90,8 +110,16 @@ export async function upsertTrip(trip) {
 export async function fetchTripRow(tripId) {
   if (!hasSupabase) return null
   try {
+    // invite_token is intentionally excluded: it is the write-authorization
+    // secret validated server-side only. Returning it to the browser would
+    // allow any client that knows the trip ID to read the token and forge
+    // write requests, bypassing the server-side validateTripToken check.
     const { data } = await withTimeout(
-      supabase.from('trips').select('*').eq('id', tripId).maybeSingle()
+      supabase
+        .from('trips')
+        .select('id,title,owner_id,template_type,start_date,end_date,pessoas,plano,created_at,updated_at')
+        .eq('id', tripId)
+        .maybeSingle()
     )
     return data ?? null
   } catch { return null }
@@ -109,7 +137,7 @@ export async function upsertTripRow(tripId, patch) {
   const token = getEffectiveToken(tripId)
   if (!token) return
   try {
-    await withTimeout(apiWrite('/api/trip', { tripId, token, patch }))
+    await withTimeout(apiPatch('/api/trip', { tripId, token, patch }))
   } catch { /* fallback: localStorage only */ }
 }
 
@@ -136,7 +164,11 @@ export async function fetchItems(tripId) {
   if (hasSupabase) {
     try {
       const { data } = await withTimeout(
-        supabase.from('items').select('*').eq('trip_id', tripId).order('created_at')
+        supabase
+          .from('items')
+          .select('id,trip_id,nome,categoria,qtd,comprado,antecipado,assignee,created_at')
+          .eq('trip_id', tripId)
+          .order('created_at')
       )
       // IMPORTANTE: se o Supabase responder vazio mas tivermos cache local para
       // esta trip, preferimos a cache. Caso contrário o polling de 5s apagava
@@ -196,7 +228,11 @@ export async function fetchMeals(tripId) {
   if (hasSupabase) {
     try {
       const { data } = await withTimeout(
-        supabase.from('meals').select('*').eq('trip_id', tripId).order('created_at')
+        supabase
+          .from('meals')
+          .select('id,trip_id,nome,emoji,tipo,dia,ingredientes,created_at')
+          .eq('trip_id', tripId)
+          .order('created_at')
       )
       const remote = data ?? []
       const local = lsGet(LS_MEALS, []).filter(m => m.trip_id === tripId)
@@ -241,7 +277,11 @@ export async function fetchExpenses(tripId) {
   if (hasSupabase) {
     try {
       const { data } = await withTimeout(
-        supabase.from('expenses').select('*').eq('trip_id', tripId).order('created_at')
+        supabase
+          .from('expenses')
+          .select('id,trip_id,descricao,valor,pago_por,dividir_por,created_at')
+          .eq('trip_id', tripId)
+          .order('created_at')
       )
       const remote = data ?? []
       const local = lsGet(LS_EXPENSES, []).filter(e => e.trip_id === tripId)

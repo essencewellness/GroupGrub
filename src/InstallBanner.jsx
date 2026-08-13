@@ -56,9 +56,10 @@ export default function InstallBanner() {
         >
           <button
             onClick={dismiss}
+            aria-label="Dispensar banner de instalação"
             className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-lg bg-white/[0.04] text-muted hover:text-brand transition-colors"
           >
-            <X size={14} />
+            <X size={14} aria-hidden="true" />
           </button>
 
           <div className="flex gap-3.5 items-center">
@@ -67,7 +68,8 @@ export default function InstallBanner() {
               <div className="font-bold text-[0.95rem] text-cream mb-1">Instalar GroupGrub</div>
               {isIos ? (
                 <div className="text-[0.78rem] text-muted leading-snug">
-                  Toca em <Share size={12} className="inline align-middle" /> <strong className="text-brand">Partilhar</strong> e depois <strong className="text-brand">"Adicionar ao ecrã de Início"</strong>
+                  Toca em <Share size={12} className="inline align-middle" aria-hidden="true" />{' '}
+                  <strong className="text-brand">Partilhar</strong> e depois <strong className="text-brand">"Adicionar ao ecrã de Início"</strong>
                 </div>
               ) : (
                 <div className="text-[0.78rem] text-muted leading-snug">
@@ -81,7 +83,7 @@ export default function InstallBanner() {
                 onClick={install}
                 className="btn-brand px-4 py-2.5 text-[0.8rem] font-bold whitespace-nowrap flex items-center gap-1.5"
               >
-                <Plus size={14} /> Instalar
+                <Plus size={14} aria-hidden="true" /> Instalar
               </motion.button>
             )}
           </div>

@@ -1,12 +1,14 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useId } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ArrowLeft, Sparkles, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 const today = new Date().toISOString().slice(0, 10)
 
 export default function NewTripWizard({ open, onClose, onCreate }) {
   const { t } = useTranslation()
+  const shouldReduceMotion = useReducedMotion()
   const [step, setStep] = useState(1)
   const [title, setTitle] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -36,22 +38,30 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
     reset()
   }
 
-  if (!open) return null
+  const dialogRef = useFocusTrap(open, close)
+
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto"
-      >
+      {open && (
         <motion.div
-          initial={{ scale: 0.94, opacity: 0, y: 20 }}
+          key="wizard"
+          initial={shouldReduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+          className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <motion.div
+            ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="wizard-dialog-title"
+          tabIndex={-1}
+          initial={shouldReduceMotion ? false : { scale: 0.94, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.96, opacity: 0, y: 10 }}
+          exit={shouldReduceMotion ? undefined : { scale: 0.96, opacity: 0, y: 10 }}
           transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-          className="w-full max-w-[440px] bg-[#080A0A] border border-white/10 rounded-[28px] p-7 relative"
+          className="w-full max-w-[440px] bg-[#080A0A] border border-white/10 rounded-[28px] p-7 relative outline-none"
           style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgb(var(--brand-rgb) / 0.06)' }}
         >
           {/* Step indicator */}
@@ -72,24 +82,27 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
             </span>
           </div>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode={shouldReduceMotion ? 'sync' : 'wait'}>
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, x: -20 }}
                 transition={{ duration: 0.22 }}
               >
                 <div className="text-center mb-7">
                   <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#FF5A26]/10 border border-[#FF5A26]/25 flex items-center justify-center text-2xl" style={{ filter: 'drop-shadow(0 0 12px rgba(255,90,38,0.5))' }}>
                     🛰️
                   </div>
-                  <h2 className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step1Title')}</h2>
+                  <h2 id="wizard-dialog-title" className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step1Title')}</h2>
                   <p className="text-[0.78rem] text-muted mt-1.5">{t('wizard.step1Sub')}</p>
                 </div>
 
+                <label htmlFor="wizard-trip-title" className="sr-only">{t('wizard.step1Title')}</label>
                 <input
+                  id="wizard-trip-title"
+                  aria-required="true"
                   autoFocus
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -118,23 +131,24 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
             {step === 2 && (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, x: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, x: -20 }}
                 transition={{ duration: 0.22 }}
               >
                 <div className="text-center mb-7">
                   <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#FF5A26]/10 border border-[#FF5A26]/25 flex items-center justify-center text-2xl">
                     📅
                   </div>
-                  <h2 className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step2Title')}</h2>
+                  <h2 id="wizard-dialog-title" className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step2Title')}</h2>
                   <p className="text-[0.78rem] text-muted mt-1.5">{t('wizard.step2Sub')}</p>
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block font-mono text-[0.62rem] tracking-[0.12em] text-muted uppercase mb-1.5">{t('wizard.startDate')}</label>
+                    <label htmlFor="wizard-start-date" className="block font-mono text-[0.62rem] tracking-[0.12em] text-muted uppercase mb-1.5">{t('wizard.startDate')}</label>
                     <input
+                      id="wizard-start-date"
                       type="date"
                       value={startDate}
                       min={today}
@@ -143,8 +157,9 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                     />
                   </div>
                   <div>
-                    <label className="block font-mono text-[0.62rem] tracking-[0.12em] text-muted uppercase mb-1.5">{t('wizard.endDate')}</label>
+                    <label htmlFor="wizard-end-date" className="block font-mono text-[0.62rem] tracking-[0.12em] text-muted uppercase mb-1.5">{t('wizard.endDate')}</label>
                     <input
+                      id="wizard-end-date"
                       type="date"
                       value={endDate}
                       min={startDate || today}
@@ -153,7 +168,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                     />
                   </div>
                   {startDate && endDate && !dateValid && (
-                    <div className="text-[0.72rem] text-[#FF5A26] font-mono">A data de fim tem de ser igual ou depois do início.</div>
+                    <div role="alert" className="text-[0.72rem] text-[#FF5A26] font-mono">A data de fim tem de ser igual ou depois do início.</div>
                   )}
                 </div>
 
@@ -195,8 +210,9 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
           >
             <X size={16} />
           </button>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   )
 }

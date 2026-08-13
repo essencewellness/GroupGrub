@@ -30,6 +30,7 @@ const EMOJI_MAP = [
   { emoji: '🌯', words: ['sandwich', 'sandwiche', 'sandwishes', 'sandes', 'prego', 'bifana', 'francesinha'] },
 ]
 
+// NOTE: identical normalizar() exists in categorizer.js — if this grows, extract to a shared lib/normalize.js
 function normalizar(texto) {
   return (texto || '')
     .toLowerCase()
