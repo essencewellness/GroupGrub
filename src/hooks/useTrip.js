@@ -248,13 +248,13 @@ export default function useTrip() {
     return () => { cancelled = true }
   }, [loadData])
 
-  // On load, push local pessoas to Supabase so guests can sync them.
-  // Skip if no Supabase — avoids pointless call on every mount in offline mode.
-  useEffect(() => {
-    if (!hasSupabase) return
-    const local = loadPessoas(tripId)
-    if (local.length > 0) upsertTripPessoas(tripId, local).catch(() => {})
-  }, [tripId])
+  // NOTE: pessoas sync-to-server used to also happen here on every mount,
+  // pushing whatever this device had locally. Removed — it raced with
+  // loadData's server-merge above (see C-6-esque bug: a freshly-joined
+  // device could push its own name before merging the server's list,
+  // silently dropping anyone else already on the trip). addPessoa() now
+  // merges with the server before writing, which is the only place a name
+  // actually needs to be pushed.
 
   /* ── polling: refresca a cada 5 segundos SÓ quando Supabase Realtime não está ativo (fallback offline) ── */
   useEffect(() => {
@@ -436,13 +436,26 @@ export default function useTrip() {
     await deleteExpense(tripId, id)
   }, [tripId])
 
-  const addPessoa = useCallback((nome) => {
+  const addPessoa = useCallback(async (nome) => {
     const trimmed = nome.trim()
     if (!trimmed || pessoasRef.current.includes(trimmed)) return
     const next = [...pessoasRef.current, trimmed]
     savePessoas(tripId, next)
     setPessoas(next)
-    upsertTripPessoas(tripId, next).catch(() => {})
+    // Merge with the server's current list before pushing — a device that
+    // just joined may not have the latest remote pessoas yet, and pushing
+    // its own stale/local view would blindly overwrite names added by
+    // other devices in the same window (read-then-write race on join).
+    try {
+      const row = await fetchTripRow(tripId)
+      const serverPessoas = Array.isArray(row?.pessoas) ? row.pessoas : []
+      const merged = [...new Set([...serverPessoas, ...next])]
+      if (merged.length !== next.length) {
+        savePessoas(tripId, merged)
+        setPessoas(merged)
+      }
+      await upsertTripPessoas(tripId, merged)
+    } catch { /* fallback: local state above still applies */ }
   }, [tripId])
 
   const removePessoa = useCallback((nome) => {
