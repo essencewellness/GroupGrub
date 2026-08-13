@@ -1,4 +1,4 @@
--- GroupGrub schema — canonical state after migrations 001-011
+-- GroupGrub schema — canonical state after migrations 001-012
 -- This file is documentation / idempotent bootstrap for new environments.
 -- Applied migrations are in migration_NNN_*.sql and must not be re-run.
 -- The app is free for anyone with the link — no accounts, no payment.
