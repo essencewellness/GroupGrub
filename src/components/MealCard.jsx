@@ -137,7 +137,7 @@ const MealCard = memo(function MealCard({ meal, isOpen, isOwner = true, onClick,
                   aria-label="Cancelar"
                   className="px-2.5 py-1 rounded-lg border border-line bg-white/[0.03] text-muted font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em]"
                 >
-                  {t('pricing.cancel')}
+                  {t('common.cancel')}
                 </button>
               </motion.div>
             )
@@ -271,7 +271,7 @@ const MealCard = memo(function MealCard({ meal, isOpen, isOwner = true, onClick,
                       onClick={cancelEdit}
                       className="py-2.5 px-3.5 rounded-xl border border-line bg-white/[0.03] text-muted font-mono text-[0.8rem] uppercase tracking-[0.08em]"
                     >
-                      {t('pricing.cancel')}
+                      {t('common.cancel')}
                     </motion.button>
                   </div>
                 </div>

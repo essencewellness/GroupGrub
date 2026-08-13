@@ -4,7 +4,7 @@ export const config = { runtime: 'edge' }
 
 // Allowed top-level columns a client may write/patch on the trips table.
 // invite_token and id are set server-side only; owner_id and created_at must never be client-writable.
-const ALLOWED_TRIP_FIELDS = ['title', 'pessoas', 'plano', 'meta', 'start_date', 'end_date', 'currency', 'note', 'premium', 'settings']
+const ALLOWED_TRIP_FIELDS = ['title', 'pessoas', 'plano', 'meta', 'start_date', 'end_date', 'currency', 'note', 'settings']
 
 function sanitizeTrip(raw) {
   const out = {}
@@ -15,17 +15,12 @@ function sanitizeTrip(raw) {
 export default async function handler(req) {
   const base = supabaseUrl()
 
-  // GET /api/trip?tripId=X (+ optional X-Invite-Key header) — public read, no
-  // token needed for the base row (RLS SELECT is open). invite_token is fetched
-  // (service_role bypasses the anon column REVOKE) but is NEVER included in the
-  // response — only used server-side to compute `keyValid`, so the browser can
-  // decide guest-mode vs paywall without ever learning the real write secret.
-  // The key travels as a header, not a query param, so it doesn't end up in
-  // access logs or any edge/CDN caching keyed on the URL.
+  // GET /api/trip?tripId=X — public read (no token needed, RLS SELECT is open).
+  // invite_token is fetched (service_role bypasses the anon column REVOKE) but is
+  // NEVER included in the response — it's the write-authorization secret, and
+  // must stay server-side only (see validateTripToken below).
   if (req.method === 'GET') {
-    const url = new URL(req.url)
-    const tripId = url.searchParams.get('tripId')
-    const key = req.headers.get('x-invite-key')
+    const tripId = new URL(req.url).searchParams.get('tripId')
     if (!tripId) return jsonErr('tripId required')
     const res = await fetch(
       `${base}/rest/v1/trips?id=eq.${encodeURIComponent(tripId)}&select=*`,
@@ -34,8 +29,8 @@ export default async function handler(req) {
     const rows = await res.json().catch(() => [])
     const row = Array.isArray(rows) ? rows[0] ?? null : null
     if (!row) return jsonOk(null)
+    // eslint-disable-next-line no-unused-vars -- deliberately stripped, never sent to the client
     const { invite_token, ...safeRow } = row
-    if (key !== null) safeRow.keyValid = !!invite_token && invite_token === key
     return jsonOk(safeRow)
   }
 

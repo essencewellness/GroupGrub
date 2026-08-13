@@ -31,7 +31,7 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
     const trimmed = joinLink.trim()
     const id = extractTripId(trimmed)
     if (!id) { setJoinError(true); return }
-    // Also extract and forward ?key= so the guest bypasses the paywall check
+    // Also extract and forward ?key= — needed for write access (see inviteKey.js)
     let key = ''
     try {
       const u = new URL(trimmed)
