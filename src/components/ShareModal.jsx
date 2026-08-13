@@ -4,7 +4,7 @@ import { Copy, Check, Wifi, WifiOff, ExternalLink, LogIn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal'
 import { hasSupabase } from '../lib/supabase'
-import { buildInviteUrl } from '../lib/inviteKey'
+import { getEffectiveToken, getOrCreateInviteKey } from '../lib/inviteKey'
 
 function extractTripId(text) {
   const trimmed = text.trim()
@@ -20,7 +20,14 @@ function extractTripId(text) {
 }
 
 export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId, isOwner = false }) {
-  const shareUrl = isOwner && tripId ? buildInviteUrl(tripId) : _shareUrl
+  // Reuse whichever token this device is already operating with (local key if
+  // this device created the trip, otherwise the ?key= it arrived with) so the
+  // share link always carries a token that's actually valid for writes —
+  // generating a brand new one here would silently shadow the real one and
+  // break write access for anyone who isn't the original creator's device.
+  const shareUrl = tripId
+    ? `${window.location.origin}${window.location.pathname}?trip=${tripId}&key=${getEffectiveToken(tripId) || getOrCreateInviteKey(tripId)}`
+    : _shareUrl
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   const [copyHover, setCopyHover] = useState(false)
