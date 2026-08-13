@@ -2,7 +2,7 @@ import { validateTripToken, adminHeaders, jsonOk, jsonErr, supabaseUrl } from '.
 
 export const config = { runtime: 'edge' }
 
-const ALLOWED_ITEM_FIELDS = ['id', 'name', 'qty', 'unit', 'category', 'checked', 'assigned_to', 'note']
+const ALLOWED_ITEM_FIELDS = ['id', 'nome', 'qtd', 'categoria', 'comprado', 'antecipado', 'assignee']
 function sanitizeItem(raw) {
   const out = {}
   for (const k of ALLOWED_ITEM_FIELDS) if (k in raw) out[k] = raw[k]

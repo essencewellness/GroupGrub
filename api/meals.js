@@ -2,7 +2,7 @@ import { validateTripToken, adminHeaders, jsonOk, jsonErr, supabaseUrl } from '.
 
 export const config = { runtime: 'edge' }
 
-const ALLOWED_MEAL_FIELDS = ['id', 'name', 'day', 'slot', 'emoji', 'note', 'assigned_to']
+const ALLOWED_MEAL_FIELDS = ['id', 'nome', 'emoji', 'tipo', 'dia', 'ingredientes']
 function sanitizeMeal(raw) {
   const out = {}
   for (const k of ALLOWED_MEAL_FIELDS) if (k in raw) out[k] = raw[k]

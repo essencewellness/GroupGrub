@@ -2,7 +2,7 @@ import { validateTripToken, adminHeaders, jsonOk, jsonErr, supabaseUrl } from '.
 
 export const config = { runtime: 'edge' }
 
-const ALLOWED_EXPENSE_FIELDS = ['id', 'description', 'amount', 'currency', 'paid_by', 'split_between', 'date', 'category', 'note']
+const ALLOWED_EXPENSE_FIELDS = ['id', 'descricao', 'valor', 'pago_por', 'dividir_por']
 function sanitizeExpense(raw) {
   const out = {}
   for (const k of ALLOWED_EXPENSE_FIELDS) if (k in raw) out[k] = raw[k]

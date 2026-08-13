@@ -122,6 +122,7 @@ function cleanItem(item, tripId) {
     categoria: item.categoria || 'outro',
     antecipado: item.antecipado || false,
     comprado: item.comprado || false,
+    assignee: item.assignee || '',
     created_at: item.created_at || new Date().toISOString(),
   }
 }
