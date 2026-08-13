@@ -12,17 +12,7 @@ const LS_TRIP_ID = 'ferias_trip_id'
 function pessoasKey(tripId) { return `ferias_pessoas_${tripId}` }
 function loadPessoas(tripId) {
   try {
-    const saved = JSON.parse(localStorage.getItem(pessoasKey(tripId)) || '[]')
-    if (saved.length === 0) {
-      const ownerName = localStorage.getItem('groupgrub_user_name')
-        || localStorage.getItem('groupgrub_guest_name')
-      if (ownerName) {
-        // Persist so the auto-push to Supabase actually sends it
-        savePessoas(tripId, [ownerName])
-        return [ownerName]
-      }
-    }
-    return saved
+    return JSON.parse(localStorage.getItem(pessoasKey(tripId)) || '[]')
   } catch { return [] }
 }
 function savePessoas(tripId, arr) {
