@@ -72,6 +72,23 @@ export function buildTripStructure(startDate, endDate) {
   return days
 }
 
+// Ensures the current URL carries &key= whenever we have a local invite key
+// for this trip — the owner's own address bar/PWA history is her recovery
+// path if localStorage is ever wiped, but only if it actually has the key in
+// it (see the ShareModal bug this was pulled out to fix: without this, an
+// owner reload with no ?key= in the URL and no local key left had no way to
+// recover the real token at all).
+function syncKeyIntoUrl(tripId) {
+  try {
+    const url = new URL(window.location)
+    if (url.searchParams.get('key')) return
+    const key = localStorage.getItem(`ferias_invite_${tripId}`)
+    if (!key) return
+    url.searchParams.set('key', key)
+    window.history.replaceState({}, '', url)
+  } catch { /* best-effort */ }
+}
+
 function getTripId() {
   // 1. Tenta query param ?trip= (prioritário — vem de links partilhados)
   const params = new URLSearchParams(window.location.search)
@@ -79,6 +96,7 @@ function getTripId() {
   if (queryTrip && queryTrip.length >= 6) {
     localStorage.setItem(LS_TRIP_ID, queryTrip)
     sessionStorage.setItem(LS_TRIP_ID, queryTrip)
+    syncKeyIntoUrl(queryTrip)
     return queryTrip
   }
 
@@ -91,6 +109,7 @@ function getTripId() {
     url.searchParams.set('trip', hash)
     url.hash = ''
     window.history.replaceState({}, '', url)
+    syncKeyIntoUrl(hash)
     return hash
   }
 
@@ -109,6 +128,7 @@ function getTripId() {
   const url = new URL(window.location)
   url.searchParams.set('trip', id)
   window.history.replaceState({}, '', url)
+  syncKeyIntoUrl(id)
   return id
 }
 

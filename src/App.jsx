@@ -14,6 +14,7 @@ import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
 import GuestNamePrompt from './components/GuestNamePrompt'
 import { GUEST_NAME_MAX_LENGTH, TOAST_DURATION_MS, TAB_SWITCH_DELAY_MS } from './lib/constants'
+import { getInviteKey } from './lib/inviteKey'
 
 // App gratuita, sem contas: quem tem o link tem acesso total. Só pedimos o
 // nome uma vez (para atribuir despesas/itens) — ver `myName` mais abaixo.
@@ -111,9 +112,16 @@ export default function App() {
     localStorage.setItem(`ferias_meta_${newId}`, JSON.stringify({ ...meta, structure }))
     setWizardDismissed(true)
     showToast(`"${meta.title}" ${t('common.added')}`)
-    // Navigate to new trip URL — reload ensures useTrip reads the correct ID
+    // Navigate to new trip URL — reload ensures useTrip reads the correct ID.
+    // Carry &key= in the owner's own address bar too, same as guest links: if
+    // her localStorage is ever wiped (iOS Safari, PWA reinstall, new device),
+    // this URL — bookmarked, in PWA history, or shared to herself — is what
+    // lets the app recover the real token instead of silently minting a new
+    // one that can never match the server's stored invite_token.
     const url = new URL(window.location)
     url.searchParams.set('trip', newId)
+    const key = getInviteKey(newId)
+    if (key) url.searchParams.set('key', key)
     window.location.href = url.toString()
   }
 

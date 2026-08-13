@@ -4,7 +4,7 @@ import { Copy, Check, Wifi, WifiOff, ExternalLink, LogIn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal'
 import { hasSupabase } from '../lib/supabase'
-import { getEffectiveToken, getOrCreateInviteKey } from '../lib/inviteKey'
+import { getEffectiveToken } from '../lib/inviteKey'
 
 function extractTripId(text) {
   const trimmed = text.trim()
@@ -22,11 +22,17 @@ function extractTripId(text) {
 export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId, isOwner = false }) {
   // Reuse whichever token this device is already operating with (local key if
   // this device created the trip, otherwise the ?key= it arrived with) so the
-  // share link always carries a token that's actually valid for writes —
-  // generating a brand new one here would silently shadow the real one and
-  // break write access for anyone who isn't the original creator's device.
-  const shareUrl = tripId
-    ? `${window.location.origin}${window.location.pathname}?trip=${tripId}&key=${getEffectiveToken(tripId) || getOrCreateInviteKey(tripId)}`
+  // share link always carries a token that's actually valid for writes.
+  // NEVER fall back to minting a new one here: this component is mounted at
+  // all times (Modal just hides it when closed), so any render — not just
+  // opening the share sheet — would silently generate a random key that can
+  // never match the server's stored invite_token, permanently locking writes
+  // for the whole trip the moment the real local key is missing (confirmed
+  // reproducible: clearing localStorage on the owner's own tab, which has no
+  // ?key= in its URL to fall back to, corrupted the key for every device).
+  const effectiveToken = tripId ? getEffectiveToken(tripId) : ''
+  const shareUrl = tripId && effectiveToken
+    ? `${window.location.origin}${window.location.pathname}?trip=${tripId}&key=${effectiveToken}`
     : _shareUrl
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
