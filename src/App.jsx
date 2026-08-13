@@ -20,7 +20,6 @@ import GuestUpsellModal from './components/GuestUpsellModal'
 import GuestNamePrompt from './components/GuestNamePrompt'
 import { getInviteKey } from './lib/inviteKey'
 import { GUEST_NAME_MAX_LENGTH, TOAST_DURATION_MS, TAB_SWITCH_DELAY_MS } from './lib/constants'
-import { fetchTripRow } from './lib/db'
 
 // C-1 fix: validar ?key= contra a chave real do trip, não apenas verificar que existe.
 // A chave tem formato 12 hex chars (gerada com crypto.getRandomValues).
@@ -81,14 +80,25 @@ export default function App() {
 
   useEffect(() => {
     if (!needsAsyncCheck) return
-    // Convidado: verifica against Supabase
-    fetchTripRow(_tripParam).then(row => {
-      setInviteValid(!!(row?.invite_key && row.invite_key === _keyParam))
-      setInviteChecked(true)
-    }).catch(() => {
-      setInviteValid(true)
-      setInviteChecked(true)
+    // Convidado: valida a chave server-side (o cliente nunca vê o invite_token real).
+    // Falha fechada: qualquer erro, timeout ou resposta ambígua nega o acesso —
+    // ao contrário do comportamento anterior, que abria acesso em caso de falha.
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 5000)
+    fetch(`/api/trip?tripId=${encodeURIComponent(_tripParam)}`, {
+      signal: controller.signal,
+      headers: { 'X-Invite-Key': _keyParam },
     })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        setInviteValid(data?.keyValid === true)
+        setInviteChecked(true)
+      })
+      .catch(() => {
+        setInviteValid(false)
+        setInviteChecked(true)
+      })
+      .finally(() => clearTimeout(timer))
   }, [needsAsyncCheck])
   const shouldReduceMotion = useReducedMotion()
   const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
@@ -164,7 +174,10 @@ export default function App() {
   const handleToggleItem = useCallback((id) => trip.toggleItem(id, currentUserName), [trip.toggleItem, currentUserName])
 
   const showWizard = showWizardOverride || (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid)
-  const showUpsell = upsellForced || (isGuest && !isPremium && !verifying && !upsellDismissed && !trip.loading)
+  // Nunca mostrar o upsell automático antes do convidado escrever o nome —
+  // caso contrário este modal (z-600) tapa o GuestNamePrompt (z-500) e a
+  // pessoa nunca chega a ficar associada às despesas.
+  const showUpsell = upsellForced || (isGuest && !!guestName && !isPremium && !verifying && !upsellDismissed && !trip.loading)
 
   // Garante que o nome do owner está sempre na lista de pessoas — corre uma vez em mount
   useEffect(() => {

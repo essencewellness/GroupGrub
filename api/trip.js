@@ -15,16 +15,28 @@ function sanitizeTrip(raw) {
 export default async function handler(req) {
   const base = supabaseUrl()
 
-  // GET /api/trip?tripId=X — public read (no token needed, RLS SELECT is open)
+  // GET /api/trip?tripId=X (+ optional X-Invite-Key header) — public read, no
+  // token needed for the base row (RLS SELECT is open). invite_token is fetched
+  // (service_role bypasses the anon column REVOKE) but is NEVER included in the
+  // response — only used server-side to compute `keyValid`, so the browser can
+  // decide guest-mode vs paywall without ever learning the real write secret.
+  // The key travels as a header, not a query param, so it doesn't end up in
+  // access logs or any edge/CDN caching keyed on the URL.
   if (req.method === 'GET') {
-    const tripId = new URL(req.url).searchParams.get('tripId')
+    const url = new URL(req.url)
+    const tripId = url.searchParams.get('tripId')
+    const key = req.headers.get('x-invite-key')
     if (!tripId) return jsonErr('tripId required')
     const res = await fetch(
       `${base}/rest/v1/trips?id=eq.${encodeURIComponent(tripId)}&select=*`,
       { headers: adminHeaders() }
     )
     const rows = await res.json().catch(() => [])
-    return jsonOk(Array.isArray(rows) ? rows[0] ?? null : null)
+    const row = Array.isArray(rows) ? rows[0] ?? null : null
+    if (!row) return jsonOk(null)
+    const { invite_token, ...safeRow } = row
+    if (key !== null) safeRow.keyValid = !!invite_token && invite_token === key
+    return jsonOk(safeRow)
   }
 
   if (req.method !== 'POST' && req.method !== 'PATCH' && req.method !== 'DELETE') {
