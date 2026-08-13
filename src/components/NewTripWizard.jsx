@@ -8,6 +8,7 @@ const today = new Date().toISOString().slice(0, 10)
 
 export default function NewTripWizard({ open, onClose, onCreate }) {
   const { t } = useTranslation()
+  const titleId = useId()
   const shouldReduceMotion = useReducedMotion()
   const [step, setStep] = useState(1)
   const [title, setTitle] = useState('')
@@ -55,7 +56,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
             ref={dialogRef}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="wizard-dialog-title"
+          aria-labelledby={titleId}
           tabIndex={-1}
           initial={shouldReduceMotion ? false : { scale: 0.94, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -95,7 +96,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                   <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#FF5A26]/10 border border-[#FF5A26]/25 flex items-center justify-center text-2xl" style={{ filter: 'drop-shadow(0 0 12px rgba(255,90,38,0.5))' }}>
                     🛰️
                   </div>
-                  <h2 id="wizard-dialog-title" className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step1Title')}</h2>
+                  <h2 id={titleId} className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step1Title')}</h2>
                   <p className="text-[0.78rem] text-muted mt-1.5">{t('wizard.step1Sub')}</p>
                 </div>
 
@@ -140,7 +141,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                   <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#FF5A26]/10 border border-[#FF5A26]/25 flex items-center justify-center text-2xl">
                     📅
                   </div>
-                  <h2 id="wizard-dialog-title" className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step2Title')}</h2>
+                  <h2 id={titleId} className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step2Title')}</h2>
                   <p className="text-[0.78rem] text-muted mt-1.5">{t('wizard.step2Sub')}</p>
                 </div>
 
