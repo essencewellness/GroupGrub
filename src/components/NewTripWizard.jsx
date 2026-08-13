@@ -46,9 +46,9 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
       {open && (
         <motion.div
           key="wizard"
-          initial={{ opacity: 0 }}
+          initial={shouldReduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0 }}
           className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto"
         >
           <motion.div
@@ -57,9 +57,9 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
           aria-modal="true"
           aria-labelledby="wizard-dialog-title"
           tabIndex={-1}
-          initial={{ scale: 0.94, opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? false : { scale: 0.94, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.96, opacity: 0, y: 10 }}
+          exit={shouldReduceMotion ? undefined : { scale: 0.96, opacity: 0, y: 10 }}
           transition={{ type: 'spring', stiffness: 320, damping: 30 }}
           className="w-full max-w-[440px] bg-[#080A0A] border border-white/10 rounded-[28px] p-7 relative outline-none"
           style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgb(var(--brand-rgb) / 0.06)' }}

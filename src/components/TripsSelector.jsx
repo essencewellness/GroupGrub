@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Plus, Trash2, Sparkles } from 'lucide-react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { ChevronDown, Plus, Trash2 } from 'lucide-react'
 import { onActivateKey } from '../lib/activateKeyDown'
 
 export default function TripsSelector({
@@ -10,9 +10,8 @@ export default function TripsSelector({
   onSwitchTrip,
   onDeleteTrip,
   onShowWizard,
-  onShowPricing,
-  isPremium,
 }) {
+  const shouldReduceMotion = useReducedMotion()
   const [isOpen, setIsOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const confirmTimerRef = useRef(null)
@@ -22,11 +21,8 @@ export default function TripsSelector({
     title: tripsLoading ? '…' : 'Minha Viagem',
   }
 
-  const canCreateMore = isPremium || trips.length === 0
-
   const handleNewTrip = () => {
     setIsOpen(false)
-    if (!canCreateMore) { onShowPricing?.(); return }
     onShowWizard()
   }
 
@@ -79,9 +75,9 @@ export default function TripsSelector({
             <div aria-hidden="true" className="fixed inset-0 z-[99]" onClick={() => setIsOpen(false)} />
 
             <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -6, scale: 0.97 }}
               transition={{ duration: 0.18 }}
               role="listbox"
               aria-label="Viagens"
@@ -143,32 +139,12 @@ export default function TripsSelector({
               <div className="h-px bg-white/[0.06] mb-2" />
 
               {/* Nova viagem */}
-              {canCreateMore ? (
-                <button
-                  onClick={handleNewTrip}
-                  className="w-full py-2.5 px-3 rounded-xl border border-dashed border-brand/35 bg-brand/[0.04] text-brand font-semibold text-[0.82rem] hover:bg-brand/[0.09] transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <Plus size={14} aria-hidden="true" /> Nova viagem
-                </button>
-              ) : (
-                <div className="px-2 pb-1">
-                  <div className="text-[0.7rem] text-faint text-center mb-2">
-                    Plano Free: 1 viagem activa
-                  </div>
-                  <button
-                    onClick={() => { setIsOpen(false); onShowPricing?.() }}
-                    className="w-full py-2.5 px-3 rounded-xl font-bold text-[0.82rem] flex items-center justify-center gap-1.5 transition-all"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(200,67,26,0.25), rgba(255,90,38,0.18))',
-                      border: '1px solid rgba(255,90,38,0.45)',
-                      color: '#ff5a26',
-                      boxShadow: '0 0 20px rgba(255,90,38,0.2)',
-                    }}
-                  >
-                    <Sparkles size={13} aria-hidden="true" /> Unlock Pro · 10€
-                  </button>
-                </div>
-              )}
+              <button
+                onClick={handleNewTrip}
+                className="w-full py-2.5 px-3 rounded-xl border border-dashed border-brand/35 bg-brand/[0.04] text-brand font-semibold text-[0.82rem] hover:bg-brand/[0.09] transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Plus size={14} aria-hidden="true" /> Nova viagem
+              </button>
             </motion.div>
           </>
         )}

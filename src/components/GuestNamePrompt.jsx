@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { GUEST_NAME_MAX_LENGTH } from '../lib/constants'
 
 /**
- * Dialog shown once to a guest who has not yet entered their name.
+ * Dialog shown once to whoever opens the app without a name saved yet.
  * Keeps App.jsx lean and makes this flow testable in isolation.
  *
  * Props:
@@ -11,6 +11,7 @@ import { GUEST_NAME_MAX_LENGTH } from '../lib/constants'
  *   onConfirm       — () => void  — called when the user submits a valid name
  */
 export default function GuestNamePrompt({ guestNameInput, onInputChange, onConfirm }) {
+  const shouldReduceMotion = useReducedMotion()
   const canSubmit = !!guestNameInput.trim()
 
   const handleKeyDown = (e) => {
@@ -19,9 +20,9 @@ export default function GuestNamePrompt({ guestNameInput, onInputChange, onConfi
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      exit={shouldReduceMotion ? undefined : { opacity: 0 }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="guest-name-title"
@@ -29,7 +30,7 @@ export default function GuestNamePrompt({ guestNameInput, onInputChange, onConfi
       style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
     >
       <motion.div
-        initial={{ scale: 0.92, y: 20 }}
+        initial={shouldReduceMotion ? false : { scale: 0.92, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         className="w-full max-w-[340px] rounded-2xl p-7"
         style={{ background: '#0e0e10', border: '1px solid rgba(255,255,255,0.1)' }}

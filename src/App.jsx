@@ -1,13 +1,9 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Receipt, ShieldAlert, Sparkles } from 'lucide-react'
+import { UtensilsCrossed, ShoppingCart, CalendarDays, RefreshCw, Share2, Plus, Receipt } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import useTrip, { buildTripStructure } from './hooks/useTrip'
 import { useTrips } from './hooks/useTrips'
-import usePremium from './hooks/usePremium'
-import { useRole } from './hooks/useRole'
-const Pricing = lazy(() => import('./pages/Pricing'))
-const Onboarding = lazy(() => import('./pages/Onboarding'))
 import MealCard from './components/MealCard'
 import ShoppingTab from './components/ShoppingTab'
 import AddMealModal from './components/AddMealModal'
@@ -16,33 +12,22 @@ import Plano from './components/Plano'
 import TripsSelector from './components/TripsSelector'
 import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
-import GuestUpsellModal from './components/GuestUpsellModal'
 import GuestNamePrompt from './components/GuestNamePrompt'
-import { getInviteKey } from './lib/inviteKey'
 import { GUEST_NAME_MAX_LENGTH, TOAST_DURATION_MS, TAB_SWITCH_DELAY_MS } from './lib/constants'
 
-// C-1 fix: validar ?key= contra a chave real do trip, não apenas verificar que existe.
-// A chave tem formato 12 hex chars (gerada com crypto.getRandomValues).
-const _ip = new URLSearchParams(window.location.search)
-const _tripParam = _ip.get('trip') || ''
-const _keyParam  = _ip.get('key')  || ''
-const KEY_FORMAT = /^[0-9a-f]{10,}$/
-// Verificação síncrona: formato válido + match com chave local (owner no mesmo dispositivo)
-const _localKey = _tripParam ? getInviteKey(_tripParam) : ''
-const INITIAL_INVITE_VALID = !!(
-  _tripParam && _keyParam &&
-  KEY_FORMAT.test(_keyParam) &&
-  (!_localKey || _keyParam === _localKey)  // se há chave local, tem de coincidir
-)
+// App gratuita, sem contas: quem tem o link tem acesso total. Só pedimos o
+// nome uma vez (para atribuir despesas/itens) — ver `myName` mais abaixo.
+const isOwner = true
 
 function Toast({ toast }) {
+  const shouldReduceMotion = useReducedMotion()
   return (
     <AnimatePresence>
       {toast && (
         <motion.div
-          initial={{ opacity: 0, y: 60, scale: 0.9 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 60, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 40 }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0, y: 40 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           role="alert"
           aria-live="assertive"
@@ -66,56 +51,19 @@ export default function App() {
   const { t } = useTranslation()
   const trip = useTrip()
   const trips = useTrips()
-  const { isPremium, verifying } = usePremium()
-  const { isOwner, isGuest } = useRole(trip.tripId)
-
-  // C-1 fix (async): valida o ?key= contra o invite_key guardado no Supabase.
-  // INITIAL_INVITE_VALID faz validação síncrona (formato + localStorage).
-  // Este state refina a decisão assim que o Supabase responde.
-  // null = a verificar | true = válido | false = inválido
-  // Synchronous cases resolve immediately; guest async case needs the effect
-  const needsAsyncCheck = _tripParam && _keyParam && KEY_FORMAT.test(_keyParam) && !(_localKey && _keyParam === _localKey)
-  const [inviteChecked, setInviteChecked] = useState(!needsAsyncCheck)
-  const [inviteValid, setInviteValid] = useState(INITIAL_INVITE_VALID)
-
-  useEffect(() => {
-    if (!needsAsyncCheck) return
-    // Convidado: valida a chave server-side (o cliente nunca vê o invite_token real).
-    // Falha fechada: qualquer erro, timeout ou resposta ambígua nega o acesso —
-    // ao contrário do comportamento anterior, que abria acesso em caso de falha.
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 5000)
-    fetch(`/api/trip?tripId=${encodeURIComponent(_tripParam)}`, {
-      signal: controller.signal,
-      headers: { 'X-Invite-Key': _keyParam },
-    })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        setInviteValid(data?.keyValid === true)
-        setInviteChecked(true)
-      })
-      .catch(() => {
-        setInviteValid(false)
-        setInviteChecked(true)
-      })
-      .finally(() => clearTimeout(timer))
-  }, [needsAsyncCheck])
   const shouldReduceMotion = useReducedMotion()
-  const [guestName, setGuestName] = useState(() => localStorage.getItem('groupgrub_guest_name') || '')
+  // Nome de quem está a usar a app agora — pedido uma única vez (ver GuestNamePrompt
+  // mais abaixo), independentemente de ter criado a viagem ou entrado por um link.
+  const [myName, setMyName] = useState(
+    () => localStorage.getItem('groupgrub_user_name') || localStorage.getItem('groupgrub_guest_name') || ''
+  )
   const [guestNameInput, setGuestNameInput] = useState('')
-  const [ownerName] = useState(() => localStorage.getItem('groupgrub_user_name') || '')
-  const currentUserName = guestName || ownerName
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
   const [showShare, setShare] = useState(false)
-  const [showPricing, setShowPricing] = useState(false)
   const [showWizardOverride, setShowWizardOverride] = useState(false)
   const [wizardDismissed, setWizardDismissed] = useState(false)
-  const [upsellDismissed, setUpsellDismissed] = useState(
-    () => !!sessionStorage.getItem('groupgrub_upsell_dismissed')
-  )
-  const [upsellForced, setUpsellForced] = useState(false)
   const [toast, setToast] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
   const toastTimerRef = useRef(null)
@@ -171,22 +119,17 @@ export default function App() {
 
   // Stable toggle callback for ShoppingTab — avoids recreating an arrow function
   // per render that would break React.memo on ShopItem items.
-  const handleToggleItem = useCallback((id) => trip.toggleItem(id, currentUserName), [trip.toggleItem, currentUserName])
+  const handleToggleItem = useCallback((id) => trip.toggleItem(id, myName), [trip.toggleItem, myName])
 
-  const showWizard = showWizardOverride || (!trip.loading && trip.needsSetup && !wizardDismissed && !inviteValid)
-  // Nunca mostrar o upsell automático antes do convidado escrever o nome —
-  // caso contrário este modal (z-600) tapa o GuestNamePrompt (z-500) e a
-  // pessoa nunca chega a ficar associada às despesas.
-  const showUpsell = upsellForced || (isGuest && !!guestName && !isPremium && !verifying && !upsellDismissed && !trip.loading)
+  const showWizard = showWizardOverride || (!trip.loading && trip.needsSetup && !wizardDismissed)
 
-  // Garante que o nome do owner está sempre na lista de pessoas — corre uma vez em mount
+  // Garante que quem já tinha dado o nome está sempre na lista de pessoas — corre uma vez em mount
   useEffect(() => {
-    const ownerName = localStorage.getItem('groupgrub_user_name')
-    if (ownerName && !trip.pessoas.includes(ownerName)) {
-      trip.addPessoa(ownerName)
+    if (myName && !trip.pessoas.includes(myName)) {
+      trip.addPessoa(myName)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // intentionally empty — owner name sync is a one-shot mount operation
+  }, []) // intentionally empty — one-shot mount operation
 
   if (trip.loading) {
     return (
@@ -220,14 +163,6 @@ export default function App() {
     )
   }
 
-  // Aguarda verificação async do invite key antes de mostrar paywall
-  if (!inviteChecked) return null
-
-  // Non-premium users who didn't arrive via a valid invite link see the onboarding paywall
-  if (!isPremium && !verifying && !inviteValid) {
-    return <Suspense fallback={null}><Onboarding tripId={trip.tripId} /></Suspense>
-  }
-
   return (
     <div className="min-h-dvh flex flex-col bg-black text-cream">
       {/* HEADER */}
@@ -252,11 +187,9 @@ export default function App() {
                   currentTripId={trip.tripId}
                   trips={trips.trips}
                   tripsLoading={trips.loading}
-                  isPremium={isPremium}
                   onSwitchTrip={trip.setTripId}
                   onDeleteTrip={trips.deleteTrip}
                   onShowWizard={() => setShowWizardOverride(true)}
-                  onShowPricing={() => setShowPricing(true)}
                 />
               </div>
             </div>
@@ -318,41 +251,6 @@ export default function App() {
           </div>
         </div>
       </header>
-
-      {/* GUEST BANNER */}
-      {isGuest && (
-        <div className="max-w-[680px] mx-auto px-4 pt-3">
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl border"
-            style={{ background: 'rgba(155,123,255,0.08)', borderColor: 'rgba(155,123,255,0.28)' }}
-          >
-            <ShieldAlert size={16} style={{ color: '#9b7bff', flexShrink: 0 }} />
-            <div className="flex-1 min-w-0">
-              <div className="font-mono text-[0.65rem] font-bold tracking-[0.12em] uppercase" style={{ color: '#9b7bff' }}>
-                {t('role.guestBanner')}
-              </div>
-              <div className="text-[0.72rem] text-muted mt-0.5">
-                {t('role.guestDesc')}
-              </div>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.93 }}
-              onClick={() => setUpsellForced(true)}
-              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[0.62rem] font-bold cursor-pointer transition-all"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,90,38,0.25), rgba(255,90,38,0.15))',
-                border: '1px solid rgba(255,90,38,0.45)',
-                color: '#ff5a26',
-              }}
-            >
-              <Sparkles size={11} />
-              10€ vitalício
-            </motion.button>
-          </motion.div>
-        </div>
-      )}
 
       {/* CONTENT */}
       <main className="flex-1 max-w-[680px] w-full mx-auto px-4 py-6 pb-52" style={{ paddingBottom: 'max(13rem, calc(8rem + env(keyboard-inset-height, 0px)))' }}>
@@ -439,7 +337,7 @@ export default function App() {
                 onAddPessoa={trip.addPessoa}
                 onRemovePessoa={trip.removePessoa}
                 isOwner={isOwner}
-                currentUser={currentUserName}
+                currentUser={myName}
               />
             </motion.div>
           )}
@@ -459,9 +357,6 @@ export default function App() {
                 items={trip.items}
                 pessoas={trip.pessoas}
                 isOwner={isOwner}
-                isGuest={isGuest}
-                isPremium={isPremium}
-
                 tripId={trip.tripId}
                 onToggle={handleToggleItem}
                 onRemove={trip.removeItem}
@@ -469,7 +364,6 @@ export default function App() {
                 onAddItem={trip.addItem}
                 onResetTicks={trip.resetTicks}
                 onCategorizarTudo={trip.categorizarTudo}
-                onShowPricing={() => setShowPricing(true)}
                 showToast={showToast}
               />
             </motion.div>
@@ -479,49 +373,23 @@ export default function App() {
 
       <AddMealModal open={showAddMeal} onClose={() => setAddMeal(false)} onAdd={handleAddMealWithIngredientes} />
       <ShareModal open={showShare} onClose={() => setShare(false)} shareUrl={trip.shareUrl} tripId={trip.tripId} isOwner={isOwner} />
-      {showUpsell && (
-        <GuestUpsellModal
-          tripId={trip.tripId}
-          onClose={() => {
-            setUpsellForced(false)
-            setUpsellDismissed(true)
-            sessionStorage.setItem('groupgrub_upsell_dismissed', '1')
-          }}
-        />
-      )}
       <NewTripWizard
         open={showWizard}
         onClose={() => { setWizardDismissed(true); setShowWizardOverride(false) }}
         onCreate={handleCreateTrip}
       />
-      {showPricing && (
-        <Suspense fallback={null}>
-          <Pricing
-            onClose={() => setShowPricing(false)}
-            tripId={trip.tripId}
-          />
-        </Suspense>
-      )}
-      {verifying && (
-        <div role="status" aria-live="polite" aria-label="A verificar pagamento, aguarda um momento" className="fixed inset-0 z-[600] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center gap-4">
-          <div className="text-4xl">✨</div>
-          <div className="font-mono text-[0.75rem] tracking-[0.2em] text-brand uppercase motion-safe:animate-pulse">
-            A verificar pagamento…
-          </div>
-        </div>
-      )}
-      {/* Guest name prompt — shown once when a guest opens the app without a name */}
+      {/* Pedido de nome — mostrado uma única vez, a quem quer que abra a app sem nome guardado */}
       <AnimatePresence>
-        {isGuest && !guestName && (
+        {!myName && (
           <GuestNamePrompt
             guestNameInput={guestNameInput}
             onInputChange={setGuestNameInput}
             onConfirm={() => {
               const n = guestNameInput.trim().slice(0, GUEST_NAME_MAX_LENGTH)
               if (!n) return
-              localStorage.setItem('groupgrub_guest_name', n)
+              localStorage.setItem('groupgrub_user_name', n)
               trip.addPessoa(n)
-              setGuestName(n)
+              setMyName(n)
             }}
           />
         )}

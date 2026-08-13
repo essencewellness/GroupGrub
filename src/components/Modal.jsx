@@ -1,20 +1,21 @@
 import { useId } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 
 export default function Modal({ open, onClose, title, children }) {
   const titleId  = useId()
   const panelRef = useFocusTrap(open, onClose)
+  const shouldReduceMotion = useReducedMotion()
 
   return (
     <AnimatePresence>
       {open && (
         <>
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={shouldReduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0 }}
             onClick={onClose}
             aria-hidden="true"
             className="fixed inset-0 bg-black/85 backdrop-blur-md z-[400]"
@@ -24,9 +25,9 @@ export default function Modal({ open, onClose, title, children }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            initial={{ opacity: 0, scale: 0.92, y: 30 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.92, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 20 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.94, y: 20 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
             className="fixed bottom-0 left-0 right-0 z-[401] bg-panel border-t border-line rounded-t-[28px] max-h-[92dvh] overflow-y-auto"
             style={{ boxShadow: '0 -8px 60px rgba(0,0,0,0.85), 0 -1px 24px rgb(var(--brand-rgb) / 0.12)', paddingBottom: 'calc(env(safe-area-inset-bottom,0px) + 24px)' }}

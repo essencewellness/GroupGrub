@@ -12,8 +12,6 @@ export default function ShoppingTab({
   items = [],
   pessoas = [],
   isOwner,
-  isGuest,
-  isPremium,
   tripId,
   onToggle,
   onRemove,
@@ -21,7 +19,6 @@ export default function ShoppingTab({
   onAddItem,
   onResetTicks,
   onCategorizarTudo,
-  onShowPricing,
   showToast,
 }) {
   const { t } = useTranslation()
@@ -138,7 +135,6 @@ export default function ShoppingTab({
         <motion.button
           whileTap={{ scale: 0.93 }}
           onClick={async () => {
-            if (!isPremium) { onShowPricing?.(); return }
             await exportShoppingList({ tripId, items, pessoas, tripName: APP_NAME })
             showToast(t('common.pdfExported'))
           }}
@@ -203,13 +199,6 @@ export default function ShoppingTab({
       })}
 
       {/* Add item */}
-      {isGuest && (
-        <div className="mt-2 px-3.5 py-2.5 rounded-xl border border-line bg-white/[0.02] text-center">
-          <span className="font-mono text-[0.65rem] text-faint tracking-[0.1em]">
-            Só o organizador pode adicionar itens
-          </span>
-        </div>
-      )}
       {isOwner && (
         <motion.div
           initial={{ opacity: 0 }}
