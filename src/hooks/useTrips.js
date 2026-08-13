@@ -3,6 +3,7 @@ import { supabase, hasSupabase } from "../lib/supabase"
 import { v4 as uuid } from "uuid"
 import { claimOwner } from "./useRole"
 import { getOrCreateInviteKey } from "../lib/inviteKey"
+import { upsertTrip, deleteTrip as dbDeleteTrip } from "../lib/db"
 
 /**
  * Multi-trips hook.
@@ -111,28 +112,18 @@ export function useTrips() {
         updated_at: now,
       }
 
-      if (hasSupabase && supabase) {
-        try {
-          // Anonymous app — upsert without owner_id so the trip row exists in Supabase
-          // even without Supabase Auth. Items/meals/expenses reference this row via FK.
-          const { error: insertError } = await supabase
-            .from("trips")
-            .upsert(newTrip, { onConflict: "id" })
-          if (insertError) console.warn("Failed to create trip in Supabase:", insertError)
-        } catch (e) {
-          console.warn("Supabase unavailable, trip saved to localStorage only:", e?.message)
-        }
-      }
-
-      // Always update localStorage as fallback
-      const all = JSON.parse(localStorage.getItem(LS_TRIPS) || "[]")
-      localStorage.setItem(LS_TRIPS, JSON.stringify([newTrip, ...all]))
-
-      // Set as active, claim ownership, and generate invite key
+      // Set as active, claim ownership, and generate the invite token BEFORE
+      // writing — the write goes through the server-side proxy (anon has no
+      // direct INSERT rights on trips, only service_role does), and the proxy
+      // needs a token to bootstrap write-authorization for this brand-new trip.
       localStorage.setItem(LS_TRIP_ID, tripId)
       sessionStorage.setItem(LS_TRIP_ID, tripId)
       claimOwner(tripId)
       getOrCreateInviteKey(tripId)
+
+      // upsertTrip writes through the server-side proxy and also mirrors to
+      // localStorage (upsert-by-id), so no separate local write is needed here.
+      await upsertTrip(newTrip)
 
       setTrips((prev) => [newTrip, ...prev])
       return tripId
@@ -163,23 +154,17 @@ export function useTrips() {
         template_type: null,
         created_at: now,
         updated_at: now,
-        source_trip_id: sourceTripId,
       }
 
-      if (hasSupabase && supabase) {
-        try {
-          await supabase.from("trips").upsert(newTrip, { onConflict: "id" })
-        } catch (e) {
-          console.warn("Supabase unavailable, duplicated trip saved locally only:", e?.message)
-        }
-      }
+      // Same bootstrap-token-first requirement as createTrip — see comment there.
+      localStorage.setItem(LS_TRIP_ID, tripId)
+      claimOwner(tripId)
+      getOrCreateInviteKey(tripId)
 
-      const all = JSON.parse(localStorage.getItem(LS_TRIPS) || "[]")
-      localStorage.setItem(LS_TRIPS, JSON.stringify([newTrip, ...all]))
+      await upsertTrip(newTrip)
 
       // Copy items from source trip
       // This would be handled by the db layer — for now just set the ID
-      localStorage.setItem(LS_TRIP_ID, tripId)
 
       setTrips((prev) => [newTrip, ...prev])
       return tripId
@@ -189,8 +174,9 @@ export function useTrips() {
 
   const deleteTrip = useCallback(async (tripId) => {
     setTrips((prev) => prev.filter((t) => t.id !== tripId))
-    if (hasSupabase && supabase) {
-      try { await supabase.from('trips').delete().eq('id', tripId) } catch { /* fallback */ }
+    // Must read the invite token before clearing it below.
+    if (hasSupabase) {
+      try { await dbDeleteTrip(tripId) } catch { /* fallback */ }
     }
     // Clean up all localStorage keys for this trip
     const keysToRemove = [

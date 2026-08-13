@@ -4,7 +4,7 @@ export const config = { runtime: 'edge' }
 
 // Allowed top-level columns a client may write/patch on the trips table.
 // invite_token and id are set server-side only; owner_id and created_at must never be client-writable.
-const ALLOWED_TRIP_FIELDS = ['title', 'pessoas', 'plano', 'meta', 'start_date', 'end_date', 'currency', 'note', 'settings']
+const ALLOWED_TRIP_FIELDS = ['title', 'pessoas', 'plano', 'meta', 'start_date', 'end_date', 'currency', 'note', 'settings', 'template_type']
 
 function sanitizeTrip(raw) {
   const out = {}
