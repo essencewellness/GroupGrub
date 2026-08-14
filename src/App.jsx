@@ -13,6 +13,7 @@ import TripsSelector from './components/TripsSelector'
 import NewTripWizard from './components/NewTripWizard'
 import ExpensesTab from './components/ExpensesTab'
 import GuestNamePrompt from './components/GuestNamePrompt'
+import JoinExpensesPrompt from './components/JoinExpensesPrompt'
 import { GUEST_NAME_MAX_LENGTH, TOAST_DURATION_MS, TAB_SWITCH_DELAY_MS } from './lib/constants'
 import { getInviteKey } from './lib/inviteKey'
 import { usePWAUpdate } from './hooks/usePWAUpdate'
@@ -96,6 +97,7 @@ export default function App() {
     () => localStorage.getItem('groupgrub_user_name') || localStorage.getItem('groupgrub_guest_name') || ''
   )
   const [guestNameInput, setGuestNameInput] = useState('')
+  const [joinExpensesPrompt, setJoinExpensesPrompt] = useState(null) // null | { name: string, count: number }
   const [tab, setTab] = useState('refeicoes')
   const [expanded, setExpanded] = useState(null)
   const [showAddMeal, setAddMeal] = useState(false)
@@ -435,7 +437,29 @@ export default function App() {
               localStorage.setItem('groupgrub_user_name', n)
               trip.addPessoa(n)
               setMyName(n)
+              // If the trip already has expenses, ask whether to join splitting
+              // them too — otherwise this person would only ever appear in
+              // expenses added after they joined, with no way to opt into the
+              // ones already there.
+              if (trip.expenses.length > 0) {
+                setJoinExpensesPrompt({ name: n, count: trip.expenses.length })
+              }
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Pedido para entrar na divisão de despesas já existentes — só mostrado
+          uma vez, logo a seguir ao nome, se a trip já tiver despesas. */}
+      <AnimatePresence>
+        {joinExpensesPrompt && (
+          <JoinExpensesPrompt
+            count={joinExpensesPrompt.count}
+            onJoin={() => {
+              trip.joinExistingExpenses(joinExpensesPrompt.name)
+              setJoinExpensesPrompt(null)
+            }}
+            onSkip={() => setJoinExpensesPrompt(null)}
           />
         )}
       </AnimatePresence>

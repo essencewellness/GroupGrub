@@ -185,6 +185,8 @@ export default function useTrip() {
   useEffect(() => { pessoasRef.current = pessoas }, [pessoas])
   const planoRef = useRef(plano)
   useEffect(() => { planoRef.current = plano }, [plano])
+  const expensesRef = useRef(expenses)
+  useEffect(() => { expensesRef.current = expenses }, [expenses])
 
   /** Switch to a different trip — updates localStorage/sessionStorage/URL then reloads */
   const setTripId = useCallback((newId) => {
@@ -479,6 +481,29 @@ export default function useTrip() {
     await deleteExpense(tripId, id)
   }, [tripId])
 
+  const updateExpense = useCallback(async (id, patch) => {
+    const exp = expensesRef.current.find(e => e.id === id)
+    if (!exp) return
+    const updated = { ...exp, ...patch }
+    setExpenses(prev => prev.map(e => e.id === id ? updated : e))
+    await upsertExpense(tripId, updated)
+  }, [tripId])
+
+  /**
+   * Adds `nome` to the split of every existing expense that doesn't already
+   * include them — used when a newly-joined person opts in to sharing the
+   * trip's expenses so far, instead of only being included in expenses
+   * created after they joined.
+   */
+  const joinExistingExpenses = useCallback(async (nome) => {
+    const targets = expensesRef.current.filter(e => !(e.dividir_por || []).includes(nome))
+    await Promise.all(targets.map(e => {
+      const updated = { ...e, dividir_por: [...(e.dividir_por || []), nome] }
+      setExpenses(prev => prev.map(x => x.id === e.id ? updated : x))
+      return upsertExpense(tripId, updated)
+    }))
+  }, [tripId])
+
   const addPessoa = useCallback(async (nome) => {
     const trimmed = nome.trim()
     if (!trimmed || pessoasRef.current.includes(trimmed)) return
@@ -516,7 +541,7 @@ export default function useTrip() {
     setTripId,
     items, toggleItem, updateItem, addItem, addIngredientes, removeItem, resetTicks, categorizarTudo,
     meals, addMeal, updateMeal, removeMeal,
-    expenses, addExpense, removeExpense,
+    expenses, addExpense, removeExpense, updateExpense, joinExistingExpenses,
     plano, updatePlano,
     meta, setTripMeta,
     needsSetup: !meta || !meta.startDate || !meta.endDate,
