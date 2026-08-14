@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { supabase, hasSupabase } from "../lib/supabase"
 import { v4 as uuid } from "uuid"
 import { claimOwner } from "./useRole"
-import { getOrCreateInviteKey } from "../lib/inviteKey"
+import { getOrCreateInviteKey, getInviteKey } from "../lib/inviteKey"
 import { upsertTrip, deleteTrip as dbDeleteTrip } from "../lib/db"
 
 /**
@@ -138,6 +138,10 @@ export function useTrips() {
     sessionStorage.setItem(LS_TRIP_ID, tripId)
     const url = new URL(window.location)
     url.searchParams.set('trip', tripId)
+    // Carry &key= if we have it — same reasoning as handleCreateTrip in App.jsx:
+    // this URL is the recovery path if localStorage is ever wiped.
+    const key = getInviteKey(tripId)
+    if (key) url.searchParams.set('key', key)
     url.hash = ''
     window.location.href = url.toString()
   }, [])

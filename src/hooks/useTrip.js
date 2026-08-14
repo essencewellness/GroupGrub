@@ -216,6 +216,19 @@ export default function useTrip() {
           return merged
         })
       }
+      // Retry the server insert for this device's own name if it's missing from
+      // the server list. addPessoa() already tries once on join, but if that
+      // single attempt timed out (e.g. flaky wifi — exactly the conditions this
+      // app is used under), the local state still shows "joined" forever with
+      // no retry and the person is invisible to everyone else (confirmed
+      // reproducible). loadData runs on mount/focus/polling, so this closes
+      // the gap without needing a dedicated retry queue.
+      const myName = localStorage.getItem('groupgrub_user_name') || localStorage.getItem('groupgrub_guest_name')
+      if (myName && !dbPessoas.includes(myName)) {
+        addPessoaRemote(tripId, myName).then(serverPessoas => {
+          if (serverPessoas) { savePessoas(tripId, serverPessoas); setPessoas(serverPessoas) }
+        })
+      }
       // Restore meta/plano from Supabase — this must resolve BEFORE loading flips
       // to false, otherwise needsSetup (computed from meta) briefly reads "no meta
       // yet" on a guest opening an existing trip's link and flashes the "create
@@ -432,14 +445,14 @@ export default function useTrip() {
       title: newMeta.title || 'Nova Viagem',
       start_date: newMeta.startDate,
       end_date: newMeta.endDate,
-    }).catch(() => {})
+    }).catch((e) => console.warn('setTripMeta: falha ao gravar no Supabase, ficou só local', e))
   }, [tripId])
 
   const updatePlano = useCallback((slotKey, selection) => {
     const next = { ...planoRef.current, [slotKey]: selection }
     localStorage.setItem(`ferias_plano_${tripId}`, JSON.stringify(next))
     setPlano(next)
-    upsertTripRow(tripId, { plano: next }).catch(() => {})
+    upsertTripRow(tripId, { plano: next }).catch((e) => console.warn('updatePlano: falha ao gravar no Supabase, ficou só local', e))
   }, [tripId])
 
   /* ══ EXPENSES ══ */

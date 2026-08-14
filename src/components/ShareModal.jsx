@@ -4,7 +4,7 @@ import { Copy, Check, Wifi, WifiOff, ExternalLink, LogIn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal'
 import { hasSupabase } from '../lib/supabase'
-import { getEffectiveToken } from '../lib/inviteKey'
+import { getEffectiveToken, getInviteKey } from '../lib/inviteKey'
 
 function extractTripId(text) {
   const trimmed = text.trim()
@@ -50,12 +50,21 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
       const u = new URL(trimmed)
       key = u.searchParams.get('key') || ''
     } catch { /* plain id, no key */ }
+    // Fall back to a key this device already knows for that trip (e.g. switching
+    // back to a trip it created earlier). If we still have nothing, refuse to
+    // proceed: entering with no key silently produces a read-only session where
+    // every write no-ops forever with no visible error — pasting just the bare
+    // code instead of the full link used to do exactly this (confirmed).
+    if (!key) key = getInviteKey(id)
+    if (!key) {
+      setJoinError(true)
+      return
+    }
     localStorage.setItem('ferias_trip_id', id)
     sessionStorage.setItem('ferias_trip_id', id)
     const url = new URL(window.location)
     url.searchParams.set('trip', id)
-    if (key) url.searchParams.set('key', key)
-    else url.searchParams.delete('key')
+    url.searchParams.set('key', key)
     url.hash = ''
     window.location.href = url.toString()
   }

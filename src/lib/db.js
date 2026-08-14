@@ -7,13 +7,19 @@
 import { supabase, hasSupabase } from './supabase'
 import { getEffectiveToken } from './inviteKey'
 
+async function throwWithServerMessage(res, label) {
+  let detail = ''
+  try { detail = (await res.json())?.error || '' } catch { /* body not JSON */ }
+  throw new Error(`${label} ${res.status}${detail ? `: ${detail}` : ''}`)
+}
+
 async function apiWrite(path, body) {
   const res = await fetch(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(`API ${path} ${res.status}`)
+  if (!res.ok) await throwWithServerMessage(res, `API ${path}`)
 }
 
 async function apiPatch(path, body) {
@@ -22,7 +28,7 @@ async function apiPatch(path, body) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(`API ${path} PATCH ${res.status}`)
+  if (!res.ok) await throwWithServerMessage(res, `API ${path} PATCH`)
 }
 
 async function apiDelete(path, body) {
@@ -31,7 +37,7 @@ async function apiDelete(path, body) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(`API ${path} DELETE ${res.status}`)
+  if (!res.ok) await throwWithServerMessage(res, `API ${path} DELETE`)
 }
 
 const LS_ITEMS    = 'ferias_items'
@@ -200,13 +206,16 @@ export async function fetchItems(tripId) {
           .eq('trip_id', tripId)
           .order('created_at')
       )
-      // IMPORTANTE: se o Supabase responder vazio mas tivermos cache local para
-      // esta trip, preferimos a cache. Caso contrário o polling de 5s apagava
-      // do ecrã items acabados de criar offline.
+      // NOTA: uma resposta bem-sucedida com 0 linhas é a verdade — NÃO cair para
+      // a cache local nesse caso. Fazê-lo (como este código costumava fazer)
+      // significa que um dispositivo com itens antigos em cache "ressuscita"
+      // itens genuinamente apagados noutro dispositivo assim que o polling
+      // corre, e pior: onResetTicks/categorizarTudo relêem itemsRef.current e
+      // fazem bulkUpsertItems, reescrevendo os itens fantasma de volta no
+      // Supabase. A cache só serve de fallback quando o pedido FALHA (catch
+      // abaixo), nunca quando o Supabase responde corretamente vazio.
       const remote = data ?? []
-      const local = lsGet(LS_ITEMS, []).filter(i => i.trip_id === tripId)
-      if (remote.length === 0 && local.length > 0) return local
-      if (remote.length) lsSet(LS_ITEMS, mergeById(lsGet(LS_ITEMS, []), remote, tripId))
+      lsSet(LS_ITEMS, mergeById(lsGet(LS_ITEMS, []), remote, tripId))
       return remote
     } catch {
       // Supabase failed — fallback to localStorage
@@ -264,10 +273,10 @@ export async function fetchMeals(tripId) {
           .eq('trip_id', tripId)
           .order('created_at')
       )
+      // Ver nota em fetchItems: resposta bem-sucedida vazia é a verdade, não
+      // cai para a cache (evitava ressuscitar refeições apagadas noutro dispositivo).
       const remote = data ?? []
-      const local = lsGet(LS_MEALS, []).filter(m => m.trip_id === tripId)
-      if (remote.length === 0 && local.length > 0) return local
-      if (remote.length) lsSet(LS_MEALS, mergeById(lsGet(LS_MEALS, []), remote, tripId))
+      lsSet(LS_MEALS, mergeById(lsGet(LS_MEALS, []), remote, tripId))
       return remote
     } catch {
       return lsGet(LS_MEALS, []).filter(m => m.trip_id === tripId)
@@ -313,10 +322,10 @@ export async function fetchExpenses(tripId) {
           .eq('trip_id', tripId)
           .order('created_at')
       )
+      // Ver nota em fetchItems: resposta bem-sucedida vazia é a verdade, não
+      // cai para a cache (evitava ressuscitar despesas apagadas noutro dispositivo).
       const remote = data ?? []
-      const local = lsGet(LS_EXPENSES, []).filter(e => e.trip_id === tripId)
-      if (remote.length === 0 && local.length > 0) return local
-      if (remote.length) lsSet(LS_EXPENSES, mergeById(lsGet(LS_EXPENSES, []), remote, tripId))
+      lsSet(LS_EXPENSES, mergeById(lsGet(LS_EXPENSES, []), remote, tripId))
       return remote
     } catch {
       return lsGet(LS_EXPENSES, []).filter(e => e.trip_id === tripId)
