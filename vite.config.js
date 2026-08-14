@@ -65,7 +65,10 @@ const pwaOptions = {
   devOptions: {
     enabled: false, // PWA off em dev — evita SW cache interferir com HMR
   },
-  injectRegister: 'auto',
+  // Registo manual via virtual:pwa-register/react (ver src/hooks/usePWAUpdate.js) —
+  // precisamos do callback onNeedRefresh para mostrar um banner em vez de a app
+  // ficar presa numa versão antiga em cache sem o utilizador saber.
+  injectRegister: null,
 }
 
 export default defineConfig({

@@ -15,10 +15,46 @@ import ExpensesTab from './components/ExpensesTab'
 import GuestNamePrompt from './components/GuestNamePrompt'
 import { GUEST_NAME_MAX_LENGTH, TOAST_DURATION_MS, TAB_SWITCH_DELAY_MS } from './lib/constants'
 import { getInviteKey } from './lib/inviteKey'
+import { usePWAUpdate } from './hooks/usePWAUpdate'
 
 // App gratuita, sem contas: quem tem o link tem acesso total. Só pedimos o
 // nome uma vez (para atribuir despesas/itens) — ver `myName` mais abaixo.
 const isOwner = true
+
+function UpdateBanner({ show, onReload }) {
+  const shouldReduceMotion = useReducedMotion()
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: -40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0, y: -40 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          role="alert"
+          aria-live="assertive"
+          className="fixed top-0 inset-x-0 z-[600] flex items-center justify-center gap-3 px-4 py-3 font-mono text-sm font-semibold"
+          style={{
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
+            background: 'rgba(10,10,11,0.97)',
+            color: '#ff5a26',
+            borderBottom: '1px solid rgba(255,90,38,0.4)',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <span>Nova versão disponível</span>
+          <button
+            onClick={onReload}
+            className="px-3 py-1 rounded-lg font-bold"
+            style={{ background: 'rgba(255,90,38,0.18)', border: '1px solid rgba(255,90,38,0.4)' }}
+          >
+            ATUALIZAR
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
 
 function Toast({ toast }) {
   const shouldReduceMotion = useReducedMotion()
@@ -52,6 +88,7 @@ export default function App() {
   const { t } = useTranslation()
   const trip = useTrip()
   const trips = useTrips()
+  const { needRefresh, reload: reloadForUpdate } = usePWAUpdate()
   const shouldReduceMotion = useReducedMotion()
   // Nome de quem está a usar a app agora — pedido uma única vez (ver GuestNamePrompt
   // mais abaixo), independentemente de ter criado a viagem ou entrado por um link.
@@ -404,6 +441,7 @@ export default function App() {
       </AnimatePresence>
 
       <Toast toast={toast} />
+      <UpdateBanner show={needRefresh} onReload={reloadForUpdate} />
     </div>
   )
 }
