@@ -51,11 +51,11 @@ export async function exportShoppingList({ tripId, items, tripName }) {
   }
 
   const catColors = {
-    dispensa:   [245, 166, 35],
+    dispensa:   [232, 163, 61],
     bebidas:    [58, 160, 255],
     talho:      [255, 107, 107],
     laticinios: [155, 123, 255],
-    fresco:     [52, 211, 153],
+    fresco:     [143, 185, 150],
     outro:      [107, 130, 153],
   }
 

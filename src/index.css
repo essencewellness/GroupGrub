@@ -6,9 +6,9 @@
   :root {
     color-scheme: dark;
     /* Design tokens — single source of truth for inline styles */
-    --brand-rgb: 255 90 38;       /* #FF5A26 — same as tailwind `brand` */
-    --success-rgb: 52 211 153;    /* #34d399 — used for positive states */
-    --danger-rgb: 235 87 87;      /* #EB5757 — debt/negative */
+    --brand-rgb: 217 113 60;      /* #D9713C — same as tailwind `brand` */
+    --success-rgb: 143 185 150;   /* #8FB996 — used for positive states */
+    --danger-rgb: 226 96 74;      /* #E2604A — debt/negative */
     --brand: rgb(var(--brand-rgb));
     --success: rgb(var(--success-rgb));
   }
@@ -33,14 +33,14 @@
 
   body {
     @apply bg-ink text-cream font-sans antialiased;
-    background: #000000;
+    background: #1c140f;
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background: #ff5a26;
+    background: #D9713C;
     color: #000;
   }
 }
@@ -67,15 +67,15 @@
 
   .btn-brand {
     @apply bg-brand text-black font-semibold tracking-tight rounded-xl transition-all duration-200;
-    box-shadow: 0 4px 20px rgba(255, 90, 38, 0.35), 0 1px 0 rgba(255,180,120,0.3) inset;
+    box-shadow: 0 4px 20px rgba(217, 113, 60, 0.35), 0 1px 0 rgba(255,180,120,0.3) inset;
   }
   .btn-brand:hover {
-    box-shadow: 0 8px 32px rgba(255, 90, 38, 0.5), 0 1px 0 rgba(255,180,120,0.3) inset;
+    box-shadow: 0 8px 32px rgba(217, 113, 60, 0.5), 0 1px 0 rgba(255,180,120,0.3) inset;
     transform: translateY(-1px);
   }
   .btn-brand:active {
     transform: translateY(0);
-    box-shadow: 0 2px 12px rgba(255, 90, 38, 0.3);
+    box-shadow: 0 2px 12px rgba(217, 113, 60, 0.3);
   }
   .btn-brand:disabled {
     @apply opacity-50 cursor-wait;

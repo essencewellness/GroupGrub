@@ -2,11 +2,11 @@
 // Import from here — never re-declare inline.
 
 export const CATS = {
-  dispensa:   { label: 'Dispensa',         icon: '🥫', color: '#f5a623', desc: 'Compra com antecedência' },
+  dispensa:   { label: 'Dispensa',         icon: '🥫', color: '#E8A33D', desc: 'Compra com antecedência' },
   bebidas:    { label: 'Bebidas',           icon: '🍷', color: '#3aa0ff', desc: 'Compra com antecedência' },
   talho:      { label: 'Talho & Peixaria', icon: '🥩', color: '#ff6b6b', desc: '1–2 dias antes' },
   laticinios: { label: 'Laticínios',       icon: '🧀', color: '#9b7bff', desc: '1–2 dias antes' },
-  fresco:     { label: 'Frescos',          icon: '🥦', color: '#34d399', desc: 'Comprar no dia' },
+  fresco:     { label: 'Frescos',          icon: '🥦', color: '#8FB996', desc: 'Comprar no dia' },
   outro:      { label: 'Outros',           icon: '📦', color: '#6b8299', desc: '' },
 }
 

@@ -55,7 +55,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
 
   const inputCls = (name) =>
     `w-full bg-black/50 border px-4 py-3 rounded-xl text-cream font-sans text-base outline-none transition-all mb-3 ${
-      focusedInput === name ? 'border-brand/60 shadow-[0_0_0_2px_rgba(255,90,38,0.2)]' : 'border-line'
+      focusedInput === name ? 'border-brand/60 shadow-[0_0_0_2px_rgba(217, 113, 60,0.2)]' : 'border-line'
     }`
 
   return (
@@ -74,7 +74,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
             onClick={() => { setForm(f => ({ ...f, emoji: e })); setAutoEmoji(null) }}
             className={`w-10 h-10 rounded-xl text-xl transition-all ${
               form.emoji === e
-                ? 'bg-brand/20 border border-brand/60 shadow-[0_0_10px_rgba(255,90,38,0.3)]'
+                ? 'bg-brand/20 border border-brand/60 shadow-[0_0_10px_rgba(217, 113, 60,0.3)]'
                 : 'bg-white/[0.03] border border-transparent hover:border-line'
             }`}
           >
@@ -134,7 +134,7 @@ export default function AddMealModal({ open, onClose, onAdd }) {
               onClick={() => setForm(f => ({ ...f, tipo: active ? '' : key }))}
               className="px-3.5 py-2 rounded-xl text-[0.8rem] font-medium transition-all border"
               style={active
-                ? { background: 'rgba(255,90,38,0.15)', borderColor: 'rgba(255,90,38,0.55)', color: '#ff5a26', boxShadow: '0 0 10px rgba(255,90,38,0.2)' }
+                ? { background: 'rgba(217, 113, 60,0.15)', borderColor: 'rgba(217, 113, 60,0.55)', color: '#D9713C', boxShadow: '0 0 10px rgba(217, 113, 60,0.2)' }
                 : { background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(245,245,244,0.55)' }
               }
             >

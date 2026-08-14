@@ -40,7 +40,7 @@ const MealCard = memo(function MealCard({ meal, isOpen, isOwner = true, onClick,
 
   const inputCls = (name) =>
     `w-full bg-black/40 border px-3.5 py-2.5 rounded-xl text-cream font-mono text-[0.88rem] outline-none transition-all ${
-      focusedInput === name ? 'border-brand/60 shadow-[0_0_12px_rgba(255,90,38,0.3)]' : 'border-line'
+      focusedInput === name ? 'border-brand/60 shadow-[0_0_12px_rgba(217, 113, 60,0.3)]' : 'border-line'
     } ${name === 'nome' ? 'mb-2.5' : 'mb-3.5'}`
 
   return (
@@ -50,7 +50,7 @@ const MealCard = memo(function MealCard({ meal, isOpen, isOwner = true, onClick,
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 28 }}
       className={`surface overflow-hidden transition-all duration-300 ${isOpen ? 'border-brand/40' : ''}`}
-      style={isOpen ? { boxShadow: '0 8px 40px rgba(255,90,38,0.12)' } : {}}
+      style={isOpen ? { boxShadow: '0 8px 40px rgba(217, 113, 60,0.12)' } : {}}
     >
       {/* Header row */}
       <div
@@ -77,7 +77,7 @@ const MealCard = memo(function MealCard({ meal, isOpen, isOwner = true, onClick,
           <motion.span
             animate={isOpen ? { scale: 1.15 } : { scale: 1 }}
             className="relative z-10 text-2xl"
-            style={{ filter: isOpen ? 'drop-shadow(0 0 10px rgba(255,90,38,0.4))' : 'none' }}
+            style={{ filter: isOpen ? 'drop-shadow(0 0 10px rgba(217, 113, 60,0.4))' : 'none' }}
             aria-hidden="true"
           >
             {meal.emoji}
@@ -217,7 +217,7 @@ const MealCard = memo(function MealCard({ meal, isOpen, isOwner = true, onClick,
                           onClick={() => setDraft(d => ({ ...d, tipo: active ? '' : key }))}
                           className="px-3 py-1.5 rounded-xl text-[0.75rem] font-medium transition-all border"
                           style={active
-                            ? { background: 'rgba(255,90,38,0.15)', borderColor: 'rgba(255,90,38,0.5)', color: '#ff5a26' }
+                            ? { background: 'rgba(217, 113, 60,0.15)', borderColor: 'rgba(217, 113, 60,0.5)', color: '#D9713C' }
                             : { background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(245,245,244,0.5)' }
                           }
                         >
@@ -262,7 +262,7 @@ const MealCard = memo(function MealCard({ meal, isOpen, isOwner = true, onClick,
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={saveEdit}
-                      className="flex-1 py-2.5 rounded-xl bg-brand text-black font-mono text-[0.8rem] font-bold uppercase tracking-[0.08em] flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(255,90,38,0.3)]"
+                      className="flex-1 py-2.5 rounded-xl bg-brand text-black font-mono text-[0.8rem] font-bold uppercase tracking-[0.08em] flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(217, 113, 60,0.3)]"
                     >
                       <Check size={15} aria-hidden="true" /> {t('common.continue')}
                     </motion.button>

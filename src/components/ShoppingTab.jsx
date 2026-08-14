@@ -94,8 +94,8 @@ export default function ShoppingTab({
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="h-full rounded-full"
             style={{
-              background: pct === 100 ? 'linear-gradient(90deg,#1a7a35,#34d399)' : 'linear-gradient(90deg,#c8431a,#ff5a26,#ff7a50)',
-              boxShadow: pct === 100 ? '0 0 12px rgba(52,211,153,0.5)' : '0 0 12px rgba(255,90,38,0.5)',
+              background: pct === 100 ? 'linear-gradient(90deg,#1a7a35,#8FB996)' : 'linear-gradient(90deg,#c8431a,#D9713C,#ff7a50)',
+              boxShadow: pct === 100 ? '0 0 12px rgba(143, 185, 150,0.5)' : '0 0 12px rgba(217, 113, 60,0.5)',
             }}
           />
         </div>
@@ -111,10 +111,10 @@ export default function ShoppingTab({
             onClick={handleCategorizarTudo}
             className="flex-1 py-3 rounded-xl border text-xs font-semibold tracking-[0.1em] transition-all"
             style={{
-              borderColor: 'rgba(255,90,38,0.55)',
-              background: 'rgba(255,90,38,0.11)',
-              color: '#ff5a26',
-              boxShadow: '0 0 20px rgba(255,90,38,0.18)',
+              borderColor: 'rgba(217, 113, 60,0.55)',
+              background: 'rgba(217, 113, 60,0.11)',
+              color: '#D9713C',
+              boxShadow: '0 0 20px rgba(217, 113, 60,0.18)',
               opacity: categorizing ? 0.6 : 1,
             }}
           >
@@ -139,7 +139,7 @@ export default function ShoppingTab({
             showToast(t('common.pdfExported'))
           }}
           className="py-3 px-3.5 rounded-xl border text-xs font-semibold tracking-[0.08em] transition-colors"
-          style={{ borderColor: 'rgba(52,211,153,0.32)', background: 'rgba(52,211,153,0.05)', color: '#34d399' }}
+          style={{ borderColor: 'rgba(143, 185, 150,0.32)', background: 'rgba(143, 185, 150,0.05)', color: '#8FB996' }}
         >
           <FileText size={13} className="inline mr-1" aria-hidden="true" /> PDF
         </motion.button>
@@ -207,7 +207,7 @@ export default function ShoppingTab({
           className={`flex gap-2.5 items-center p-3.5 rounded-xl border transition-all duration-200 ${
             inputFocused ? 'border-brand/60 bg-brand/[0.06]' : 'border-line bg-panel'
           }`}
-          style={{ boxShadow: inputFocused ? '0 0 24px rgba(255,90,38,.2)' : 'none' }}
+          style={{ boxShadow: inputFocused ? '0 0 24px rgba(217, 113, 60,.2)' : 'none' }}
         >
           <span className="font-mono text-cream/60 text-sm font-bold flex-shrink-0" aria-hidden="true">&gt;</span>
           <input
@@ -230,7 +230,7 @@ export default function ShoppingTab({
                 onClick={handleAddItem}
                 aria-label="Adicionar item"
                 className="w-9 h-9 flex items-center justify-center rounded-xl bg-brand/20 text-brand border border-brand/60"
-                style={{ boxShadow: '0 0 16px rgba(255,90,38,.35)' }}
+                style={{ boxShadow: '0 0 16px rgba(217, 113, 60,.35)' }}
               >
                 <Plus size={17} strokeWidth={2.5} aria-hidden="true" />
               </motion.button>

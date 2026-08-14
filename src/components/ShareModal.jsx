@@ -98,7 +98,7 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
       {isOwner && (
         <div
           className="flex items-start gap-2.5 p-3.5 rounded-xl mb-4 border"
-          style={{ background: 'rgba(52,211,153,0.07)', borderColor: 'rgba(52,211,153,0.25)' }}
+          style={{ background: 'rgba(143, 185, 150,0.07)', borderColor: 'rgba(143, 185, 150,0.25)' }}
         >
           <div className="text-lg flex-shrink-0">👑</div>
           <div>
@@ -115,17 +115,17 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
       <div
         className="flex items-center gap-2.5 p-3 rounded-xl mb-5"
         style={{
-          background: hasSupabase ? 'rgba(52,211,153,0.09)' : 'rgba(245,166,35,0.09)',
-          border: `1px solid ${hasSupabase ? 'rgba(52,211,153,0.35)' : 'rgba(245,166,35,0.3)'}`,
+          background: hasSupabase ? 'rgba(143, 185, 150,0.09)' : 'rgba(232, 163, 61,0.09)',
+          border: `1px solid ${hasSupabase ? 'rgba(143, 185, 150,0.35)' : 'rgba(232, 163, 61,0.3)'}`,
         }}
       >
         {hasSupabase ? (
           <Wifi size={18} className="text-success flex-shrink-0" />
         ) : (
-          <WifiOff size={18} className="flex-shrink-0" style={{ color: '#f5a623' }} />
+          <WifiOff size={18} className="flex-shrink-0" style={{ color: '#E8A33D' }} />
         )}
         <div>
-          <div className="text-[0.82rem] font-bold" style={{ color: hasSupabase ? '#34d399' : '#f5a623' }}>
+          <div className="text-[0.82rem] font-bold" style={{ color: hasSupabase ? '#8FB996' : '#E8A33D' }}>
             {hasSupabase ? t('app.name') + ' · LIVE' : 'MODO LOCAL'}
           </div>
           <div className="text-[0.72rem] text-muted mt-0.5">
@@ -148,9 +148,9 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
           title={copied ? 'Copiado' : 'Copiar link'}
           className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
           style={{
-            background: copied ? 'rgba(52,211,153,0.18)' : copyHover ? 'rgba(255,90,38,0.18)' : 'rgba(255,90,38,0.09)',
-            border: `1px solid ${copied ? 'rgba(52,211,153,0.5)' : 'rgba(255,90,38,0.32)'}`,
-            color: copied ? '#34d399' : '#ff5a26',
+            background: copied ? 'rgba(143, 185, 150,0.18)' : copyHover ? 'rgba(217, 113, 60,0.18)' : 'rgba(217, 113, 60,0.09)',
+            border: `1px solid ${copied ? 'rgba(143, 185, 150,0.5)' : 'rgba(217, 113, 60,0.32)'}`,
+            color: copied ? '#8FB996' : '#D9713C',
           }}
         >
           {copied ? <Check size={15} strokeWidth={3} /> : <Copy size={15} />}
@@ -166,9 +166,9 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
         onClick={copy}
         className="w-full py-3.5 rounded-xl font-bold text-[0.95rem] mb-3 transition-all"
         style={{
-          background: copied ? 'rgba(52,211,153,0.16)' : 'rgba(255,90,38,0.14)',
-          color: '#ff5a26',
-          boxShadow: copied ? '0 0 26px rgba(52,211,153,0.3)' : '0 0 26px rgba(255,90,38,0.28)',
+          background: copied ? 'rgba(143, 185, 150,0.16)' : 'rgba(217, 113, 60,0.14)',
+          color: '#D9713C',
+          boxShadow: copied ? '0 0 26px rgba(143, 185, 150,0.3)' : '0 0 26px rgba(217, 113, 60,0.28)',
         }}
       >
         {copied ? <><Check size={17} className="inline mr-1.5" /> Copiado! ✓</> : <><Copy size={17} className="inline mr-1.5" /> Copiar link</>}
@@ -205,7 +205,7 @@ export default function ShareModal({ open, onClose, shareUrl: _shareUrl, tripId,
             whileTap={{ scale: 0.93 }}
             onClick={() => doJoin()}
             className="flex-shrink-0 px-4 rounded-xl bg-brand/20 text-brand font-bold text-[0.85rem] flex items-center gap-1.5"
-            style={{ boxShadow: '0 0 18px rgba(255,90,38,0.3)' }}
+            style={{ boxShadow: '0 0 18px rgba(217, 113, 60,0.3)' }}
           >
             <LogIn size={15} /> Entrar
           </motion.button>

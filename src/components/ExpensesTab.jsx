@@ -78,7 +78,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
               </div>
               <div
                 className="text-[1.45rem] font-bold leading-none tabular-nums"
-                style={{ fontFamily: '"JetBrains Mono", monospace', color: '#34d399' }}
+                style={{ fontFamily: '"JetBrains Mono", monospace', color: '#8FB996' }}
               >
                 {(totalGasto / allParticipants.length).toFixed(2)}<span className="text-[0.9rem] ml-0.5 opacity-70">€</span>
               </div>
@@ -112,9 +112,9 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
               const isPos = bal > 0.005
               const isNeg = bal < -0.005
               const Icon = isPos ? TrendingUp : isNeg ? TrendingDown : Minus
-              const color = isPos ? '#34d399' : isNeg ? '#EB5757' : '#6b8299'
-              const bgColor = isPos ? 'rgba(52,211,153,0.07)' : isNeg ? 'rgba(235,87,87,0.07)' : 'rgba(255,255,255,0.03)'
-              const borderColor = isPos ? 'rgba(52,211,153,0.2)' : isNeg ? 'rgba(235,87,87,0.2)' : 'rgba(255,255,255,0.06)'
+              const color = isPos ? '#8FB996' : isNeg ? '#E2604A' : '#6b8299'
+              const bgColor = isPos ? 'rgba(143, 185, 150,0.07)' : isNeg ? 'rgba(226, 96, 74,0.07)' : 'rgba(255,255,255,0.03)'
+              const borderColor = isPos ? 'rgba(143, 185, 150,0.2)' : isNeg ? 'rgba(226, 96, 74,0.2)' : 'rgba(255,255,255,0.06)'
               return (
                 <div
                   key={p}
@@ -273,7 +273,7 @@ export default function ExpensesTab({ expenses = [], pessoas = [], onAddExpense,
         whileTap={{ scale: 0.97 }}
         onClick={() => setModalOpen(true)}
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-brand text-white font-mono text-[0.8rem] font-bold tracking-[0.1em] cursor-pointer transition-all"
-        style={{ boxShadow: '0 4px 24px rgba(255,90,38,0.35)' }}
+        style={{ boxShadow: '0 4px 24px rgba(217, 113, 60,0.35)' }}
       >
         <Plus size={16} aria-hidden="true" />
         {t('expenses.new', 'NOVA DESPESA')}

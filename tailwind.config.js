@@ -4,32 +4,32 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Premium Fintech palette
-        ink: '#000000',
-        carbon: '#0a0a0b',
-        panel: '#111113',
-        line: 'rgba(255,255,255,0.08)',
-        lineStrong: 'rgba(255,255,255,0.14)',
+        // Warm sunset palette — terracotta & sand, not corporate black
+        ink: '#1c140f',
+        carbon: '#241a14',
+        panel: '#2b2019',
+        line: 'rgba(247,230,208,0.09)',
+        lineStrong: 'rgba(247,230,208,0.16)',
         brand: {
-          DEFAULT: '#FF5A26',
-          dim: 'rgba(255,90,38,0.12)',
-          glow: 'rgba(255,90,38,0.35)',
+          DEFAULT: '#D9713C',
+          dim: 'rgba(217,113,60,0.14)',
+          glow: 'rgba(217,113,60,0.35)',
         },
-        cream: '#f5f5f4',
-        muted: 'rgba(245,245,244,0.55)',
-        faint: 'rgba(245,245,244,0.50)',
-        success: '#34d399',
-        danger:  '#EB5757',
+        cream: '#F7EFE3',
+        muted: 'rgba(247,239,227,0.58)',
+        faint: 'rgba(247,239,227,0.52)',
+        success: '#8FB996',
+        danger:  '#E2604A',
         // category accents
-        dispensa:  '#f5a623',
-        bebidas:   '#3aa0ff',
-        talho:     '#ff6b6b',
-        laticinios:'#9b7bff',
-        fresco:    '#34d399',
+        dispensa:  '#E8A33D',
+        bebidas:   '#4FA9A0',
+        talho:     '#E2604A',
+        laticinios:'#B98CA6',
+        fresco:    '#8FB996',
       },
       fontFamily: {
-        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
-        display: ['Syne', '"DM Sans"', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       boxShadow: {

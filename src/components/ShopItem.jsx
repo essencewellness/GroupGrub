@@ -25,7 +25,7 @@ const ShopItem = memo(function ShopItem({ item, cat, onToggle, onRemove, onUpdat
   const catKey      = cat || item.categoria || 'outro'
   const catCfg      = CATS[catKey] || CATS.outro
   const isUncat     = catKey === 'outro'
-  const borderColor = item.comprado ? '#34d399' : catCfg.color
+  const borderColor = item.comprado ? '#8FB996' : catCfg.color
 
   return (
     <motion.div
@@ -51,9 +51,9 @@ const ShopItem = memo(function ShopItem({ item, cat, onToggle, onRemove, onUpdat
               onKeyDown={onActivateKey(() => onToggle(item.id))}
               className="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center transition-all cursor-pointer"
               style={{
-                background: item.comprado ? '#34d399' : 'transparent',
+                background: item.comprado ? '#8FB996' : 'transparent',
                 border: item.comprado ? 'none' : '2px solid rgba(255,255,255,0.2)',
-                boxShadow: item.comprado ? '0 0 12px rgba(52,211,153,0.5)' : 'none',
+                boxShadow: item.comprado ? '0 0 12px rgba(143, 185, 150,0.5)' : 'none',
               }}
             >
               <AnimatePresence>
@@ -69,7 +69,7 @@ const ShopItem = memo(function ShopItem({ item, cat, onToggle, onRemove, onUpdat
             <span
               className="flex-1 font-semibold text-[0.95rem] transition-all"
               style={{
-                color: item.comprado ? '#34d399' : '#f5f5f4',
+                color: item.comprado ? '#8FB996' : '#f5f5f4',
                 textDecoration: item.comprado ? 'line-through' : 'none',
                 opacity: item.comprado ? 0.7 : 1,
               }}
@@ -93,8 +93,8 @@ const ShopItem = memo(function ShopItem({ item, cat, onToggle, onRemove, onUpdat
                 <span
                   className="font-mono text-[0.65rem] font-bold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded"
                   style={item.comprado
-                    ? { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }
-                    : { background: 'rgba(255,90,38,0.15)', color: '#ff5a26', border: '1px solid rgba(255,90,38,0.35)' }
+                    ? { background: 'rgba(143, 185, 150,0.12)', color: '#8FB996', border: '1px solid rgba(143, 185, 150,0.3)' }
+                    : { background: 'rgba(217, 113, 60,0.15)', color: '#D9713C', border: '1px solid rgba(217, 113, 60,0.35)' }
                   }
                 >
                   {item.assignee}
@@ -104,7 +104,7 @@ const ShopItem = memo(function ShopItem({ item, cat, onToggle, onRemove, onUpdat
               {item.antecipado && !item.comprado && (
                 <span
                   className="font-mono text-[0.65rem] font-bold uppercase tracking-[0.04em] px-1.5 py-0.5 rounded"
-                  style={{ background: 'rgba(245,166,35,0.1)', color: '#f5a623', border: '1px solid rgba(245,166,35,0.22)' }}
+                  style={{ background: 'rgba(232, 163, 61,0.1)', color: '#E8A33D', border: '1px solid rgba(232, 163, 61,0.22)' }}
                 >
                   {t('shopping.antecipado')}
                 </span>
@@ -166,7 +166,7 @@ const ShopItem = memo(function ShopItem({ item, cat, onToggle, onRemove, onUpdat
             >
               <span
                 className="flex items-center gap-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.1em] transition-colors"
-                style={{ color: showCatPicker ? '#ff5a26' : 'rgba(255,90,38,0.7)' }}
+                style={{ color: showCatPicker ? '#D9713C' : 'rgba(217, 113, 60,0.7)' }}
               >
                 <span className="inline-block w-3 h-3 rounded-full border-2 border-current motion-safe:animate-pulse" aria-hidden="true" />
                 {t('shopping.uncategorized')}
@@ -235,7 +235,7 @@ const ShopItem = memo(function ShopItem({ item, cat, onToggle, onRemove, onUpdat
                       className="px-3 py-1.5 rounded-lg font-mono text-[0.72rem] uppercase tracking-[0.04em] border transition-colors"
                       style={
                         assigneeVal === p
-                          ? { background: 'rgba(255,90,38,0.15)', borderColor: 'rgba(255,90,38,0.5)', color: '#ff5a26' }
+                          ? { background: 'rgba(217, 113, 60,0.15)', borderColor: 'rgba(217, 113, 60,0.5)', color: '#D9713C' }
                           : { background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.1)', color: '#8a9baa' }
                       }
                     >

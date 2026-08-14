@@ -42,7 +42,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
         className={`w-full text-left cursor-pointer rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition-all ${
           selected ? 'border-brand/55 bg-brand/[0.08]' : 'border-line bg-panel'
         }`}
-        style={selected ? { boxShadow: '0 2px 16px rgba(255,90,38,0.25)' } : {}}
+        style={selected ? { boxShadow: '0 2px 16px rgba(217, 113, 60,0.25)' } : {}}
       >
         {selected ? (
           <>
@@ -50,7 +50,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
             <span className="flex-1 font-semibold text-[0.88rem] text-cream">{selected.nome}</span>
             <motion.button
               whileTap={{ scale: 0.85 }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#ff5a26')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#D9713C')}
               onMouseLeave={(e) => (e.currentTarget.style.color = '')}
               onClick={(e) => { e.stopPropagation(); onSelect(null); setOpen(false) }}
               className="text-faint hover:text-brand transition-colors"
@@ -85,7 +85,7 @@ function MealPicker({ curso, meals, selectedId, usedIds = new Set(), onSelect })
                   <motion.button
                     key={meal.id}
                     whileTap={{ scale: 0.97 }}
-                    whileHover={!isUsed ? { background: 'rgba(255,90,38,0.08)' } : {}}
+                    whileHover={!isUsed ? { background: 'rgba(217, 113, 60,0.08)' } : {}}
                     onClick={() => { if (!isUsed) { onSelect(meal.id); setOpen(false) } }}
                     className={`w-full text-left rounded-xl border px-3 py-2.5 flex items-center gap-2.5 transition-colors ${
                       isSelected ? 'border-brand/55 bg-brand/[0.12] cursor-pointer' :
@@ -126,12 +126,12 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
       layout
       whileHover={{ scale: 1.015 }}
       className="surface overflow-hidden transition-all relative"
-      style={{ borderColor: allFilled ? 'rgba(52,211,153,0.35)' : open ? 'rgba(255,90,38,0.4)' : undefined, boxShadow: open ? '0 6px 30px rgba(255,90,38,0.12)' : '0 2px 12px rgba(0,0,0,0.4)' }}
+      style={{ borderColor: allFilled ? 'rgba(143, 185, 150,0.35)' : open ? 'rgba(217, 113, 60,0.4)' : undefined, boxShadow: open ? '0 6px 30px rgba(217, 113, 60,0.12)' : '0 2px 12px rgba(0,0,0,0.4)' }}
     >
       {allFilled && (
         <div
           className="absolute top-2.5 right-11 px-2 py-0.5 flex items-center gap-1 font-mono text-[0.62rem] font-bold uppercase tracking-[0.08em] rounded"
-          style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.4)', color: '#34d399' }}
+          style={{ background: 'rgba(143, 185, 150,0.12)', border: '1px solid rgba(143, 185, 150,0.4)', color: '#8FB996' }}
         >
           <Check size={11} strokeWidth={3} /> COMPLETO
         </div>
@@ -147,10 +147,10 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
         onKeyDown={onActivateKey(() => setOpen((v) => !v))}
         className="p-3.5 sm:p-4 flex items-center gap-3.5 cursor-pointer relative"
       >
-        <span className="text-xl flex-shrink-0" style={{ filter: open ? 'drop-shadow(0 0 8px rgba(255,90,38,0.4))' : 'none' }}>{slotEmoji}</span>
+        <span className="text-xl flex-shrink-0" style={{ filter: open ? 'drop-shadow(0 0 8px rgba(217, 113, 60,0.4))' : 'none' }}>{slotEmoji}</span>
         <div className="flex-1">
           <div className="text-base font-bold text-cream uppercase tracking-[0.02em]">{t(`plan.${slot}`)}</div>
-          <div className="text-[0.72rem] mt-0.5 font-mono uppercase tracking-[0.03em]" style={{ color: filled === 0 ? 'rgba(245,245,244,0.50)' : '#ff5a26' }}>
+          <div className="text-[0.72rem] mt-0.5 font-mono uppercase tracking-[0.03em]" style={{ color: filled === 0 ? 'rgba(245,245,244,0.50)' : '#D9713C' }}>
             {filled === 0 ? t('meals.noneSelected') : filled === 3 ? t('meals.allCourses') : `${filled} DE 3 ${t('meals.courses').toUpperCase()}`}
           </div>
         </div>
@@ -160,7 +160,7 @@ function SlotCard({ diaId, slot, meals, plano, allUsedIds, onUpdate }) {
             <div
               key={c.key}
               className="w-2.5 h-2.5 rounded-full transition-all"
-              style={{ background: selection[c.key] ? (allFilled ? '#34d399' : '#ff5a26') : 'rgba(255,90,38,0.08)', boxShadow: selection[c.key] ? `0 0 10px ${allFilled ? 'rgba(52,211,153,0.5)' : 'rgba(255,90,38,0.5)'}` : 'none' }}
+              style={{ background: selection[c.key] ? (allFilled ? '#8FB996' : '#D9713C') : 'rgba(217, 113, 60,0.08)', boxShadow: selection[c.key] ? `0 0 10px ${allFilled ? 'rgba(143, 185, 150,0.5)' : 'rgba(217, 113, 60,0.5)'}` : 'none' }}
             />
           ))}
         </div>
@@ -230,7 +230,7 @@ export default function Plano({ meals, plano, onUpdate, structure }) {
         transition={{ duration: 0.24 }}
       >
         <div className="flex flex-col items-center justify-center text-center p-14 surface">
-          <span className="text-3xl mb-4" style={{ filter: 'drop-shadow(0 0 12px rgba(255,90,38,0.4))' }}>🍽️</span>
+          <span className="text-3xl mb-4" style={{ filter: 'drop-shadow(0 0 12px rgba(217, 113, 60,0.4))' }}>🍽️</span>
           <div className="font-display text-lg font-bold text-cream mb-2 tracking-tight">{t('trips.empty')}</div>
           <div className="text-[0.82rem] text-muted leading-relaxed max-w-[240px] font-mono uppercase tracking-[0.02em]">
             {t('trips.emptyHint')}
@@ -261,7 +261,7 @@ export default function Plano({ meals, plano, onUpdate, structure }) {
               {totalFilled} DE {totalPossible} {t('plan.coursesPlanned')}
             </div>
           </div>
-          <div className="font-display text-2xl font-bold" style={{ color: progressPct === 100 ? '#34d399' : '#ff5a26' }}>
+          <div className="font-display text-2xl font-bold" style={{ color: progressPct === 100 ? '#8FB996' : '#D9713C' }}>
             {progressPct}%
           </div>
         </div>
@@ -272,8 +272,8 @@ export default function Plano({ meals, plano, onUpdate, structure }) {
             transition={{ duration: 0.45, ease: 'easeOut' }}
             className="h-full rounded-full"
             style={{
-              background: progressPct === 100 ? 'linear-gradient(90deg,#1f8a3a,#34d399)' : 'linear-gradient(90deg,#c8431a,#ff5a26)',
-              boxShadow: '0 0 10px rgba(255,90,38,0.4)',
+              background: progressPct === 100 ? 'linear-gradient(90deg,#1f8a3a,#8FB996)' : 'linear-gradient(90deg,#c8431a,#D9713C)',
+              boxShadow: '0 0 10px rgba(217, 113, 60,0.4)',
             }}
           />
         </div>
@@ -288,7 +288,7 @@ export default function Plano({ meals, plano, onUpdate, structure }) {
         return (
           <div key={dia.id} className="mb-8">
             <div className="flex items-center gap-2.5 mb-3">
-              <span className="text-xl" style={{ filter: 'drop-shadow(0 0 6px rgba(255,90,38,0.4))' }}>{dia.emoji}</span>
+              <span className="text-xl" style={{ filter: 'drop-shadow(0 0 6px rgba(217, 113, 60,0.4))' }}>{dia.emoji}</span>
               <span className="font-display text-lg font-bold text-brand">
                 {dia.date
                   ? `${dia.label}, ${dia.date.slice(8, 10)}/${dia.date.slice(5, 7)}`
@@ -297,7 +297,7 @@ export default function Plano({ meals, plano, onUpdate, structure }) {
               {diaFilledSlots > 0 && (
                 <div
                   className="px-2 py-0.5 font-mono text-[0.62rem] font-bold uppercase tracking-[0.06em] rounded"
-                  style={{ background: 'rgba(255,90,38,0.1)', border: '1px solid rgba(255,90,38,0.4)', color: '#ff5a26' }}
+                  style={{ background: 'rgba(217, 113, 60,0.1)', border: '1px solid rgba(217, 113, 60,0.4)', color: '#D9713C' }}
                 >
                   {diaFilledSlots} {t('plan.mealsDefined').toLowerCase()}
                 </div>

@@ -62,7 +62,7 @@ export default function GuestNamePrompt({ guestNameInput, onInputChange, onConfi
           onClick={onConfirm}
           className="w-full py-3.5 rounded-xl font-bold text-[0.95rem]"
           style={{
-            background: canSubmit ? 'linear-gradient(135deg,#c8431a,#ff5a26)' : 'rgba(255,255,255,0.06)',
+            background: canSubmit ? 'linear-gradient(135deg,#c8431a,#D9713C)' : 'rgba(255,255,255,0.06)',
             color: canSubmit ? '#fff' : 'rgba(255,255,255,0.3)',
             cursor: canSubmit ? 'pointer' : 'not-allowed',
           }}

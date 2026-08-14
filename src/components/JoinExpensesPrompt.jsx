@@ -39,7 +39,7 @@ export default function JoinExpensesPrompt({ count, onJoin, onSkip }) {
           whileTap={{ scale: 0.97 }}
           onClick={onJoin}
           className="w-full py-3.5 rounded-xl font-bold text-[0.95rem] mb-2.5"
-          style={{ background: 'linear-gradient(135deg,#c8431a,#ff5a26)', color: '#fff' }}
+          style={{ background: 'linear-gradient(135deg,#c8431a,#D9713C)', color: '#fff' }}
         >
           Sim, incluir-me
         </motion.button>

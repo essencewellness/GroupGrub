@@ -38,8 +38,8 @@ function UpdateBanner({ show, onReload }) {
           style={{
             paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
             background: 'rgba(10,10,11,0.97)',
-            color: '#ff5a26',
-            borderBottom: '1px solid rgba(255,90,38,0.4)',
+            color: '#D9713C',
+            borderBottom: '1px solid rgba(217, 113, 60,0.4)',
             backdropFilter: 'blur(12px)',
           }}
         >
@@ -47,7 +47,7 @@ function UpdateBanner({ show, onReload }) {
           <button
             onClick={onReload}
             className="px-3 py-1 rounded-lg font-bold"
-            style={{ background: 'rgba(255,90,38,0.18)', border: '1px solid rgba(255,90,38,0.4)' }}
+            style={{ background: 'rgba(217, 113, 60,0.18)', border: '1px solid rgba(217, 113, 60,0.4)' }}
           >
             ATUALIZAR
           </button>
@@ -72,9 +72,9 @@ function Toast({ toast }) {
           className="fixed bottom-7 left-1/2 -translate-x-1/2 z-[200] px-6 py-2.5 rounded-xl font-mono text-sm font-semibold tracking-wide"
           style={{
             background: 'rgba(10,10,11,0.94)',
-            color: toast.type === 'err' ? '#ff5a26' : '#34d399',
-            border: `1px solid ${toast.type === 'err' ? 'rgba(255,90,38,0.45)' : 'rgba(52,211,153,0.45)'}`,
-            boxShadow: `0 0 26px ${toast.type === 'err' ? 'rgba(255,90,38,0.28)' : 'rgba(52,211,153,0.18)'}, 0 12px 40px rgba(0,0,0,.7)`,
+            color: toast.type === 'err' ? '#D9713C' : '#8FB996',
+            border: `1px solid ${toast.type === 'err' ? 'rgba(217, 113, 60,0.45)' : 'rgba(143, 185, 150,0.45)'}`,
+            boxShadow: `0 0 26px ${toast.type === 'err' ? 'rgba(217, 113, 60,0.28)' : 'rgba(143, 185, 150,0.18)'}, 0 12px 40px rgba(0,0,0,.7)`,
             backdropFilter: 'blur(12px)',
           }}
         >
@@ -180,10 +180,10 @@ export default function App() {
 
   if (trip.loading) {
     return (
-      <div role="status" aria-live="polite" aria-label={t('app.initializing')} className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-black relative overflow-hidden px-6">
+      <div role="status" aria-live="polite" aria-label={t('app.initializing')} className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-ink relative overflow-hidden px-6">
         {/* Atmospheric glow */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,90,38,0.08) 0%, transparent 70%)'
+          background: 'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(217, 113, 60,0.08) 0%, transparent 70%)'
         }} />
         <motion.div
           animate={shouldReduceMotion ? {} : { y: [0, -6, 0] }}
@@ -203,7 +203,7 @@ export default function App() {
             animate={{ x: ['-100%', '280%'] }}
             transition={shouldReduceMotion ? { duration: 0 } : { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
             className="w-[40%] h-full rounded-full"
-            style={{ background: 'linear-gradient(90deg, transparent, #ff5a26, transparent)', boxShadow: '0 0 10px #ff5a26' }}
+            style={{ background: 'linear-gradient(90deg, transparent, #D9713C, transparent)', boxShadow: '0 0 10px #D9713C' }}
           />
         </div>
       </div>
@@ -211,7 +211,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col bg-black text-cream">
+    <div className="min-h-dvh flex flex-col bg-ink text-cream">
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b border-line" style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px) saturate(1.5)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[680px] mx-auto px-5">
@@ -289,7 +289,7 @@ export default function App() {
                   <motion.div
                     layoutId="tab-line"
                     className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
-                    style={{ background: 'linear-gradient(90deg, #c8431a, #ff5a26, #ff7a50)', boxShadow: '0 0 10px rgba(255,90,38,0.6)' }}
+                    style={{ background: 'linear-gradient(90deg, #c8431a, #D9713C, #ff7a50)', boxShadow: '0 0 10px rgba(217, 113, 60,0.6)' }}
                     transition={{ type: 'spring', stiffness: 480, damping: 38 }}
                   />
                 )}

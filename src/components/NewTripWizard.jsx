@@ -73,8 +73,8 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                 className="h-1 rounded-full transition-all duration-300"
                 style={{
                   width: step === s ? 28 : 14,
-                  background: step >= s ? '#FF5A26' : 'rgba(255,255,255,0.12)',
-                  boxShadow: step >= s ? '0 0 10px rgba(255,90,38,0.5)' : 'none',
+                  background: step >= s ? '#D9713C' : 'rgba(255,255,255,0.12)',
+                  boxShadow: step >= s ? '0 0 10px rgba(217, 113, 60,0.5)' : 'none',
                 }}
               />
             ))}
@@ -93,7 +93,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                 transition={{ duration: 0.22 }}
               >
                 <div className="text-center mb-7">
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#FF5A26]/10 border border-[#FF5A26]/25 flex items-center justify-center text-2xl" style={{ filter: 'drop-shadow(0 0 12px rgba(255,90,38,0.5))' }}>
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#D9713C]/10 border border-[#D9713C]/25 flex items-center justify-center text-2xl" style={{ filter: 'drop-shadow(0 0 12px rgba(217, 113, 60,0.5))' }}>
                     🛰️
                   </div>
                   <h2 id={titleId} className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step1Title')}</h2>
@@ -118,9 +118,9 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                   disabled={!validTitle}
                   className="w-full mt-5 py-3.5 rounded-xl font-mono text-sm font-bold tracking-[0.1em] uppercase flex items-center justify-center gap-2 transition-all"
                   style={{
-                    background: validTitle ? '#FF5A26' : 'rgba(255,255,255,0.06)',
+                    background: validTitle ? '#D9713C' : 'rgba(255,255,255,0.06)',
                     color: validTitle ? '#000' : 'rgba(245,245,244,0.4)',
-                    boxShadow: validTitle ? '0 8px 24px rgba(255,90,38,0.3)' : 'none',
+                    boxShadow: validTitle ? '0 8px 24px rgba(217, 113, 60,0.3)' : 'none',
                     cursor: validTitle ? 'pointer' : 'not-allowed',
                   }}
                 >
@@ -138,7 +138,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                 transition={{ duration: 0.22 }}
               >
                 <div className="text-center mb-7">
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#FF5A26]/10 border border-[#FF5A26]/25 flex items-center justify-center text-2xl">
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#D9713C]/10 border border-[#D9713C]/25 flex items-center justify-center text-2xl">
                     📅
                   </div>
                   <h2 id={titleId} className="font-display text-lg font-bold text-white tracking-tight">{t('wizard.step2Title')}</h2>
@@ -169,7 +169,7 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                     />
                   </div>
                   {startDate && endDate && !dateValid && (
-                    <div role="alert" className="text-[0.72rem] text-[#FF5A26] font-mono">A data de fim tem de ser igual ou depois do início.</div>
+                    <div role="alert" className="text-[0.72rem] text-[#D9713C] font-mono">A data de fim tem de ser igual ou depois do início.</div>
                   )}
                 </div>
 
@@ -187,9 +187,9 @@ export default function NewTripWizard({ open, onClose, onCreate }) {
                     disabled={!dateValid || submitting}
                     className="flex-1 py-3.5 rounded-xl font-mono text-sm font-bold tracking-[0.1em] uppercase flex items-center justify-center gap-2 transition-all"
                     style={{
-                      background: dateValid && !submitting ? '#FF5A26' : 'rgba(255,255,255,0.06)',
+                      background: dateValid && !submitting ? '#D9713C' : 'rgba(255,255,255,0.06)',
                       color: dateValid && !submitting ? '#000' : 'rgba(245,245,244,0.4)',
-                      boxShadow: dateValid && !submitting ? '0 8px 24px rgba(255,90,38,0.3)' : 'none',
+                      boxShadow: dateValid && !submitting ? '0 8px 24px rgba(217, 113, 60,0.3)' : 'none',
                       cursor: dateValid && !submitting ? 'pointer' : 'not-allowed',
                     }}
                   >

@@ -25,7 +25,7 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
   const inputCls = (name) =>
     `w-full bg-black/50 border px-4 py-3 rounded-xl text-cream font-mono text-[1rem] outline-none transition-all mb-2.5 ${
       focusedInput === name
-        ? 'border-brand/60 shadow-[0_0_0_2px_rgba(255,90,38,0.3)]'
+        ? 'border-brand/60 shadow-[0_0_0_2px_rgba(217, 113, 60,0.3)]'
         : 'border-line'
     }`
 
@@ -122,7 +122,7 @@ export default function AddExpenseModal({ open, onClose, onAdd, pessoas, current
         disabled={!isReady}
         className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-mono text-[0.8rem] font-bold tracking-[0.1em] transition-all ${
           isReady
-            ? 'bg-brand text-white shadow-[0_4px_24px_rgba(255,90,38,0.35)] cursor-pointer'
+            ? 'bg-brand text-white shadow-[0_4px_24px_rgba(217, 113, 60,0.35)] cursor-pointer'
             : 'bg-white/[0.06] text-muted cursor-not-allowed'
         }`}
       >
