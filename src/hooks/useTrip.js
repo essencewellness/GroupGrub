@@ -449,9 +449,20 @@ export default function useTrip() {
   }, [tripId])
 
   const updatePlano = useCallback((slotKey, selection) => {
-    const next = { ...planoRef.current, [slotKey]: selection }
+    // Compute `next` from the setState updater (always sees the true latest
+    // state), not from planoRef.current — the ref only syncs one render after
+    // commit, so two slot picks made back-to-back (well within that window —
+    // e.g. a fast double-tap, or any programmatic bulk update) would both read
+    // the same stale ref and the second write would silently discard the first
+    // slot's selection. Assigning into `next` here is safe even under
+    // StrictMode's double-invoked updater since it's just overwritten with the
+    // same value the second time.
+    let next
+    setPlano(prev => {
+      next = { ...prev, [slotKey]: selection }
+      return next
+    })
     localStorage.setItem(`ferias_plano_${tripId}`, JSON.stringify(next))
-    setPlano(next)
     upsertTripRow(tripId, { plano: next }).catch((e) => console.warn('updatePlano: falha ao gravar no Supabase, ficou só local', e))
   }, [tripId])
 
